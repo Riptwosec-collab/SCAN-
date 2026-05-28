@@ -49,36 +49,79 @@ function clearOutput(){
   setStatus('ล้างผลลัพธ์แล้ว','ok');
 }
 
-function resetAll(){
+function clearCanvas(id){
+  const canvas=$(id);
+  if(!canvas)return;
+  const ctx=canvas.getContext?.('2d');
+  if(ctx)ctx.clearRect(0,0,canvas.width,canvas.height);
+  canvas.width=0;
+  canvas.height=0;
+  canvas.style.display='none';
+}
+
+function removeImageFile(){
   clearOutput();
   AppState.imageFile=null;
   AppState.imageCanvas=null;
   AppState.processedCanvas=null;
   AppState.crop=null;
   AppState.cropEnabled=false;
+  AppState.sourceName='';
+  const input=$('imgInput');
+  if(input)input.value='';
+  clearCanvas('imgPreview');
+  clearCanvas('processedPreview');
+  const info=$('imgFileInfo');
+  if(info)info.classList.add('hide');
+  const name=$('imgFileName');
+  if(name)name.textContent='ยังไม่ได้เลือกไฟล์';
+  const cropBtn=$('enableCropBtn');
+  if(cropBtn)cropBtn.textContent='เปิด Crop';
+  setStatus('ยกเลิกไฟล์รูปภาพแล้ว สามารถอัปโหลดใหม่ได้','ok');
+}
+
+function removePdfFile(){
+  clearOutput();
   AppState.pdfDoc=null;
   AppState.pdfPages=0;
   AppState.pdfPageInfo=[];
+  AppState.sourceName='';
+  const input=$('pdfInput');
+  if(input)input.value='';
+  clearCanvas('pdfPreview');
+  const thumbs=$('pdfThumbs');
+  if(thumbs)thumbs.innerHTML='';
+  const info=$('pdfFileInfo');
+  if(info)info.classList.add('hide');
+  const name=$('pdfFileName');
+  if(name)name.textContent='ยังไม่ได้เลือกไฟล์';
+  $('pageFrom').value=1;
+  $('pageTo').value=1;
+  setStatus('ยกเลิกไฟล์ PDF แล้ว สามารถอัปโหลดใหม่ได้','ok');
+}
+
+function removeBatchFiles(){
+  clearOutput();
   AppState.batchFiles=[];
   AppState.batchResults=[];
   AppState.sourceName='';
+  const input=$('batchInput');
+  if(input)input.value='';
+  const list=$('batchList');
+  if(list)list.innerHTML='';
+  const info=$('batchFileInfo');
+  if(info)info.classList.add('hide');
+  const name=$('batchFileName');
+  if(name)name.textContent='ยังไม่ได้เลือกไฟล์';
+  setStatus('ยกเลิกไฟล์ Batch แล้ว สามารถอัปโหลดใหม่ได้','ok');
+}
 
-  ['imgInput','pdfInput','batchInput'].forEach(id=>{const el=$(id);if(el)el.value='';});
-  ['imgPreview','processedPreview','pdfPreview','sourceCompare'].forEach(id=>{
-    const canvas=$(id);
-    if(canvas){
-      const ctx=canvas.getContext?.('2d');
-      if(ctx)ctx.clearRect(0,0,canvas.width,canvas.height);
-      canvas.style.display='none';
-    }
-  });
-
-  const pdfThumbs=$('pdfThumbs');
-  if(pdfThumbs)pdfThumbs.innerHTML='';
-  const batchList=$('batchList');
-  if(batchList)batchList.innerHTML='';
-  const cropBtn=$('enableCropBtn');
-  if(cropBtn)cropBtn.textContent='เปิด Crop';
+function resetAll(){
+  removeImageFile();
+  removePdfFile();
+  removeBatchFiles();
+  clearOutput();
+  ['sourceCompare'].forEach(clearCanvas);
   setStatus('ล้างข้อมูลทั้งหมดแล้ว','ok');
 }
 
