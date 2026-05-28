@@ -13,6 +13,36 @@ async function imageFileToCanvas(file){
   });
 }
 
+function drawCanvasTo(target,source){
+  target.width=source.width;
+  target.height=source.height;
+  target.style.display='block';
+  target.getContext('2d').drawImage(source,0,0);
+}
+
+function drawImagePreview(){
+  if(!AppState.imageCanvas)return;
+  drawCanvasTo($('imgPreview'),AppState.imageCanvas);
+  if(AppState.crop){
+    const c=$('imgPreview');
+    const ctx=c.getContext('2d');
+    ctx.save();
+    ctx.strokeStyle='#b7ff4a';
+    ctx.lineWidth=Math.max(3,c.width/260);
+    ctx.setLineDash([14,8]);
+    ctx.strokeRect(AppState.crop.x,AppState.crop.y,AppState.crop.w,AppState.crop.h);
+    ctx.restore();
+  }
+  drawCanvasTo($('sourceCompare'),AppState.imageCanvas);
+}
+
+function updateProcessedPreview(){
+  if(!AppState.imageCanvas)return;
+  const base=cropCanvas(AppState.imageCanvas);
+  AppState.processedCanvas=preprocessCanvas(base);
+  drawCanvasTo($('processedPreview'),AppState.processedCanvas);
+}
+
 function preprocessCanvas(source){
   const scale=$('upscale')?.checked?2:1;
   const canvas=document.createElement('canvas');
@@ -45,16 +75,27 @@ async function runOcr(canvas,start=0,end=100){
       if(m.status)setStatus(m.status+' '+Math.round((m.progress||0)*100)+'%');
     }
   });
+  AppState.confidence=extractAverageConfidence(result);
   return result.data.text||'';
 }
 
+function extractAverageConfidence(result){
+  const words=result?.data?.words||[];
+  if(!words.length)return null;
+  const usable=words.map(w=>Number(w.confidence)).filter(n=>Number.isFinite(n));
+  if(!usable.length)return null;
+  return Math.round(usable.reduce((a,b)=>a+b,0)/usable.length);
+}
+
 async function scanImage(){
-  if(!AppState.imageFile){
+  if(!AppState.imageFile||!AppState.imageCanvas){
     setStatus('ยังไม่ได้เลือกรูปภาพ','err');
     return '';
   }
   setStatus('กำลัง OCR รูปภาพ...');
-  const canvas=await imageFileToCanvas(AppState.imageFile);
-  const processed=preprocessCanvas(canvas);
+  const base=cropCanvas(AppState.imageCanvas);
+  const processed=preprocessCanvas(base);
+  AppState.processedCanvas=processed;
+  drawCanvasTo($('processedPreview'),processed);
   return runOcr(processed,5,95);
 }
