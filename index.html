@@ -16,13 +16,14 @@
     <header class="head">
       <div>
         <div class="brand">RIPTWOSEC.SCAN</div>
-        <div class="sub">Image/PDF OCR + Thai word spacing cleanup</div>
+        <div class="sub">Image/PDF OCR · Crop · Batch · Thai/IT Dictionary · Export</div>
       </div>
       <div class="top-actions">
         <button class="btn" id="copyBtn">Copy</button>
         <button class="btn" id="txtBtn">TXT</button>
         <button class="btn" id="docBtn">DOC</button>
         <button class="btn" id="csvBtn">CSV</button>
+        <button class="btn" id="jsonBtn">JSON</button>
         <button class="btn" id="printBtn">PDF</button>
         <button class="btn danger" id="clearBtn">Clear</button>
       </div>
@@ -31,6 +32,7 @@
     <nav class="tabs">
       <button id="tabImg" class="tab active" data-tab="img">🖼 รูปภาพ</button>
       <button id="tabPdf" class="tab" data-tab="pdf">📄 PDF</button>
+      <button id="tabBatch" class="tab" data-tab="batch">📦 Batch</button>
     </nav>
 
     <main class="grid">
@@ -42,9 +44,23 @@
             <input id="imgInput" type="file" accept="image/*">
             <div class="drop-icon">🖼</div>
             <b>เลือกรูปภาพ / วางรูป / Ctrl+V</b>
-            <span class="hint">PNG · JPG · WEBP</span>
+            <span class="hint">PNG · JPG · WEBP · รองรับ Crop OCR</span>
           </div>
-          <img id="imgPreview" class="preview" alt="image preview">
+          <div class="preview-grid">
+            <div>
+              <div class="mini-label">Original</div>
+              <canvas id="imgPreview" class="preview-canvas"></canvas>
+            </div>
+            <div>
+              <div class="mini-label">Processed Preview</div>
+              <canvas id="processedPreview" class="preview-canvas"></canvas>
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn" id="enableCropBtn">เปิด Crop</button>
+            <button class="btn" id="resetCropBtn">Reset Crop</button>
+          </div>
+          <div class="hint">ลากเมาส์บนภาพ Original เพื่อเลือกพื้นที่ OCR</div>
         </div>
 
         <div id="pdfPanel" class="hide">
@@ -52,14 +68,29 @@
             <input id="pdfInput" type="file" accept="application/pdf">
             <div class="drop-icon">📄</div>
             <b>เลือก PDF</b>
-            <span class="hint">อ่าน Text Layer ก่อน ถ้าไม่มีจะ OCR จากภาพ</span>
+            <span class="hint">Auto: มี Text Layer ดึงข้อความ / ไม่มี Text Layer ใช้ OCR</span>
           </div>
-          <canvas id="pdfPreview" class="preview"></canvas>
           <div class="row">
             <input id="pageFrom" type="number" min="1" value="1" placeholder="หน้าเริ่ม">
             <input id="pageTo" type="number" min="1" value="1" placeholder="หน้าสุดท้าย">
             <button class="btn small" id="allPagesBtn">ทุกหน้า</button>
           </div>
+          <div class="row">
+            <label class="inline-check"><input id="ocrOnlyNoText" type="checkbox" checked> OCR เฉพาะหน้าที่ไม่มี Text Layer</label>
+            <label class="inline-check"><input id="separatePages" type="checkbox"> แยกผลลัพธ์ตามหน้า</label>
+          </div>
+          <div id="pdfThumbs" class="thumbs"></div>
+          <canvas id="pdfPreview" class="preview-canvas wide"></canvas>
+        </div>
+
+        <div id="batchPanel" class="hide">
+          <div class="drop" id="batchDrop">
+            <input id="batchInput" type="file" accept="image/*,application/pdf" multiple>
+            <div class="drop-icon">📦</div>
+            <b>เลือกหลายไฟล์เพื่อ Batch OCR</b>
+            <span class="hint">รองรับรูปภาพ + PDF หลายไฟล์</span>
+          </div>
+          <div id="batchList" class="batch-list"></div>
         </div>
 
         <div class="label space-top">02 — Options</div>
@@ -79,10 +110,22 @@
         </div>
 
         <div class="checks">
-          <label><input id="removeNoise" type="checkbox" checked> ลบอักษรแปลก เช่น Ɵ, É, Ê, ○</label>
-          <label><input id="cleanThai" type="checkbox" checked> รวมคำไทยที่ OCR เว้นวรรคผิด เช่น เครื อง → เครื่อง</label>
+          <label><input id="removeNoise" type="checkbox" checked> ลบอักษรแปลก</label>
+          <label><input id="cleanThai" type="checkbox" checked> รวมคำไทยที่เว้นวรรคผิด</label>
+          <label><input id="itDictionary" type="checkbox" checked> Dictionary IT/NOC</label>
+          <label><input id="highlightFixes" type="checkbox" checked> แสดงคำที่ถูกแก้</label>
           <label><input id="upscale" type="checkbox" checked> ขยายภาพก่อน OCR</label>
           <label><input id="threshold" type="checkbox" checked> ขาวดำ/เพิ่ม Contrast</label>
+        </div>
+
+        <div class="dictionary-box">
+          <div class="mini-label">เพิ่มคำแก้เอง</div>
+          <div class="row">
+            <input id="customFrom" placeholder="คำที่ OCR อ่านผิด เช่น เครื อง">
+            <input id="customTo" placeholder="แก้เป็น เช่น เครื่อง">
+            <button class="btn small" id="addRuleBtn">เพิ่ม</button>
+          </div>
+          <div id="customRules" class="rules"></div>
         </div>
 
         <div class="row">
@@ -92,23 +135,45 @@
 
         <div class="progress"><span id="progressBar"></span></div>
         <div id="status" class="status">พร้อมใช้งาน</div>
+        <div id="confidenceBox" class="confidence">Confidence: -</div>
 
         <div class="label space-top">03 — History</div>
         <div id="history" class="history"></div>
       </section>
 
-      <section class="panel">
+      <section class="panel output-panel">
         <div class="label">Output</div>
-        <div id="output" class="out">ผลลัพธ์จะแสดงที่นี่</div>
+        <div class="search-row">
+          <input id="searchInput" placeholder="ค้นหาในผลลัพธ์ เช่น CUCM, SD-WAN, NOC">
+          <button class="btn small" id="searchBtn">Search</button>
+          <button class="btn small" id="clearSearchBtn">Clear</button>
+        </div>
+        <div class="compare-grid">
+          <div>
+            <div class="mini-label">Source / Page Preview</div>
+            <canvas id="sourceCompare" class="compare-canvas"></canvas>
+          </div>
+          <div>
+            <div class="mini-label">Extracted Text</div>
+            <div id="output" class="out">ผลลัพธ์จะแสดงที่นี่</div>
+          </div>
+        </div>
+        <div class="label space-top">Fixed Words</div>
+        <div id="fixReport" class="fix-report">ยังไม่มีรายการคำที่แก้</div>
       </section>
     </main>
   </div>
 
   <script src="js/state.js"></script>
   <script src="js/utils.js"></script>
+  <script src="js/dictionary-it.js"></script>
+  <script src="js/custom-rules.js"></script>
   <script src="js/text-cleaner.js"></script>
+  <script src="js/crop.js"></script>
   <script src="js/ocr.js"></script>
   <script src="js/pdf-handler.js"></script>
+  <script src="js/batch.js"></script>
+  <script src="js/search.js"></script>
   <script src="js/exporter.js"></script>
   <script src="js/history.js"></script>
   <script src="js/app.js"></script>
