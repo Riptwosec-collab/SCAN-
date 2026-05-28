@@ -1,12 +1,56 @@
 <!doctype html>
 <html lang="th">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RIPTWOSEC.SCAN</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RIPTWOSEC.SCAN</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+:root{--bg:#0b0d0f;--card:#15191d;--card2:#1d2329;--line:#303842;--text:#eef3f7;--muted:#93a0ad;--accent:#b7ff4a;--blue:#58b7ff;--red:#ff6b6b}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Sarabun,sans-serif}.wrap{max-width:1200px;margin:auto;padding:20px}.head{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:16px 18px;margin-bottom:14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.brand{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;color:var(--accent)}.sub{color:var(--muted);font-size:13px}.tabs{display:flex;gap:8px;margin-bottom:12px}.tab,.btn,select,input{border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:10px;padding:9px 12px;font-family:Sarabun,sans-serif}.tab.active{border-color:var(--accent);color:var(--accent)}.grid{display:grid;grid-template-columns:420px 1fr;gap:14px}.panel{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:16px}.label{font-family:'Space Mono',monospace;color:#65717d;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin:8px 0}.drop{position:relative;border:1.5px dashed #515d68;border-radius:14px;min-height:200px;display:flex;align-items:center;justify-content:center;text-align:center;flex-direction:column;gap:8px;cursor:pointer}.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}.drop:hover{border-color:var(--accent)}.hint{color:var(--muted);font-size:12px}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.row>*{flex:1}.check{display:block;color:var(--muted);font-size:13px;margin-top:8px}.out{min-height:520px;white-space:pre-wrap;line-height:1.75;border:1px solid var(--line);background:#101316;border-radius:14px;padding:16px;overflow:auto}.status{margin-top:10px;color:var(--muted);border:1px solid var(--line);border-radius:12px;padding:10px;font-family:'Space Mono',monospace;font-size:12px}.ok{color:#6ee7a8}.err{color:var(--red)}.preview{max-width:100%;max-height:300px;margin-top:10px;border-radius:12px;border:1px solid var(--line);display:none}.bar{height:6px;background:#25313a;border-radius:20px;overflow:hidden;margin-top:10px}.bar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--blue))}@media(max-width:850px){.grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-  <h1>RIPTWOSEC.SCAN</h1>
-  <p>Upload completed placeholder.</p>
+<div class="wrap">
+ <div class="head"><div><div class="brand">RIPTWOSEC.SCAN</div><div class="sub">Image/PDF OCR + Thai word spacing cleanup</div></div><div class="row"><button class="btn" onclick="downloadText()">Export TXT</button><button class="btn" onclick="clearOutput()">Clear</button></div></div>
+ <div class="tabs"><button id="tImg" class="tab active" onclick="setTab('img')">รูปภาพ</button><button id="tPdf" class="tab" onclick="setTab('pdf')">PDF</button></div>
+ <div class="grid"><div class="panel">
+   <div class="label">Input</div>
+   <div id="imgBox"><div class="drop"><input id="imgFile" type="file" accept="image/*"><b>เลือกรูปภาพ</b><span class="hint">PNG/JPG/WEBP</span></div><img id="imgPreview" class="preview"></div>
+   <div id="pdfBox" style="display:none"><div class="drop"><input id="pdfFile" type="file" accept="application/pdf"><b>เลือก PDF</b><span class="hint">อ่าน Text layer ก่อน ถ้าไม่มีจะ OCR</span></div><div class="row"><input id="fromPage" type="number" min="1" value="1"><input id="toPage" type="number" min="1" value="1"></div></div>
+   <div class="label">Options</div>
+   <select id="lang"><option value="tha+eng">ไทย + อังกฤษ</option><option value="tha">ไทย</option><option value="eng">อังกฤษ</option></select>
+   <label class="check"><input id="cleanThai" type="checkbox" checked> รวมคำไทยที่ OCR เว้นวรรคผิด เช่น เครื อง → เครื่อง</label>
+   <label class="check"><input id="removeNoise" type="checkbox" checked> ลบอักษรแปลก เช่น Ɵ, É, Ê, ○</label>
+   <label class="check"><input id="upscale" type="checkbox" checked> ขยายภาพก่อน OCR</label>
+   <div class="row"><button class="btn" onclick="scan()">⚡ แปลง</button><button class="btn" onclick="reformat()">จัดข้อความใหม่</button></div>
+   <div class="bar"><span id="prog"></span></div><div id="status" class="status">พร้อมใช้งาน</div>
+  </div><div class="panel"><div class="label">Output</div><div id="output" class="out">ผลลัพธ์จะแสดงที่นี่</div></div></div>
+</div>
+<script>
+'use strict';
+if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js'}
+let currentTab='img',img=null,pdf=null,pdfPages=0,last='';
+const $=id=>document.getElementById(id);
+function setTab(t){currentTab=t;$('tImg').classList.toggle('active',t==='img');$('tPdf').classList.toggle('active',t==='pdf');$('imgBox').style.display=t==='img'?'block':'none';$('pdfBox').style.display=t==='pdf'?'block':'none';}
+function status(t,c=''){let s=$('status');s.textContent=t;s.className='status '+c}
+function progress(n){$('prog').style.width=Math.max(0,Math.min(100,n))+'%'}
+$('imgFile').addEventListener('change',e=>{img=e.target.files[0];if(img){$('imgPreview').src=URL.createObjectURL(img);$('imgPreview').style.display='block';status('เลือกรูปแล้ว','ok')}});
+$('pdfFile').addEventListener('change',async e=>{try{let f=e.target.files[0];if(!f)return;let data=new Uint8Array(await f.arrayBuffer());pdf=await pdfjsLib.getDocument({data}).promise;pdfPages=pdf.numPages;$('fromPage').value=1;$('toPage').value=pdfPages;status('โหลด PDF แล้ว '+pdfPages+' หน้า','ok')}catch(err){status('PDF error: '+err.message,'err')}});
+async function scan(){try{progress(0);if(currentTab==='img'){if(!img)return status('ยังไม่ได้เลือกรูป','err');let c=await imageToCanvas(img);let text=await runOcr(preprocess(c));show(clean(text));}else{if(!pdf)return status('ยังไม่ได้เลือก PDF','err');let a=Math.max(1,parseInt($('fromPage').value)||1),b=Math.min(pdfPages,parseInt($('toPage').value)||pdfPages);let all=[];for(let p=a;p<=b;p++){progress((p-a)/(b-a+1)*100);status('อ่านหน้า '+p+'/'+b);let text=await pdfText(p);if(!text.trim()){let c=await pdfCanvas(p);text=await runOcr(preprocess(c));}if(text.trim())all.push(text)}show(clean(all.join('\n\n')))}progress(100);status('แปลงสำเร็จ','ok')}catch(err){status('แปลงไม่ได้: '+err.message,'err')}}
+function show(t){last=t.trim();$('output').textContent=last||'ไม่พบข้อความ'}
+function clearOutput(){last='';$('output').textContent='ผลลัพธ์จะแสดงที่นี่';progress(0);status('ล้างแล้ว','ok')}
+function reformat(){show(clean(last||$('output').textContent))}
+function downloadText(){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([last||$('output').textContent],{type:'text/plain;charset=utf-8'}));a.download='riptwosec-scan.txt';a.click()}
+async function imageToCanvas(file){return new Promise((res,rej)=>{let im=new Image();im.onload=()=>{let c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;c.getContext('2d').drawImage(im,0,0);res(c)};im.onerror=rej;im.src=URL.createObjectURL(file)})}
+function preprocess(src){let scale=$('upscale').checked?2:1,c=document.createElement('canvas');c.width=src.width*scale;c.height=src.height*scale;let ctx=c.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.drawImage(src,0,0,c.width,c.height);let im=ctx.getImageData(0,0,c.width,c.height),d=im.data;for(let i=0;i<d.length;i+=4){let v=.299*d[i]+.587*d[i+1]+.114*d[i+2];v=(v-128)*1.45+128;v=v>150?255:0;d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v))}ctx.putImageData(im,0,0);return c}
+async function runOcr(c){if(!window.Tesseract)throw new Error('โหลด Tesseract ไม่สำเร็จ');let r=await Tesseract.recognize(c,$('lang').value,{logger:m=>{if(m.progress)progress(m.progress*100);if(m.status)status(m.status)}});return r.data.text||''}
+async function pdfText(p){let page=await pdf.getPage(p),tc=await page.getTextContent();if(!tc.items||!tc.items.length)return'';let rows=[];for(const it of tc.items){if(!it.str)continue;let y=Math.round(it.transform[5]);let row=rows.find(r=>Math.abs(r.y-y)<3);if(!row){row={y,items:[]};rows.push(row)}row.items.push({x:it.transform[4],s:it.str})}return rows.sort((a,b)=>b.y-a.y).map(r=>r.items.sort((a,b)=>a.x-b.x).map(i=>i.s).join(' ')).join('\n')}
+async function pdfCanvas(p){let page=await pdf.getPage(p),vp=page.getViewport({scale:2.2}),c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;return c}
+function clean(t){t=(t||'').replace(/\r/g,'').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();if($('removeNoise').checked)t=fixNoise(t);if($('cleanThai').checked)t=fixThai(t);return t.split('\n').map(x=>x.trim()).filter(Boolean).join('\n')}
+function fixNoise(t){return t.replace(/[○●◦▪▫◆◇□■�]/g,'').replace(/[Ɵθϴ]/g,'ti').replace(/[ƩΣ]/g,'tt').replace(/ที\s*[ÉE]/g,'ที่').replace(/เกี\s*[ÉE]\s*ยว/g,'เกี่ยว').replace(/ขึ\s*น/g,'ขึ้น').replace(/\bSD\s*WAN\b/gi,'SD-WAN').replace(/\bnoc\b/gi,'NOC').replace(/\bcase\b/gi,'Case').replace(/pa\s*tt\s*ern/gi,'pattern').replace(/configura\s*ti\s*o?n?/gi,'configuration')}
+function fixThai(t){const pairs=[['เพื อ','เพื่อ'],['เปลี ยน','เปลี่ยน'],['เครื อง','เครื่อง'],['เรื อง','เรื่อง'],['เชื อม','เชื่อม'],['ข้ อมูล','ข้อมูล'],['ตั วอักษร','ตัวอักษร'],['ช่ องว่าง','ช่องว่าง'],['ช่องว่า','ช่องว่าง'],['ขั นตอน','ขั้นตอน'],['ขั น','ขั้น'],['เอก สาร','เอกสาร'],['หเอกสาร','เอกสาร'],['เจอ บ่อย','เจอบ่อย'],['อาการที่ เจอบ่อย','อาการที่เจอบ่อย'],['เข้ใจ','เข้าใจ'],['เข้ ใจ','เข้าใจ'],['ลค ทดสอบ','ลิงก์ทดสอบ']];for(const p of pairs)t=t.split(p[0]).join(p[1]);t=t.replace(/([เแโใไ])\s+([ก-ฮ])/g,'$1$2');t=t.replace(/([ก-ฮ])\s+([ะาำิีึืุูั็่้๊๋์])/g,'$1$2');t=t.replace(/([ก-ฮ])\s+([ก-ฮ])(?=(?:ว่า|ที่|แล้ว|อยู่|ด้วย|จาก|ให้|ของ|การ|งาน|ระบบ|เครื่อง|เอกสาร|ขั้นตอน|บ่อย))/g,'$1$2');return t}
+</script>
 </body>
 </html>
