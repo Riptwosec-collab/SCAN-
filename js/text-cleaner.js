@@ -1,4 +1,28 @@
+function resetFixReport(){
+  AppState.fixedWords=[];
+}
+
+function replaceTrack(text,pattern,replacement){
+  let out=text;
+  if(pattern instanceof RegExp){
+    out=out.replace(pattern,(match)=>{
+      if(match!==replacement)AppState.fixedWords.push({from:match,to:replacement});
+      return replacement;
+    });
+  }else{
+    const from=String(pattern);
+    if(!from)return out;
+    const parts=out.split(from);
+    if(parts.length>1){
+      for(let i=1;i<parts.length;i++)AppState.fixedWords.push({from,to:replacement});
+      out=parts.join(replacement);
+    }
+  }
+  return out;
+}
+
 function cleanText(text){
+  resetFixReport();
   let result=(text||'')
     .replace(/\r/g,'')
     .replace(/[ \t]+/g,' ')
@@ -6,6 +30,8 @@ function cleanText(text){
     .trim();
 
   if($('removeNoise')?.checked)result=fixNoise(result);
+  if($('itDictionary')?.checked)result=applyItDictionary(result);
+  result=applyCustomRules(result);
   if($('cleanThai')?.checked)result=fixThaiWords(result);
 
   const mode=$('modeSelect')?.value||'clean';
@@ -17,28 +43,17 @@ function cleanText(text){
 }
 
 function fixNoise(text){
-  return text
-    .replace(/[○●◦▪▫◆◇□■�]/g,'')
-    .replace(/[Ɵθϴ]/g,'ti')
-    .replace(/[ƩΣ]/g,'tt')
-    .replace(/ที\s*[ÉE]/g,'ที่')
-    .replace(/เกี\s*[ÉE]\s*ยว/g,'เกี่ยว')
-    .replace(/ขึ\s*น/g,'ขึ้น')
-    .replace(/ขั\s*น/g,'ขั้น')
-    .replace(/\bSD\s*WAN\b/gi,'SD-WAN')
-    .replace(/\bCUCM\s*(\d+)\b/gi,'CUCM$1')
-    .replace(/\bnoc\b/gi,'NOC')
-    .replace(/\bcase\b/gi,'Case')
-    .replace(/pa\s*tt\s*ern/gi,'pattern')
-    .replace(/pa\s*[ƩΣ]\s*ern/gi,'pattern')
-    .replace(/configura\s*ti\s*o?n?/gi,'configuration')
-    .replace(/informa\s*ti\s*o?n?/gi,'information')
-    .replace(/opera\s*ti\s*o?n?/gi,'operation')
-    .replace(/loca\s*ti\s*o?n?/gi,'location')
-    .replace(/destina\s*ti\s*o?n?/gi,'destination');
+  let out=text;
+  const rules=[
+    [/[○●◦▪▫◆◇□■�]/g,''],[/[Ɵθϴ]/g,'ti'],[/[ƩΣ]/g,'tt'],[/ที\s*[ÉE]/g,'ที่'],[/เกี\s*[ÉE]\s*ยว/g,'เกี่ยว'],
+    [/ขึ\s*น/g,'ขึ้น'],[/ขั\s*น/g,'ขั้น']
+  ];
+  for(const [pattern,replacement] of rules)out=replaceTrack(out,pattern,replacement);
+  return out;
 }
 
 function fixThaiWords(text){
+  let out=text;
   const replacements=[
     ['เพื อ','เพื่อ'],['เปลี ยน','เปลี่ยน'],['เครื อง','เครื่อง'],['เรื อง','เรื่อง'],['เชื อม','เชื่อม'],
     ['ข้ อมูล','ข้อมูล'],['ตั วอักษร','ตัวอักษร'],['ช่ องว่าง','ช่องว่าง'],['ช่องว่า','ช่องว่าง'],
@@ -46,12 +61,11 @@ function fixThaiWords(text){
     ['เจอ บ่อย','เจอบ่อย'],['อาการที่ เจอบ่อย','อาการที่เจอบ่อย'],['เข้ใจ','เข้าใจ'],['เข้ ใจ','เข้าใจ'],
     ['ลค ทดสอบ','ลิงก์ทดสอบ'],['ฟังก์ ชัน','ฟังก์ชัน'],['บรร ทัด','บรรทัด'],['หัว ข้อ','หัวข้อ']
   ];
-  for(const [from,to] of replacements)text=text.split(from).join(to);
-
-  return text
-    .replace(/([เแโใไ])\s+([ก-ฮ])/g,'$1$2')
-    .replace(/([ก-ฮ])\s+([ะาำิีึืุูั็่้๊๋์])/g,'$1$2')
-    .replace(/([ก-ฮ])\s+([ก-ฮ])(?=(?:ว่า|ที่|แล้ว|อยู่|ด้วย|จาก|ให้|ของ|การ|งาน|ระบบ|เครื่อง|เอกสาร|ขั้นตอน|บ่อย|ข้อมูล|ข้อความ))/g,'$1$2');
+  for(const [from,to] of replacements)out=replaceTrack(out,from,to);
+  out=replaceTrack(out,/([เแโใไ])\s+([ก-ฮ])/g,'$1$2');
+  out=replaceTrack(out,/([ก-ฮ])\s+([ะาำิีึืุูั็่้๊๋์])/g,'$1$2');
+  out=replaceTrack(out,/([ก-ฮ])\s+([ก-ฮ])(?=(?:ว่า|ที่|แล้ว|อยู่|ด้วย|จาก|ให้|ของ|การ|งาน|ระบบ|เครื่อง|เอกสาร|ขั้นตอน|บ่อย|ข้อมูล|ข้อความ))/g,'$1$2');
+  return out;
 }
 
 function toDocument(text){
@@ -67,4 +81,29 @@ function toTable(text){
 function summarize(text){
   const lines=text.split('\n').map(x=>x.trim()).filter(x=>x.length>8);
   return lines.slice(0,12).map(line=>'- '+line).join('\n');
+}
+
+function renderFixReport(){
+  const box=$('fixReport');
+  if(!box)return;
+  const items=AppState.fixedWords.slice(0,80);
+  if(!items.length){box.textContent='ไม่มีรายการคำที่แก้';return;}
+  box.innerHTML=items.map(x=>'<span class="fix-item">'+escapeHtml(x.from)+' → '+escapeHtml(x.to)+'</span>').join('');
+}
+
+function calculateConfidence(raw,cleaned){
+  const rawLen=(raw||'').replace(/\s/g,'').length;
+  if(!rawLen)return 0;
+  const weird=((raw||'').match(/[�ƟθϴƩΣÉÊ○●]/g)||[]).length;
+  const fixCount=AppState.fixedWords.length;
+  let score=100-Math.min(35,weird*3)-Math.min(25,fixCount*.8);
+  if(cleaned.length<raw.length*.45)score-=10;
+  return Math.max(35,Math.min(99,Math.round(score)));
+}
+
+function renderConfidence(score){
+  const box=$('confidenceBox');
+  if(!box)return;
+  box.className='confidence '+(score>=80?'good':score>=60?'warn':'bad');
+  box.textContent='Confidence: '+score+'% · Fixed: '+AppState.fixedWords.length+' จุด';
 }
