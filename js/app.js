@@ -1,18 +1,23 @@
 document.addEventListener('DOMContentLoaded',()=>{
   bindAppEvents();
+  bindCropCanvas();
   renderHistory();
+  renderCustomRules();
   setStatus('พร้อมใช้งาน','ok');
 });
 
 function bindAppEvents(){
   $('tabImg').onclick=()=>switchTab('img');
   $('tabPdf').onclick=()=>switchTab('pdf');
+  $('tabBatch').onclick=()=>switchTab('batch');
 
   $('imgInput').onchange=e=>handleImageFile(e.target.files[0]);
   $('pdfInput').onchange=e=>handlePdfFile(e.target.files[0]);
+  $('batchInput').onchange=e=>setBatchFiles(e.target.files);
 
   bindDropZone($('imgDrop'),file=>handleImageFile(file));
   bindDropZone($('pdfDrop'),file=>handlePdfFile(file));
+  bindDropZone($('batchDrop'),fileList=>setBatchFiles(fileList),true);
 
   document.addEventListener('paste',e=>{
     for(const item of e.clipboardData?.items||[]){
@@ -28,49 +33,75 @@ function bindAppEvents(){
     if(AppState.pdfPages){
       $('pageFrom').value=1;
       $('pageTo').value=AppState.pdfPages;
+      document.querySelectorAll('#pdfThumbs .thumb').forEach(x=>x.classList.add('active'));
     }
   };
 
+  $('enableCropBtn').onclick=()=>{
+    AppState.cropEnabled=!AppState.cropEnabled;
+    $('enableCropBtn').textContent=AppState.cropEnabled?'ปิด Crop':'เปิด Crop';
+    setStatus(AppState.cropEnabled?'เปิด Crop แล้ว ลากกรอบบนรูป Original':'ปิด Crop แล้ว','ok');
+  };
+  $('resetCropBtn').onclick=resetCrop;
+
   $('scanBtn').onclick=scanCurrent;
-  $('formatBtn').onclick=()=>showOutput(cleanText(AppState.lastText||$('output').innerText));
+  $('formatBtn').onclick=()=>showCleanedResult(AppState.rawText||AppState.lastText||$('output').innerText);
   $('clearBtn').onclick=clearOutput;
   $('copyBtn').onclick=copyOutput;
   $('txtBtn').onclick=exportTxt;
   $('docBtn').onclick=exportDoc;
   $('csvBtn').onclick=exportCsv;
+  $('jsonBtn').onclick=exportJson;
   $('printBtn').onclick=exportPrintPdf;
+  $('addRuleBtn').onclick=addCustomRule;
+  $('searchBtn').onclick=searchOutput;
+  $('clearSearchBtn').onclick=clearSearch;
+
+  ['upscale','threshold'].forEach(id=>$(id).addEventListener('change',updateProcessedPreview));
 }
 
 function switchTab(tab){
   AppState.tab=tab;
   $('tabImg').classList.toggle('active',tab==='img');
   $('tabPdf').classList.toggle('active',tab==='pdf');
+  $('tabBatch').classList.toggle('active',tab==='batch');
   $('imgPanel').classList.toggle('hide',tab!=='img');
   $('pdfPanel').classList.toggle('hide',tab!=='pdf');
-  setStatus(tab==='img'?'โหมดรูปภาพ':'โหมด PDF','ok');
+  $('batchPanel').classList.toggle('hide',tab!=='batch');
+  setStatus(tab==='img'?'โหมดรูปภาพ':tab==='pdf'?'โหมด PDF':'โหมด Batch','ok');
 }
 
-function bindDropZone(zone,callback){
+function bindDropZone(zone,callback,multiple=false){
   zone.ondragover=e=>{e.preventDefault();zone.classList.add('drag')};
   zone.ondragleave=()=>zone.classList.remove('drag');
   zone.ondrop=e=>{
     e.preventDefault();
     zone.classList.remove('drag');
-    const file=e.dataTransfer.files[0];
-    if(file)callback(file);
+    if(multiple)callback(e.dataTransfer.files);
+    else{
+      const file=e.dataTransfer.files[0];
+      if(file)callback(file);
+    }
   };
 }
 
-function handleImageFile(file){
-  if(!file)return;
-  if(!file.type.startsWith('image/')){
-    setStatus('กรุณาเลือกไฟล์รูปภาพ','err');
-    return;
+async function handleImageFile(file){
+  try{
+    if(!file)return;
+    if(!file.type.startsWith('image/')){
+      setStatus('กรุณาเลือกไฟล์รูปภาพ','err');
+      return;
+    }
+    AppState.imageFile=file;
+    AppState.sourceName=file.name;
+    AppState.imageCanvas=await imageFileToCanvas(file);
+    AppState.crop=null;
+    drawImagePreview();
+    updateProcessedPreview();
+    setStatus('โหลดรูปภาพแล้ว: '+file.name,'ok');
+  }catch(error){
+    setStatus('โหลดรูปไม่ได้: '+error.message,'err');
   }
-  AppState.imageFile=file;
-  $('imgPreview').src=URL.createObjectURL(file);
-  $('imgPreview').style.display='block';
-  setStatus('โหลดรูปภาพแล้ว: '+file.name,'ok');
 }
 
 async function handlePdfFile(file){
@@ -92,14 +123,24 @@ async function scanCurrent(){
     setProgress(0);
     let raw='';
     if(AppState.tab==='img')raw=await scanImage();
-    else raw=await scanPdf();
+    else if(AppState.tab==='pdf')raw=await scanPdf();
+    else raw=await scanBatch();
 
-    const cleaned=cleanText(raw);
-    showOutput(cleaned);
+    AppState.rawText=raw;
+    showCleanedResult(raw);
     setProgress(100);
     setStatus('แปลงสำเร็จ','ok');
   }catch(error){
     setStatus('แปลงไม่ได้: '+error.message,'err');
     setProgress(0);
   }
+}
+
+function showCleanedResult(raw){
+  const cleaned=cleanText(raw);
+  showOutput(cleaned);
+  renderFixReport();
+  const finalScore=AppState.confidence??calculateConfidence(raw,cleaned);
+  AppState.confidence=finalScore;
+  renderConfidence(finalScore);
 }
