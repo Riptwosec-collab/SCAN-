@@ -48,18 +48,51 @@
       </div>
     </section>
 
-    <section id="features" class="clean-section">
-      <div class="section-head">
-        <div class="label">Core Features</div>
-        <h2>จุดเด่นที่ใช้กับงานจริง</h2>
+    <section id="features" class="clean-section feature-showcase">
+      <div class="section-head feature-head">
+        <div>
+          <div class="label">Real Use Cases</div>
+          <h2>จุดเด่นที่ใช้กับงานจริง</h2>
+          <p>จัดมาให้ตรงกับงาน NOC / Helpdesk / Engineer: แปลงไว อ่านง่าย ลดเวลาพิมพ์ซ้ำ และเก็บผลลัพธ์ไปใช้งานต่อได้ทันที</p>
+        </div>
       </div>
-      <div class="feature-grid compact">
-        <article><b>แก้คำไทยเพี้ยน</b><p>รวมคำที่ OCR เว้นวรรคผิด เช่น เครื อง → เครื่อง</p></article>
-        <article><b>รองรับ PDF</b><p>อ่าน Text Layer และ OCR fallback สำหรับ PDF สแกน</p></article>
-        <article><b>Batch OCR</b><p>แปลงหลายไฟล์ต่อเนื่อง เหมาะกับคู่มือหรือรูปจากแชต</p></article>
-        <article><b>Export หลายแบบ</b><p>TXT, DOC, CSV, JSON และ Print เป็น PDF</p></article>
-        <article><b>IT/NOC Dictionary</b><p>แก้คำเฉพาะ เช่น SD-WAN, CUCM, NOC, Case, Engineer</p></article>
-        <article><b>Browser-based</b><p>ประมวลผลใน Browser เป็นหลัก ไม่ต้องมี Backend</p></article>
+      <div class="feature-grid real-grid">
+        <article class="feature-card main-feature">
+          <span class="feature-icon">🧠</span>
+          <b>แก้ข้อความไทยจาก OCR ให้อ่านรู้เรื่อง</b>
+          <p>ช่วยรวมคำที่โดนเว้นวรรคผิด แก้สระหาย และลบอักษรแปลก เช่น <code>เครื อง</code> → <code>เครื่อง</code>, <code>ขั นตอน</code> → <code>ขั้นตอน</code></p>
+          <div class="feature-tags"><span>Thai Cleanup</span><span>Noise Fix</span></div>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon">📄</span>
+          <b>อ่าน PDF ได้ทั้ง Text และ Scan</b>
+          <p>ถ้า PDF มี Text Layer จะดึงข้อความโดยตรง ถ้าเป็นไฟล์สแกนจะ fallback ไป OCR จากภาพหน้าเอกสาร</p>
+          <div class="feature-tags"><span>PDF</span><span>OCR Fallback</span></div>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon">📦</span>
+          <b>Batch OCR หลายไฟล์</b>
+          <p>เหมาะกับรูปจาก LINE/Teams, คู่มือหลายหน้า หรือเอกสารงาน Support ที่ต้องแปลงต่อเนื่องหลายไฟล์</p>
+          <div class="feature-tags"><span>Batch</span><span>Multi-file</span></div>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon">🛠</span>
+          <b>Dictionary สำหรับสาย IT / NOC</b>
+          <p>รู้จักคำเฉพาะทาง เช่น SD-WAN, CUCM, NOC, Case, Engineer, Route Pattern ลดปัญหาคำอังกฤษเพี้ยน</p>
+          <div class="feature-tags"><span>NOC</span><span>IT Terms</span></div>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon">✂️</span>
+          <b>Crop เฉพาะจุดที่ต้องการ</b>
+          <p>ลากเลือกเฉพาะพื้นที่ข้อความในรูป เพื่อลดสิ่งรบกวนจากเมนู ไอคอน หรือพื้นหลังที่ทำให้ OCR อ่านมั่ว</p>
+          <div class="feature-tags"><span>Crop</span><span>Cleaner Output</span></div>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon">📤</span>
+          <b>Export พร้อมใช้งานต่อ</b>
+          <p>คัดลอกหรือส่งออกเป็น TXT, DOC, CSV, JSON และไฟล์สำหรับ Print เป็น PDF เพื่อใช้ต่อใน Ticket, Report หรือเอกสารงาน</p>
+          <div class="feature-tags"><span>Export</span><span>Report Ready</span></div>
+        </article>
       </div>
     </section>
 
