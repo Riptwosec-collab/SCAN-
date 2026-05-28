@@ -44,6 +44,10 @@ function bindAppEvents(){
   };
   $('resetCropBtn').onclick=resetCrop;
 
+  $('removeImgBtn').onclick=removeImageFile;
+  $('removePdfBtn').onclick=removePdfFile;
+  $('removeBatchBtn').onclick=removeBatchFiles;
+
   $('scanBtn').onclick=scanCurrent;
   $('formatBtn').onclick=()=>showCleanedResult(AppState.rawText||AppState.lastText||$('output').innerText);
   $('clearBtn').onclick=clearOutput;
@@ -92,10 +96,13 @@ async function handleImageFile(file){
       setStatus('กรุณาเลือกไฟล์รูปภาพ','err');
       return;
     }
+    clearOutput();
     AppState.imageFile=file;
     AppState.sourceName=file.name;
     AppState.imageCanvas=await imageFileToCanvas(file);
     AppState.crop=null;
+    $('imgFileName').textContent=file.name;
+    $('imgFileInfo').classList.remove('hide');
     drawImagePreview();
     updateProcessedPreview();
     setStatus('โหลดรูปภาพแล้ว: '+file.name,'ok');
@@ -111,6 +118,9 @@ async function handlePdfFile(file){
       setStatus('กรุณาเลือกไฟล์ PDF','err');
       return;
     }
+    clearOutput();
+    $('pdfFileName').textContent=file.name;
+    $('pdfFileInfo').classList.remove('hide');
     setStatus('กำลังโหลด PDF...');
     await loadPdfFile(file);
   }catch(error){
