@@ -6,6 +6,11 @@ async function copyOutput(){
 }
 
 function exportTxt(){
+  if(AppState.pdfPageInfo?.length&&$('separatePages')?.checked){
+    const text=AppState.pdfPageInfo.map(p=>'[หน้า '+p.page+']\n'+p.text).join('\n\n');
+    downloadFile('riptwosec-scan-pages.txt',text,'text/plain');
+    return;
+  }
   downloadFile('riptwosec-scan.txt',AppState.lastText||$('output').innerText,'text/plain');
 }
 
@@ -19,6 +24,23 @@ function exportCsv(){
   const text=AppState.lastText||$('output').innerText;
   const csv=text.split('\n').map(line=>'"'+line.replace(/"/g,'""')+'"').join('\n');
   downloadFile('riptwosec-scan.csv',csv,'text/csv');
+}
+
+function exportJson(){
+  const payload={
+    app:'RIPTWOSEC.SCAN',
+    sourceName:AppState.sourceName||'',
+    language:$('langSelect')?.value||'',
+    mode:$('modeSelect')?.value||'',
+    confidence:AppState.confidence,
+    rawText:AppState.rawText||'',
+    cleanedText:AppState.lastText||$('output').innerText,
+    fixedWords:AppState.fixedWords||[],
+    pdfPages:AppState.pdfPageInfo||[],
+    batchResults:AppState.batchResults||[],
+    exportedAt:new Date().toISOString()
+  };
+  downloadFile('riptwosec-scan.json',JSON.stringify(payload,null,2),'application/json');
 }
 
 function exportPrintPdf(){
