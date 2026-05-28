@@ -37,7 +37,7 @@
 
     <main class="grid">
       <section class="panel">
-        <div class="label">01 — Input</div>
+        <div class="label">01 — Input / Preview</div>
 
         <div id="imgPanel">
           <div class="drop" id="imgDrop">
@@ -45,6 +45,10 @@
             <div class="drop-icon">🖼</div>
             <b>เลือกรูปภาพ / วางรูป / Ctrl+V</b>
             <span class="hint">PNG · JPG · WEBP · รองรับ Crop OCR</span>
+          </div>
+          <div id="imgFileInfo" class="file-info hide">
+            <span id="imgFileName">ยังไม่ได้เลือกไฟล์</span>
+            <button class="btn small danger" id="removeImgBtn">ยกเลิกไฟล์นี้</button>
           </div>
           <div class="preview-grid">
             <div>
@@ -70,6 +74,10 @@
             <b>เลือก PDF</b>
             <span class="hint">Auto: มี Text Layer ดึงข้อความ / ไม่มี Text Layer ใช้ OCR</span>
           </div>
+          <div id="pdfFileInfo" class="file-info hide">
+            <span id="pdfFileName">ยังไม่ได้เลือกไฟล์</span>
+            <button class="btn small danger" id="removePdfBtn">ยกเลิกไฟล์นี้</button>
+          </div>
           <div class="row">
             <input id="pageFrom" type="number" min="1" value="1" placeholder="หน้าเริ่ม">
             <input id="pageTo" type="number" min="1" value="1" placeholder="หน้าสุดท้าย">
@@ -89,6 +97,10 @@
             <div class="drop-icon">📦</div>
             <b>เลือกหลายไฟล์เพื่อ Batch OCR</b>
             <span class="hint">รองรับรูปภาพ + PDF หลายไฟล์</span>
+          </div>
+          <div id="batchFileInfo" class="file-info hide">
+            <span id="batchFileName">ยังไม่ได้เลือกไฟล์</span>
+            <button class="btn small danger" id="removeBatchBtn">ยกเลิกไฟล์ทั้งหมด</button>
           </div>
           <div id="batchList" class="batch-list"></div>
         </div>
@@ -142,22 +154,18 @@
       </section>
 
       <section class="panel output-panel">
-        <div class="label">Output</div>
+        <div class="output-head">
+          <div>
+            <div class="label">Output</div>
+            <div class="hint">แสดงเฉพาะข้อความที่แปลงได้ ไม่มี Preview ซ้ำในฝั่ง Output</div>
+          </div>
+        </div>
         <div class="search-row">
           <input id="searchInput" placeholder="ค้นหาในผลลัพธ์ เช่น CUCM, SD-WAN, NOC">
           <button class="btn small" id="searchBtn">Search</button>
           <button class="btn small" id="clearSearchBtn">Clear</button>
         </div>
-        <div class="compare-grid">
-          <div>
-            <div class="mini-label">Source / Page Preview</div>
-            <canvas id="sourceCompare" class="compare-canvas"></canvas>
-          </div>
-          <div>
-            <div class="mini-label">Extracted Text</div>
-            <div id="output" class="out">ผลลัพธ์จะแสดงที่นี่</div>
-          </div>
-        </div>
+        <div id="output" class="out output-only">ผลลัพธ์จะแสดงที่นี่</div>
         <div class="label space-top">Fixed Words</div>
         <div id="fixReport" class="fix-report">ยังไม่มีรายการคำที่แก้</div>
       </section>
