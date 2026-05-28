@@ -7,11 +7,14 @@ async function loadPdfFile(file){
   const data=new Uint8Array(await file.arrayBuffer());
   AppState.pdfDoc=await pdfjsLib.getDocument({data}).promise;
   AppState.pdfPages=AppState.pdfDoc.numPages;
+  AppState.sourceName=file.name;
+  AppState.pdfPageInfo=[];
   $('pageFrom').value=1;
   $('pageTo').value=AppState.pdfPages;
   $('pageFrom').max=AppState.pdfPages;
   $('pageTo').max=AppState.pdfPages;
   await renderPdfPreview(1);
+  await renderPdfThumbnails();
   setStatus('โหลด PDF แล้ว '+AppState.pdfPages+' หน้า','ok');
 }
 
@@ -24,6 +27,34 @@ async function renderPdfPreview(pageNumber){
   canvas.height=viewport.height;
   canvas.style.display='block';
   await page.render({canvasContext:ctx,viewport}).promise;
+  drawCanvasTo($('sourceCompare'),canvas);
+}
+
+async function renderPdfThumbnails(){
+  const box=$('pdfThumbs');
+  box.innerHTML='';
+  const max=Math.min(AppState.pdfPages,40);
+  for(let i=1;i<=max;i++){
+    const div=document.createElement('div');
+    div.className='thumb active';
+    div.dataset.page=i;
+    div.innerHTML='<b>หน้า '+i+'</b><div class="hint">เลือก OCR</div>';
+    div.onclick=()=>{
+      div.classList.toggle('active');
+      renderPdfPreview(i);
+    };
+    box.appendChild(div);
+  }
+}
+
+function getSelectedPdfPages(){
+  const selected=[...document.querySelectorAll('#pdfThumbs .thumb.active')].map(x=>Number(x.dataset.page));
+  if(selected.length)return selected;
+  const from=Math.max(1,parseInt($('pageFrom').value)||1);
+  const to=Math.min(AppState.pdfPages,parseInt($('pageTo').value)||AppState.pdfPages);
+  const pages=[];
+  for(let p=from;p<=to;p++)pages.push(p);
+  return pages;
 }
 
 async function extractPdfText(pageNumber){
@@ -63,22 +94,30 @@ async function scanPdf(){
     return '';
   }
 
-  const from=Math.max(1,parseInt($('pageFrom').value)||1);
-  const to=Math.min(AppState.pdfPages,parseInt($('pageTo').value)||AppState.pdfPages);
-  if(from>to)throw new Error('ช่วงหน้า PDF ไม่ถูกต้อง');
+  const pages=getSelectedPdfPages();
+  if(!pages.length)throw new Error('ยังไม่ได้เลือกหน้า PDF');
 
+  AppState.pdfPageInfo=[];
   const parts=[];
-  for(let pageNo=from;pageNo<=to;pageNo++){
-    const pct=((pageNo-from)/(to-from+1))*100;
+  for(let i=0;i<pages.length;i++){
+    const pageNo=pages[i];
+    const pct=(i/pages.length)*100;
     setProgress(pct);
-    setStatus('กำลังอ่านหน้า '+pageNo+'/'+to);
+    setStatus('กำลังอ่านหน้า '+pageNo);
     let text=await extractPdfText(pageNo);
-    if(!text.trim()){
+    const hadTextLayer=!!text.trim();
+    const shouldOcr=!hadTextLayer||!$('ocrOnlyNoText')?.checked;
+    if(shouldOcr&&!hadTextLayer){
       setStatus('หน้า '+pageNo+' ไม่มี Text Layer กำลัง OCR จากภาพ...');
       const canvas=await pdfPageToCanvas(pageNo);
-      text=await runOcr(preprocessCanvas(canvas),pct,Math.min(95,pct+20));
+      text=await runOcr(preprocessCanvas(canvas),pct,Math.min(95,pct+(100/pages.length)));
     }
-    if(text.trim())parts.push(text.trim());
+    const cleaned=text.trim();
+    AppState.pdfPageInfo.push({page:pageNo,text:cleaned,hadTextLayer,usedOcr:shouldOcr&&!hadTextLayer});
+    if(cleaned){
+      if($('separatePages')?.checked)parts.push('[หน้า '+pageNo+']\n'+cleaned);
+      else parts.push(cleaned);
+    }
   }
   return parts.join('\n\n');
 }
