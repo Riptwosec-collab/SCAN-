@@ -158,7 +158,6 @@ async function scanCurrent(){
 async function showCleanedResult(raw,animate=false){
   let cleaned=cleanText(raw);
   if(typeof finalOcrReview==='function')cleaned=finalOcrReview(cleaned);
-  if(typeof aiThaiDocumentPostProcess==='function')cleaned=aiThaiDocumentPostProcess(cleaned);
   AppState.lastText=cleaned;
   showOutput(cleaned);
   if(animate)setOutputSuccess();
