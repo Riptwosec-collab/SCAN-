@@ -76,6 +76,8 @@ function clearFileSuccess(infoId,nameId,defaultText){
 function clearOutput(){
   AppState.lastText='';
   AppState.rawText='';
+  AppState.ocrCandidates=[];
+  AppState.selectedCandidateIndex=0;
   AppState.fixedWords=[];
   AppState.confidence=null;
   AppState.batchResults=[];
@@ -95,6 +97,12 @@ function clearOutput(){
 
   const search=$('searchInput');
   if(search)search.value='';
+
+  const candidates=$('candidateBox');
+  if(candidates){
+    candidates.classList.add('hide');
+    candidates.innerHTML='';
+  }
 
   setProgress(0);
   setStatus('ล้างผลลัพธ์แล้ว','ok');

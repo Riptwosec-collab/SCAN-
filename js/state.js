@@ -12,6 +12,10 @@ window.AppState={
   batchResults:[],
   lastText:'',
   rawText:'',
+  ocrCandidates:[],
+  selectedCandidateIndex:0,
+  cleanupLevel:'normal',
+  ocrPreset:'auto',
   fixedWords:[],
   confidence:null,
   sourceName:''

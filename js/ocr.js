@@ -141,7 +141,23 @@ function scoreOcrText(text,confidence){
   score-=repeated*12;
   if(len<8)score-=40;
   if(thai===0&&eng>20&&networkTerms<2&&docTerms<2)score-=15;
+  score-=ocrRiskScore(value)*2.2;
   return score;
+}
+
+function ocrRiskScore(text){
+  const value=text||'';
+  const len=Math.max(1,value.replace(/\s/g,'').length);
+  const weird=(value.match(/[�ƟθϴƩΣÉÊÈË|{}<>~`_^«»]/g)||[]).length;
+  const floatingMarks=(value.match(/\s+[ะาำิีึืุูั็่้๊๋์]/g)||[]).length;
+  const splitThai=(value.match(/[เแโใไก-ฮ]\s+[ะาำิีึืุูั็่้๊๋์ก-ฮ]/g)||[]).length;
+  const repeated=(value.match(/(.)\1{5,}/g)||[]).length;
+  const junkLines=value.split('\n').filter(line=>{
+    const compact=line.replace(/\s/g,'');
+    return compact.length>12&&(/^(.)\1+$/.test(compact)||/^[^\wก-ฮ]+$/.test(compact));
+  }).length;
+  const symbolRatio=((value.match(/[|{}<>~`_^=+*\\/]/g)||[]).length/len)*100;
+  return Math.round((weird*3)+(floatingMarks*2)+(splitThai*1.4)+(repeated*4)+(junkLines*5)+symbolRatio);
 }
 
 function normalizeNetworkOcrText(text){
@@ -207,6 +223,34 @@ async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6',extr
 }
 
 function createImageOcrPasses(){
+  const preset=$('ocrPreset')?.value||AppState.ocrPreset||'auto';
+  const sets={
+    document:[
+      {name:'Document Balanced',mode:'pdf-like',psm:'6'},
+      {name:'Document Binary',mode:'doc-clean',psm:'6'},
+      {name:'Dense Paragraph',mode:'pdf-like',psm:'4'},
+      {name:'Gray Document',mode:'gray',psm:'6'}
+    ],
+    screenshot:[
+      {name:'IT Screenshot Detail',mode:'ui-detail',psm:'11'},
+      {name:'Screenshot Gray',mode:'gray',psm:'11'},
+      {name:'Screenshot Soft',mode:'soft',psm:'6'},
+      {name:'Network Document',mode:'pdf-like',psm:'6'}
+    ],
+    mobile:[
+      {name:'Mobile Soft',mode:'soft',psm:'6'},
+      {name:'Mobile Receipt',mode:'receipt',psm:'4'},
+      {name:'Mobile Gray',mode:'gray',psm:'11'},
+      {name:'Mobile Binary',mode:'doc-clean',psm:'6'}
+    ],
+    table:[
+      {name:'Table Dense',mode:'gray',psm:'6'},
+      {name:'Table Sparse',mode:'ui-detail',psm:'11'},
+      {name:'Table Clean',mode:'doc-clean',psm:'6'},
+      {name:'Table Soft',mode:'soft',psm:'4'}
+    ]
+  };
+  if(sets[preset])return sets[preset];
   return [
     {name:'PDF-like Document',mode:'pdf-like',psm:'6'},
     {name:'Document Clean',mode:'doc-clean',psm:'6'},
@@ -233,6 +277,7 @@ async function runOcr(canvas,start=0,end=100,profile='image'){
 
   const passes=profile==='pdf'?createPdfOcrPasses():createImageOcrPasses();
   let best={text:'',confidence:0,score:-Infinity,mode:''};
+  const candidates=[];
   for(let i=0;i<passes.length;i++){
     const pass=passes[i];
     const from=start+((end-start)*i/passes.length);
@@ -243,14 +288,22 @@ async function runOcr(canvas,start=0,end=100,profile='image'){
     const normalized=normalizeNetworkOcrText(result.text);
     const extracted=extractNetworkConnectionDetails(normalized);
     const candidateText=extracted||normalized||result.text;
+    const risk=ocrRiskScore(candidateText);
     const score=scoreOcrText(candidateText,result.confidence)+(extracted?120:0);
+    candidates.push({text:candidateText,confidence:result.confidence,score,mode:pass.name,risk,canvas:processed});
     if(score>best.score){
-      best={text:candidateText,confidence:result.confidence,score,mode:pass.name,canvas:processed};
+      best={text:candidateText,confidence:result.confidence,score,mode:pass.name,risk,canvas:processed};
     }
     if(extracted&&result.confidence>=55)break;
     if(result.confidence>=88&&score>230)break;
   }
 
+  AppState.ocrCandidates=candidates
+    .filter(item=>(item.text||'').trim())
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,4);
+  AppState.selectedCandidateIndex=0;
+  if(AppState.ocrCandidates.length)best=AppState.ocrCandidates[0];
   AppState.confidence=best.confidence;
   if(best.canvas){
     AppState.processedCanvas=best.canvas;

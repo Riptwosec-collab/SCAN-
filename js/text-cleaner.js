@@ -50,6 +50,8 @@ function applyKnownThaiWordJoin(text){
 
 function cleanText(text){
   resetFixReport();
+  const level=$('cleanupLevel')?.value||AppState.cleanupLevel||'normal';
+  AppState.cleanupLevel=level;
   let result=(text||'')
     .replace(/\r/g,'')
     .replace(/\$1\$2/g,'')
@@ -57,7 +59,13 @@ function cleanText(text){
     .replace(/\n{3,}/g,'\n\n')
     .trim();
 
+  if(level==='raw')return result;
   if($('removeNoise')?.checked)result=fixNoise(result);
+  if(level==='light'){
+    if($('itDictionary')?.checked)result=applyItDictionary(result);
+    result=applyCustomRules(result);
+    return result.split('\n').map(line=>line.trim()).filter(Boolean).join('\n');
+  }
   if($('itDictionary')?.checked)result=applyItDictionary(result);
   result=applyCustomRules(result);
   if($('cleanThai')?.checked)result=fixThaiWords(result);
@@ -197,7 +205,9 @@ function calculateConfidence(raw,cleaned){
   if(!rawLen)return 0;
   const weird=((raw||'').match(/[�ƟθϴƩΣÉÊÈË○●$ํ]/g)||[]).length;
   const fixCount=AppState.fixedWords.length;
-  let score=100-Math.min(35,weird*3)-Math.min(25,fixCount*.8);
+  const suspicious=typeof findSuspiciousOcrTokens==='function'?findSuspiciousOcrTokens(cleaned||''):[];
+  const suspiciousCount=suspicious.reduce((sum,item)=>sum+(item.count||0),0);
+  let score=100-Math.min(35,weird*3)-Math.min(25,fixCount*.8)-Math.min(18,suspiciousCount*1.4);
   if(cleaned.length<raw.length*.45)score-=10;
   return Math.max(35,Math.min(99,Math.round(score)));
 }

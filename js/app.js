@@ -62,6 +62,14 @@ function bindAppEvents(){
   $('clearSearchBtn').onclick=clearSearch;
 
   ['upscale','threshold'].forEach(id=>$(id).addEventListener('change',updateProcessedPreview));
+  $('ocrPreset')?.addEventListener('change',()=>{
+    AppState.ocrPreset=$('ocrPreset').value;
+    updateProcessedPreview();
+  });
+  $('cleanupLevel')?.addEventListener('change',()=>{
+    AppState.cleanupLevel=$('cleanupLevel').value;
+    if(AppState.rawText)showCleanedResult(AppState.rawText,true);
+  });
 }
 
 function switchTab(tab){
@@ -157,13 +165,53 @@ async function scanCurrent(){
 
 async function showCleanedResult(raw,animate=false){
   let cleaned=cleanText(raw);
-  if(typeof finalOcrReview==='function')cleaned=finalOcrReview(cleaned);
+  const level=$('cleanupLevel')?.value||AppState.cleanupLevel||'normal';
+  AppState.cleanupLevel=level;
+  if(level==='strict'&&typeof finalOcrReview==='function')cleaned=finalOcrReview(cleaned);
   AppState.lastText=cleaned;
   showOutput(cleaned);
   if(animate)setOutputSuccess();
+  renderOcrCandidates();
   if(typeof renderOcrReview==='function')renderOcrReview(raw,cleaned);
   else renderFixReport();
   const finalScore=AppState.confidence??calculateConfidence(raw,cleaned);
   AppState.confidence=finalScore;
   renderConfidence(finalScore);
+}
+
+function renderOcrCandidates(){
+  const box=$('candidateBox');
+  if(!box)return;
+  const items=AppState.ocrCandidates||[];
+  if(items.length<2){
+    box.classList.add('hide');
+    box.innerHTML='';
+    return;
+  }
+  box.classList.remove('hide');
+  box.innerHTML='<div class="candidate-title"><b>OCR Candidates</b><span>Choose another read if the top one looks off.</span></div>'+
+    items.slice(0,4).map((item,index)=>{
+      const active=index===AppState.selectedCandidateIndex?' active':'';
+      const confidence=item.confidence??'-';
+      const score=Math.round(item.score||0);
+      const risk=item.risk??0;
+      const sample=escapeHtml((item.text||'').replace(/\s+/g,' ').trim().slice(0,120));
+      return '<button class="candidate-card'+active+'" data-candidate="'+index+'" type="button">'+
+        '<span class="candidate-rank">#'+(index+1)+'</span>'+
+        '<span class="candidate-main"><b>'+escapeHtml(item.mode||'OCR')+'</b><small>confidence '+confidence+'% · score '+score+' · risk '+risk+'</small><em>'+sample+'</em></span>'+
+      '</button>';
+    }).join('');
+  box.querySelectorAll('[data-candidate]').forEach(button=>{
+    button.onclick=()=>selectOcrCandidate(Number(button.dataset.candidate));
+  });
+}
+
+function selectOcrCandidate(index){
+  const item=(AppState.ocrCandidates||[])[index];
+  if(!item)return;
+  AppState.selectedCandidateIndex=index;
+  AppState.rawText=item.text||'';
+  AppState.confidence=item.confidence;
+  showCleanedResult(AppState.rawText,true);
+  setStatus('Switched OCR candidate #'+(index+1)+' · '+(item.mode||'OCR'),'ok');
 }

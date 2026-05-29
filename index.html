@@ -205,6 +205,21 @@
             <select id="langSelect"><option value="tha+eng">ไทย + อังกฤษ</option><option value="tha">ไทย</option><option value="eng">อังกฤษ</option></select>
             <select id="modeSelect"><option value="plain">ข้อความล้วน</option><option value="clean" selected>ลบช่องว่าง/อักษรแปลก</option><option value="document">จัดเป็นเอกสาร</option><option value="table">จัดเป็นตาราง</option><option value="summary">สรุปพื้นฐาน</option></select>
           </div>
+          <div class="row compact-row precision-row">
+            <select id="ocrPreset">
+              <option value="auto" selected>Preset: Auto</option>
+              <option value="document">Preset: Document / PDF</option>
+              <option value="screenshot">Preset: IT Screenshot</option>
+              <option value="mobile">Preset: Mobile Photo</option>
+              <option value="table">Preset: Table / Form</option>
+            </select>
+            <select id="cleanupLevel">
+              <option value="raw">Cleanup: Raw OCR</option>
+              <option value="light">Cleanup: Light</option>
+              <option value="normal" selected>Cleanup: Balanced</option>
+              <option value="strict">Cleanup: Strict</option>
+            </select>
+          </div>
 
           <div class="checks compact-checks">
             <label><input id="removeNoise" type="checkbox" checked> ลบอักษรแปลก</label>
@@ -248,6 +263,7 @@
             <button class="btn small" id="searchBtn">Search</button>
             <button class="btn small" id="clearSearchBtn">Clear</button>
           </div>
+          <div id="candidateBox" class="candidate-box hide"></div>
           <div id="output" class="out output-only">ผลลัพธ์จะแสดงที่นี่</div>
           <details class="fix-box">
             <summary>Fixed Words</summary>
