@@ -82,6 +82,9 @@ function preprocessCanvas(source,mode='default'){
       d[i]=d[i+1]=d[i+2]=v;
     }else if(mode==='gray'){
       d[i]=d[i+1]=d[i+2]=v;
+    }else if(mode==='ui-detail'){
+      v=(v-150)*1.75+150;
+      d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v));
     }
   }
   ctx.putImageData(img,0,0);
@@ -93,31 +96,82 @@ function scoreOcrText(text,confidence){
   const thai=(value.match(/[ก-ฮะาำิีึืุูั็่้๊๋์]/g)||[]).length;
   const eng=(value.match(/[A-Za-z]/g)||[]).length;
   const nums=(value.match(/[0-9]/g)||[]).length;
-  const weird=(value.match(/[�ƟθϴƩΣÉÊÈË|{}<>~`_^]/g)||[]).length;
+  const ipLike=(value.match(/\b\d{1,3}[\.\s]\d{1,3}[\.\s]\d{1,3}[\.\s]\d{1,3}\b/g)||[]).length;
+  const networkTerms=(value.match(/DHCP|IPv4|Subnet|Mask|Gateway|DNS|Ethernet|Wireless|Network|Connection|Details|Intel/gi)||[]).length;
+  const weird=(value.match(/[�ƟθϴƩΣÉÊÈË|{}<>~`_^«»]/g)||[]).length;
   const shortNoise=(value.match(/\b[a-zA-Z]{1,2}\b/g)||[]).length;
   const repeated=(value.match(/(.)\1{4,}/g)||[]).length;
   const len=value.replace(/\s/g,'').length;
   let score=0;
   score+=Math.min(70,thai*1.5);
-  score+=Math.min(20,eng*.5);
-  score+=Math.min(10,nums*.25);
+  score+=Math.min(25,eng*.55);
+  score+=Math.min(15,nums*.35);
+  score+=ipLike*28;
+  score+=networkTerms*18;
   score+=confidence?confidence*.8:0;
-  score-=weird*12;
-  score-=shortNoise*1.5;
+  score-=weird*13;
+  score-=shortNoise*1.2;
   score-=repeated*8;
   if(len<8)score-=40;
-  if(thai===0&&eng>20)score-=15;
+  if(thai===0&&eng>20&&networkTerms<2)score-=15;
   return score;
 }
 
-async function recognizeOnce(canvas,progressStart,progressEnd,label){
+function normalizeNetworkOcrText(text){
+  let out=text||'';
+  out=out
+    .replace(/tPv4|IPV4|lPv4|1Pv4|IPvA/g,'IPv4')
+    .replace(/1กหร|Subnet\s+Mas[kK]?|รบnet\s+Mask/gi,'Subnet Mask')
+    .replace(/DHCP\s+Enabled\s+Yes/gi,'DHCP Enabled: Yes')
+    .replace(/DHCP\s+Enabled\s+No/gi,'DHCP Enabled: No')
+    .replace(/Lease\s+Obtained/gi,'Lease Obtained:')
+    .replace(/Lease\s+Expires/gi,'Lease Expires:')
+    .replace(/Default\s+Gateway|เศห4\s*บิต์ธนพ!\s*gateway|gateway/gi,'Default Gateway:')
+    .replace(/Network\s+Connection\s+Details/gi,'Network Connection Details')
+    .replace(/Intel\(R\)\s+Wireless\s*-?\s*AC\s*9260/gi,'Intel(R) Wireless-AC 9260');
+
+  out=out.replace(/(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})/g,'$1.$2.$3.$4');
+  out=out.replace(/\b(\d{1,3})\s*\.\s*(\d{1,3})\s*\.\s*(\d{1,3})\s*\.\s*(\d{1,3})\b/g,'$1.$2.$3.$4');
+  out=out.replace(/\s{2,}/g,' ').replace(/\n\s+/g,'\n').trim();
+  return out;
+}
+
+function extractNetworkConnectionDetails(text){
+  const src=normalizeNetworkOcrText(text||'');
+  const hasNetwork=/DHCP|IPv4|Subnet Mask|Gateway|Wireless|Ethernet|Network Connection Details|Intel\(R\)/i.test(src);
+  if(!hasNetwork)return '';
+
+  const lines=[];
+  const add=(label,value)=>{if(value&&!lines.some(x=>x.startsWith(label+':')))lines.push(label+': '+value.trim())};
+  const ip=src.match(/(?:IPv4\s+Address|Address)[:\s]+(\d{1,3}(?:\.\d{1,3}){3})/i)||src.match(/\b(10\d?\.\d{1,3}\.\d{1,3}\.\d{1,3}|100\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})\b/);
+  const mask=src.match(/(?:Subnet\s+Mask)[:\s]+(\d{1,3}(?:\.\d{1,3}){3})/i)||src.match(/\b255\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/);
+  const gw=src.match(/(?:Default\s+Gateway)[:\s]+(\d{1,3}(?:\.\d{1,3}){3})/i);
+  const adapter=src.match(/Intel\(R\)\s+Wireless-AC\s+9260[^\n]*/i)||src.match(/(?:Wireless|Ethernet)[^\n]{0,70}/i);
+  const dhcp=src.match(/DHCP\s+Enabled[:\s]+(Yes|No)/i)||src.match(/DHCP[^\n]{0,24}(Yes|No)/i);
+  const obtained=src.match(/Lease\s+Obtained:?[\s]+([^\n|]{6,60})/i);
+  const expires=src.match(/Lease\s+Expires:?[\s]+([^\n|]{6,60})/i);
+
+  lines.push('Network Connection Details');
+  if(adapter)add('Adapter',adapter[0]);
+  if(dhcp)add('DHCP Enabled',dhcp[1]);
+  if(ip)add('IPv4 Address',ip[1]);
+  if(mask)add('Subnet Mask',mask[1]||mask[0]);
+  if(gw)add('Default Gateway',gw[1]);
+  if(obtained)add('Lease Obtained',obtained[1]);
+  if(expires)add('Lease Expires',expires[1]);
+
+  if(lines.length<=1)return '';
+  return lines.join('\n')+'\n\n--- Raw OCR ---\n'+src;
+}
+
+async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6'){
   const lang=$('langSelect')?.value||'tha+eng';
   const result=await Tesseract.recognize(canvas,lang,{
     logger:m=>{
       if(m.progress!==undefined)setProgress(progressStart+(m.progress*(progressEnd-progressStart)));
       if(m.status)setStatus(label+' · '+m.status+' '+Math.round((m.progress||0)*100)+'%');
     },
-    tessedit_pageseg_mode:'6',
+    tessedit_pageseg_mode:psm,
     preserve_interword_spaces:'1'
   });
   const confidence=extractAverageConfidence(result);
@@ -128,10 +182,11 @@ async function runOcr(canvas,start=0,end=100){
   if(!window.Tesseract)throw new Error('โหลด Tesseract.js ไม่สำเร็จ กรุณาต่ออินเทอร์เน็ต');
 
   const passes=[
-    {name:'Auto Sharp',mode:'binary'},
-    {name:'Soft Contrast',mode:'soft'},
-    {name:'Gray Detail',mode:'gray'},
-    {name:'Invert Check',mode:'invert'}
+    {name:'UI Detail',mode:'ui-detail',psm:'11'},
+    {name:'Auto Sharp',mode:'binary',psm:'6'},
+    {name:'Soft Contrast',mode:'soft',psm:'6'},
+    {name:'Gray Detail',mode:'gray',psm:'11'},
+    {name:'Invert Check',mode:'invert',psm:'11'}
   ];
 
   let best={text:'',confidence:0,score:-Infinity,mode:''};
@@ -141,13 +196,16 @@ async function runOcr(canvas,start=0,end=100){
     const to=start+((end-start)*(i+1)/passes.length);
     setStatus('กำลังตรวจ OCR หลายโหมด: '+pass.name+' ('+(i+1)+'/'+passes.length+')');
     const processed=preprocessCanvas(canvas,pass.mode);
-    const result=await recognizeOnce(processed,from,to,pass.name);
-    const score=scoreOcrText(result.text,result.confidence);
+    const result=await recognizeOnce(processed,from,to,pass.name,pass.psm);
+    const normalized=normalizeNetworkOcrText(result.text);
+    const extracted=extractNetworkConnectionDetails(normalized);
+    const candidateText=extracted||normalized||result.text;
+    const score=scoreOcrText(candidateText,result.confidence)+(extracted?120:0);
     if(score>best.score){
-      best={...result,score,mode:pass.name,canvas:processed};
+      best={text:candidateText,confidence:result.confidence,score,mode:pass.name,canvas:processed};
     }
-
-    if(result.confidence>=83&&score>120)break;
+    if(extracted&&result.confidence>=55)break;
+    if(result.confidence>=83&&score>160)break;
   }
 
   AppState.confidence=best.confidence;
