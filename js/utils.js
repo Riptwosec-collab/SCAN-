@@ -1,4 +1,5 @@
 const $=id=>document.getElementById(id);
+let outputSuccessTimer=null;
 
 function setStatus(message,type=''){
   const el=$('status');
@@ -20,22 +21,32 @@ function escapeHtml(text){
 function setOutputProcessing(){
   const output=$('output');
   if(!output)return;
-  output.classList.remove('output-success','output-done-pulse');
+  if(outputSuccessTimer){clearTimeout(outputSuccessTimer);outputSuccessTimer=null;}
+  output.classList.remove('output-success','output-done-pulse','output-success-hide');
   output.classList.add('output-processing');
 }
 
 function setOutputSuccess(){
   const output=$('output');
   if(!output)return;
-  output.classList.remove('output-processing');
+  if(outputSuccessTimer){clearTimeout(outputSuccessTimer);outputSuccessTimer=null;}
+  output.classList.remove('output-processing','output-success-hide');
   output.classList.add('output-success','output-done-pulse');
-  setTimeout(()=>output.classList.remove('output-done-pulse'),900);
+  setTimeout(()=>output.classList.remove('output-done-pulse'),800);
+  outputSuccessTimer=setTimeout(()=>{
+    output.classList.add('output-success-hide');
+    setTimeout(()=>{
+      output.classList.remove('output-success','output-success-hide','output-done-pulse');
+      outputSuccessTimer=null;
+    },260);
+  },2000);
 }
 
 function clearOutputState(){
   const output=$('output');
   if(!output)return;
-  output.classList.remove('output-processing','output-success','output-done-pulse');
+  if(outputSuccessTimer){clearTimeout(outputSuccessTimer);outputSuccessTimer=null;}
+  output.classList.remove('output-processing','output-success','output-done-pulse','output-success-hide');
 }
 
 function showOutput(text){
