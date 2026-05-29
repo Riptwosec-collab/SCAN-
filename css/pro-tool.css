@@ -6,6 +6,9 @@
   --accent:#a7f23b;
   --accent-soft:rgba(167,242,59,.12);
   --blue-soft:rgba(96,165,250,.14);
+  --rim-a:rgba(167,242,59,.58);
+  --rim-b:rgba(96,165,250,.42);
+  --rim-c:rgba(255,255,255,.18);
   --radius:10px;
 }
 
@@ -40,6 +43,78 @@ body:after,
   background:var(--card)!important;
   box-shadow:0 1px 0 rgba(255,255,255,.04),0 18px 44px rgba(0,0,0,.20)!important;
   backdrop-filter:none!important;
+  position:relative;
+  overflow:hidden;
+}
+
+.site-header:after,
+.hero-copy:after,
+.clean-card:after,
+.privacy-note:after,
+.tool-shell:after,
+.panel:after,
+.feature-showcase:after,
+.feature-card:after,
+.candidate-card:after{
+  content:'';
+  display:block!important;
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  padding:1px;
+  pointer-events:none;
+  background:
+    linear-gradient(135deg,var(--rim-a),transparent 24%,transparent 64%,var(--rim-b)),
+    linear-gradient(90deg,transparent,var(--rim-c),transparent);
+  opacity:.34;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude;
+  transition:opacity .22s ease,filter .22s ease;
+}
+
+.site-header:before,
+.hero-copy:before,
+.clean-card:before,
+.privacy-note:before,
+.tool-shell:before,
+.panel:before,
+.feature-showcase:before{
+  content:'';
+  display:block!important;
+  position:absolute;
+  inset:-1px;
+  border-radius:inherit;
+  pointer-events:none;
+  background:linear-gradient(115deg,transparent 0 18%,rgba(167,242,59,.10) 34%,transparent 48%,rgba(96,165,250,.08) 70%,transparent 100%);
+  opacity:.22;
+  transform:translateX(-18%);
+  transition:opacity .25s ease,transform .45s ease;
+}
+
+.site-header:hover:after,
+.hero-copy:hover:after,
+.clean-card:hover:after,
+.privacy-note:hover:after,
+.tool-shell:hover:after,
+.panel:hover:after,
+.feature-showcase:hover:after,
+.feature-card:hover:after,
+.candidate-card:hover:after{
+  opacity:.72;
+  filter:drop-shadow(0 0 10px rgba(167,242,59,.20));
+}
+
+.site-header:hover:before,
+.hero-copy:hover:before,
+.clean-card:hover:before,
+.privacy-note:hover:before,
+.tool-shell:hover:before,
+.panel:hover:before,
+.feature-showcase:hover:before{
+  opacity:.38;
+  transform:translateX(0);
 }
 
 .site-header{
@@ -256,6 +331,8 @@ input:hover{
   padding:10px;
   cursor:pointer;
   transition:border-color .16s ease,background .16s ease,transform .16s ease;
+  position:relative;
+  overflow:hidden;
 }
 
 .candidate-card:hover{
@@ -267,6 +344,11 @@ input:hover{
 .candidate-card.active{
   border-color:rgba(167,242,59,.70);
   background:linear-gradient(180deg,rgba(167,242,59,.15),rgba(96,165,250,.08));
+  box-shadow:0 0 0 1px rgba(167,242,59,.08),0 12px 28px rgba(0,0,0,.18);
+}
+
+.candidate-card.active:after{
+  opacity:.88;
 }
 
 .candidate-rank{
