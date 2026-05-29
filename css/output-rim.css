@@ -6,23 +6,35 @@
   right:-2px;
   top:-2px;
   bottom:-2px;
-  border-radius:20px;
+  border-radius:inherit;
   padding:2px;
-  background:linear-gradient(90deg,rgba(187,247,208,0),rgba(187,247,208,.18),#bbf7d0,#86efac,#4ade80,rgba(134,239,172,.20),rgba(187,247,208,0));
-  background-size:240% 100%;
-  animation:outputRimLightSmooth 1.9s ease-in-out infinite;
+  background:
+    linear-gradient(90deg,rgba(220,252,231,0),rgba(220,252,231,.22),#dcfce7,#bbf7d0,#86efac,rgba(187,247,208,.24),rgba(220,252,231,0)),
+    radial-gradient(circle at 50% 50%,rgba(220,252,231,.16),transparent 62%);
+  background-size:260% 100%,100% 100%;
+  animation:outputRimLightSmooth 3.2s cubic-bezier(.45,0,.25,1) infinite;
   z-index:-1;
-  filter:drop-shadow(0 0 8px rgba(134,239,172,.32));
+  filter:drop-shadow(0 0 10px rgba(187,247,208,.34)) drop-shadow(0 0 18px rgba(134,239,172,.12));
   opacity:1;
   transform:scale(1);
-  transition:opacity .42s ease,transform .58s ease;
+  transition:opacity .55s ease,transform .7s ease,filter .55s ease;
+}
+.out.output-success{
+  border-color:rgba(187,247,208,.58)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    inset 0 0 34px rgba(187,247,208,.06),
+    0 20px 52px rgba(0,0,0,.26),
+    0 0 28px rgba(187,247,208,.13),
+    0 0 0 1px rgba(187,247,208,.12)!important;
 }
 .out.output-success-hide:before{
   opacity:0;
-  transform:scale(.84);
+  transform:scale(.92);
   animation:none;
 }
 @keyframes outputRimLightSmooth{
-  0%{background-position:240% 0}
-  100%{background-position:-240% 0}
+  0%{background-position:260% 0,50% 50%;opacity:.74}
+  45%{opacity:1}
+  100%{background-position:-260% 0,50% 50%;opacity:.74}
 }
