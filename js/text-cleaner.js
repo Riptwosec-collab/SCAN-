@@ -2,12 +2,21 @@ function resetFixReport(){
   AppState.fixedWords=[];
 }
 
+function expandReplacement(replacement,args){
+  return String(replacement).replace(/\$(\d+)/g,(full,n)=>{
+    const index=Number(n);
+    return args[index]!==undefined?args[index]:full;
+  });
+}
+
 function replaceTrack(text,pattern,replacement){
   let out=text;
   if(pattern instanceof RegExp){
-    out=out.replace(pattern,(match)=>{
-      if(match!==replacement)AppState.fixedWords.push({from:match,to:replacement});
-      return replacement;
+    out=out.replace(pattern,(...args)=>{
+      const match=args[0];
+      const fixed=typeof replacement==='function'?replacement(...args):expandReplacement(replacement,args);
+      if(match!==fixed)AppState.fixedWords.push({from:match,to:fixed});
+      return fixed;
     });
   }else{
     const from=String(pattern);
@@ -25,6 +34,7 @@ function cleanText(text){
   resetFixReport();
   let result=(text||'')
     .replace(/\r/g,'')
+    .replace(/\$1\$2/g,'')
     .replace(/[ \t]+/g,' ')
     .replace(/\n{3,}/g,'\n\n')
     .trim();
@@ -33,6 +43,7 @@ function cleanText(text){
   if($('itDictionary')?.checked)result=applyItDictionary(result);
   result=applyCustomRules(result);
   if($('cleanThai')?.checked)result=fixThaiWords(result);
+  result=postCleanThai(result);
 
   const mode=$('modeSelect')?.value||'clean';
   if(mode==='plain')return result;
@@ -45,8 +56,8 @@ function cleanText(text){
 function fixNoise(text){
   let out=text;
   const rules=[
-    [/[○●◦▪▫◆◇□■�]/g,''],[/[Ɵθϴ]/g,'ti'],[/[ƩΣ]/g,'tt'],[/ที\s*[ÉE]/g,'ที่'],[/เกี\s*[ÉE]\s*ยว/g,'เกี่ยว'],
-    [/ขึ\s*น/g,'ขึ้น'],[/ขั\s*น/g,'ขั้น']
+    [/[○●◦▪▫◆◇□■�💀]/g,''],[/[Ɵθϴ]/g,'ti'],[/[ƩΣ]/g,'tt'],[/ที\s*[ÉE]/g,'ที่'],[/เกี\s*[ÉE]\s*ยว/g,'เกี่ยว'],
+    [/ขึ\s*น/g,'ขึ้น'],[/ขั\s*น/g,'ขั้น'],[/ป\s*ด/g,'ปิด'],[/ว่\s*า/g,'ว่า'],[/ประ\s*เมิ\s*น/g,'ประเมิน'],[/อุ\s*ปกร\s*ณ์/g,'อุปกรณ์']
   ];
   for(const [pattern,replacement] of rules)out=replaceTrack(out,pattern,replacement);
   return out;
@@ -59,13 +70,35 @@ function fixThaiWords(text){
     ['ข้ อมูล','ข้อมูล'],['ตั วอักษร','ตัวอักษร'],['ช่ องว่าง','ช่องว่าง'],['ช่องว่า','ช่องว่าง'],
     ['ขั นตอน','ขั้นตอน'],['ขั น','ขั้น'],['เอก สาร','เอกสาร'],['หเอกสาร','เอกสาร'],
     ['เจอ บ่อย','เจอบ่อย'],['อาการที่ เจอบ่อย','อาการที่เจอบ่อย'],['เข้ใจ','เข้าใจ'],['เข้ ใจ','เข้าใจ'],
-    ['ลค ทดสอบ','ลิงก์ทดสอบ'],['ฟังก์ ชัน','ฟังก์ชัน'],['บรร ทัด','บรรทัด'],['หัว ข้อ','หัวข้อ']
+    ['ลค ทดสอบ','ลิงก์ทดสอบ'],['ลค','ลูกค้า'],['ฟังก์ ชัน','ฟังก์ชัน'],['บรร ทัด','บรรทัด'],['หัว ข้อ','หัวข้อ'],
+    ['ปิด Case','ปิด Case'],['ป ด Case','ปิด Case'],['แจ้ ง','แจ้ง'],['แจ้ง PM','แจ้ง PM'],['แจ้ง NOC','แจ้ง NOC'],
+    ['ยื น ยั น','ยืนยัน'],['ได้รับการ ยืนยัน','ได้รับการยืนยัน'],['จัด ส่ง','จัดส่ง'],['ทดแทน','ทดแทน'],['Close Ticket','Close Ticket'],
+    ['ระ บุ','ระบุ'],['อาการ เช่น','อาการ เช่น'],['ใช้งาน','ใช้งาน'],['ประเมิน','ประเมิน'],['Hardware เสีย','Hardware เสีย']
   ];
   for(const [from,to] of replacements)out=replaceTrack(out,from,to);
   out=replaceTrack(out,/([เแโใไ])\s+([ก-ฮ])/g,'$1$2');
   out=replaceTrack(out,/([ก-ฮ])\s+([ะาำิีึืุูั็่้๊๋์])/g,'$1$2');
-  out=replaceTrack(out,/([ก-ฮ])\s+([ก-ฮ])(?=(?:ว่า|ที่|แล้ว|อยู่|ด้วย|จาก|ให้|ของ|การ|งาน|ระบบ|เครื่อง|เอกสาร|ขั้นตอน|บ่อย|ข้อมูล|ข้อความ))/g,'$1$2');
+  out=replaceTrack(out,/([ก-ฮ])\s+([ก-ฮ])(?=(?:ว่า|ที่|แล้ว|อยู่|ด้วย|จาก|ให้|ของ|การ|งาน|ระบบ|เครื่อง|เอกสาร|ขั้นตอน|บ่อย|ข้อมูล|ข้อความ|ลิงก์|ประเมิน|อุปกรณ์|ทดแทน))/g,'$1$2');
   return out;
+}
+
+function postCleanThai(text){
+  return (text||'')
+    .replace(/\$1\$2/g,'')
+    .replace(/\s+([ะาำิีึืุูั็่้๊๋์])/g,'$1')
+    .replace(/([เแโใไ])\s+/g,'$1')
+    .replace(/แจ้ง\s+/g,'แจ้ง ')
+    .replace(/เพื่อ\s+/g,'เพื่อ ')
+    .replace(/ได้รับการ\s+ยืนยัน/g,'ได้รับการยืนยัน')
+    .replace(/จัด\s*ส่ง/g,'จัดส่ง')
+    .replace(/อุปกร\s*ณ์/g,'อุปกรณ์')
+    .replace(/ประเมิ\s*น/g,'ประเมิน')
+    .replace(/ใช้งา\s*น/g,'ใช้งาน')
+    .replace(/ลิงก์ทดสอบ\s*ใช้งาน/g,'ลิงก์ทดสอบใช้งาน')
+    .replace(/ATA\s+Hardware\s+เสีย/g,'ATA Hardware เสีย')
+    .replace(/\s{2,}/g,' ')
+    .replace(/\n\s+/g,'\n')
+    .trim();
 }
 
 function toDocument(text){
@@ -94,7 +127,7 @@ function renderFixReport(){
 function calculateConfidence(raw,cleaned){
   const rawLen=(raw||'').replace(/\s/g,'').length;
   if(!rawLen)return 0;
-  const weird=((raw||'').match(/[�ƟθϴƩΣÉÊ○●]/g)||[]).length;
+  const weird=((raw||'').match(/[�ƟθϴƩΣÉÊ○●$]/g)||[]).length;
   const fixCount=AppState.fixedWords.length;
   let score=100-Math.min(35,weird*3)-Math.min(25,fixCount*.8);
   if(cleaned.length<raw.length*.45)score-=10;
