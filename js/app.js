@@ -127,10 +127,17 @@ async function handlePdfFile(file){
   }
 }
 
+function scrollToOutputBox(){
+  const panel=document.querySelector('.output-panel')||$('output');
+  if(panel)panel.scrollIntoView(true);
+}
+
 async function scanCurrent(){
   try{
     setProgress(0);
     setOutputProcessing();
+    setStatus('กำลังแปลง... กำลังพาไปที่กล่อง Output','ok');
+    scrollToOutputBox();
     let raw='';
     if(AppState.tab==='img')raw=await scanImage();
     else if(AppState.tab==='pdf')raw=await scanPdf();
@@ -140,6 +147,7 @@ async function scanCurrent(){
     showCleanedResult(raw,true);
     setProgress(100);
     setStatus('แปลงสำเร็จ · ตรวจละเอียดก่อนแสดงผลแล้ว','ok');
+    setTimeout(scrollToOutputBox,120);
   }catch(error){
     clearOutputState();
     setStatus('แปลงไม่ได้: '+error.message,'err');
