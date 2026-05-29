@@ -23,6 +23,30 @@ function showOutput(text){
   if(AppState.lastText)saveHistory(AppState.lastText);
 }
 
+function setFileSuccess(infoId,nameId,fileOrText,mode='single'){
+  const info=$(infoId);
+  const name=$(nameId);
+  if(!info||!name)return;
+  const label=typeof fileOrText==='string'?fileOrText:(fileOrText?.name||'เลือกไฟล์แล้ว');
+  info.classList.remove('hide','file-pending','file-error');
+  info.classList.add('file-success');
+  name.innerHTML='<span class="file-check">✓</span><span class="file-main">อัปโหลดสำเร็จ</span><span class="file-name">'+escapeHtml(label)+'</span>';
+  if(mode==='batch')name.innerHTML='<span class="file-check">✓</span><span class="file-main">อัปโหลดสำเร็จ</span><span class="file-name">'+escapeHtml(label)+'</span>';
+}
+
+function clearFileSuccess(infoId,nameId,defaultText){
+  const info=$(infoId);
+  const name=$(nameId);
+  if(info)info.classList.remove('file-success','file-pending','file-error');
+  if(name)name.textContent=defaultText;
+}
+
+function showOutput(text){
+  AppState.lastText=(text||'').trim();
+  $('output').textContent=AppState.lastText||'ไม่พบข้อความ';
+  if(AppState.lastText)saveHistory(AppState.lastText);
+}
+
 function clearOutput(){
   AppState.lastText='';
   AppState.rawText='';
@@ -72,9 +96,8 @@ function removeImageFile(){
   clearCanvas('imgPreview');
   clearCanvas('processedPreview');
   const info=$('imgFileInfo');
-  if(info)info.classList.add('hide');
-  const name=$('imgFileName');
-  if(name)name.textContent='ยังไม่ได้เลือกไฟล์';
+  if(info){info.classList.remove('file-success','file-pending','file-error');info.classList.add('hide');}
+  clearFileSuccess('imgFileInfo','imgFileName','ยังไม่ได้เลือกไฟล์');
   const cropBtn=$('enableCropBtn');
   if(cropBtn)cropBtn.textContent='เปิด Crop';
   setStatus('ยกเลิกไฟล์รูปภาพแล้ว สามารถอัปโหลดใหม่ได้','ok');
@@ -92,9 +115,8 @@ function removePdfFile(){
   const thumbs=$('pdfThumbs');
   if(thumbs)thumbs.innerHTML='';
   const info=$('pdfFileInfo');
-  if(info)info.classList.add('hide');
-  const name=$('pdfFileName');
-  if(name)name.textContent='ยังไม่ได้เลือกไฟล์';
+  if(info){info.classList.remove('file-success','file-pending','file-error');info.classList.add('hide');}
+  clearFileSuccess('pdfFileInfo','pdfFileName','ยังไม่ได้เลือกไฟล์');
   $('pageFrom').value=1;
   $('pageTo').value=1;
   setStatus('ยกเลิกไฟล์ PDF แล้ว สามารถอัปโหลดใหม่ได้','ok');
@@ -110,9 +132,8 @@ function removeBatchFiles(){
   const list=$('batchList');
   if(list)list.innerHTML='';
   const info=$('batchFileInfo');
-  if(info)info.classList.add('hide');
-  const name=$('batchFileName');
-  if(name)name.textContent='ยังไม่ได้เลือกไฟล์';
+  if(info){info.classList.remove('file-success','file-pending','file-error');info.classList.add('hide');}
+  clearFileSuccess('batchFileInfo','batchFileName','ยังไม่ได้เลือกไฟล์');
   setStatus('ยกเลิกไฟล์ Batch แล้ว สามารถอัปโหลดใหม่ได้','ok');
 }
 
