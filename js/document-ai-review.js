@@ -1,7 +1,12 @@
 // RIPTWOSEC.SCAN document OCR post-processor
-// Rule-based AI helper for Thai document OCR cleanup in browser.
+// Rule-based AI helper for Thai document, IT ticket, and email OCR cleanup in browser.
 function aiThaiDocumentPostProcess(text){
   let out = text || '';
+
+  out = removeItEmailGarbage(out);
+  out = normalizeItEmailHeader(out);
+  out = normalizeDomainAndEmail(out);
+
   const rules = [
     ['ใบกากับภาษี','ใบกำกับภาษี'],['ใบกาํ กับภาษี','ใบกำกับภาษี'],['ใบกำกับ ภาษี','ใบกำกับภาษี'],
     ['หนังสือมอมอำนาจ','หนังสือมอบอำนาจ'],['หนงสือมอบอานาจ','หนังสือมอบอำนาจ'],['หนังสอ','หนังสือ'],['หนงสือ','หนังสือ'],
@@ -13,17 +18,31 @@ function aiThaiDocumentPostProcess(text){
     ['สิงที่ส่งมาด้วย','สิ่งที่ส่งมาด้วย'],['เพือทราบ','เพื่อทราบ'],['ไดรับ','ได้รับ'],
     ['ยอดรวมทงหมด','ยอดรวมทั้งหมด'],['ยอดรวมทังสิ้น','ยอดรวมทั้งสิ้น'],['ยอดรวม ท้งหมด','ยอดรวมทั้งหมด'],
     ['ข้อมล','ข้อมูล'],['ขอสวนสิทธิ','ขอสงวนสิทธิ์'],['สวนสิทธิ','สงวนสิทธิ์'],['กาไร','กำไร'],
-    ['รือซีเมลี่','หรืออีเมลที่'],['๐อทไชอ๐18','ติดต่อ'],['ผู่','ผู้']
+    ['ธีเมล','อีเมล'],['เหมศ','โหมด'],['เหมเศิ','โหมด'],['หรัต','หรือ'],['ชีกครัง','อีกครั้ง'],['อีกครัง','อีกครั้ง'],
+    ['รบกรน','รบกวน'],['ทตสอบ','ทดสอบ'],['ทาการ','ทำการ'],['ตรวจสขบ','ตรวจสอบ'],['ตรวจสรบ','ตรวจสอบ'],
+    ['ขัตมูลเพ็มเติม','ข้อมูลเพิ่มเติม'],['ขอมูลเพิ่มเติม','ข้อมูลเพิ่มเติม'],['ทุกขั้น','ทุกวัน'],['ตลดต','ตลอด'],['ซั้วโมง','ชั่วโมง'],
+    ['ขตแสดงตวามนับถืต','ขอแสดงความนับถือ'],['เจลาๆ','เวลา'],['คสุณ','คุณ'],
+    ['เสืตกพตรป','เลือกรูป'],['เลือกรูปภาพ','เลือกรูปภาพ'],['เลือกเมนู','เลือกเมนู'],
+    ['Ticket Mo.','Ticket No.'],['Ticket No,','Ticket No.'],['Ticket N0.','Ticket No.'],
+    ['รือซีเมลี่','หรืออีเมลที่'],['๐อทไชอ๐18','ติดต่อ'],['0อทไชอ018','ติดต่อ'],['อทไชอ','ติดต่อ'],['ผู่','ผู้']
   ];
   for(const pair of rules){
     out = out.split(pair[0]).join(pair[1]);
   }
-  const docWords = ['บริษัท','จำกัด','ใบกำกับภาษี','หนังสือมอบอำนาจ','เลขประจำตัว','จำนวนเงิน','ใบเสร็จ','สัญญา','อนุมัติ','ใบสำคัญจ่าย','ราคาสุทธิ','ผู้รับเงิน','ผู้ว่าจ้าง','สิ่งที่ส่งมาด้วย','เพื่อทราบ','ได้รับ','ยอดรวมทั้งหมด','ยอดรวมทั้งสิ้น','สงวนสิทธิ์','ข้อมูล','กำไร','บาทถ้วน'];
+
+  out = repairItTicketNumbers(out);
+  out = repairThaiVowelOrder(out);
+
+  const docWords = [
+    'บริษัท','จำกัด','ใบกำกับภาษี','หนังสือมอบอำนาจ','เลขประจำตัว','จำนวนเงิน','ใบเสร็จ','สัญญา','อนุมัติ','ใบสำคัญจ่าย','ราคาสุทธิ','ผู้รับเงิน','ผู้ว่าจ้าง','สิ่งที่ส่งมาด้วย','เพื่อทราบ','ได้รับ','ยอดรวมทั้งหมด','ยอดรวมทั้งสิ้น','สงวนสิทธิ์','ข้อมูล','ข้อมูลเพิ่มเติม','กำไร','บาทถ้วน',
+    'อีเมล','โหมด','Incognito','รบกวน','ทดสอบ','ทำการ','ตรวจสอบ','ทุกวัน','ตลอด','ชั่วโมง','ขอแสดงความนับถือ','เวลา','คุณ','เลือกรูป','เลือกเมนู','ติดต่อ','Ticket No.','จาก','ถึง','วันที่','เรื่อง'
+  ];
   if(typeof spacedWordRegex === 'function' && typeof replaceTrack === 'function'){
     for(const word of docWords.sort((a,b)=>b.length-a.length)){
       out = replaceTrack(out, spacedWordRegex(word), word);
     }
   }
+
   out = out
     .replace(/ํ(?=า)/g,'')
     .replace(/([เแโใไ])\s+([ก-ฮ])/g,'$1$2')
@@ -32,8 +51,64 @@ function aiThaiDocumentPostProcess(text){
     .replace(/บ\s*S\s*ิ\s*ษัท/g,'บริษัท')
     .replace(/จ\s*ำ\s*ก\s*ั\s*ด/g,'จำกัด')
     .replace(/บ\s*า\s*ท/g,'บาท')
+    .replace(/\|+/g,'')
     .replace(/\s{2,}/g,' ')
     .replace(/\n\s+/g,'\n')
     .trim();
   return out;
+}
+
+function removeItEmailGarbage(text){
+  return String(text||'')
+    .split('\n')
+    .map(line=>line.trim())
+    .filter(line=>{
+      if(!line)return false;
+      const compact=line.replace(/\s/g,'');
+      if(compact.length<=10 && /^[;:=\-_=~`!|Il0oO\.\[\]{}()<>\/\\]+$/.test(compact))return false;
+      if(/^[;:\-=\s\dA-Za-zIl|!\.\[\]{}()<>\/\\]+$/.test(line) && compact.length<14 && !/\d{2,}/.test(compact))return false;
+      if(/PERE|F——|oo\s*PERE|ซ่\s*Be/i.test(line))return false;
+      return true;
+    })
+    .join('\n');
+}
+
+function normalizeItEmailHeader(text){
+  return String(text||'')
+    .replace(/^\s*(Audi|Date|Dale|วันที่|วนที่)\s*[:：]?/gim,'วันที่:')
+    .replace(/^\s*(From|Fron|จาก)\s*[:：]?/gim,'จาก:')
+    .replace(/^\s*(To|T0|ถึง)\s*[:：]?/gim,'ถึง:')
+    .replace(/^\s*(Subject|Subj|เรื่อง|เรือง)\s*[:：]?/gim,'เรื่อง:')
+    .replace(/Ticket\s*(Mo|N0|No)\s*[.:]?/gi,'Ticket No.');
+}
+
+function normalizeDomainAndEmail(text){
+  let out = String(text||'');
+  out = out.replace(/([A-Za-z0-9_-]+)\s*[,，]\s*([A-Za-z]{2,})(?=\b|>)/g,'$1.$2');
+  out = out.replace(/([A-Za-z0-9_-]+)\s*\.\s*([A-Za-z]{2,})(?=\b|>)/g,'$1.$2');
+  out = out.replace(/workd\s*[,，.]\s*go\s*[,，.]?\s*th/gi,'workd.go.th');
+  out = out.replace(/networkdrd\s*[,，.]\s*oo\s*[,，.]?\s*th/gi,'network@dga.or.th');
+  out = out.replace(/network\s*@\s*dga\s*\.\s*or\s*\.\s*th/gi,'network@dga.or.th');
+  out = out.replace(/<\s*([^<>\s]+)\s*>/g,'<$1>');
+  return out;
+}
+
+function repairItTicketNumbers(text){
+  return String(text||'')
+    .replace(/ฟี\s*-\s*(\d+)/g,'9-$1')
+    .replace(/Ticket No\.\s*([๐-๙0-9\-]+)/g,(m,id)=>'Ticket No. '+thaiDigitsToArabic(id));
+}
+
+function thaiDigitsToArabic(value){
+  const map={'๐':'0','๑':'1','๒':'2','๓':'3','๔':'4','๕':'5','๖':'6','๗':'7','๘':'8','๙':'9'};
+  return String(value||'').replace(/[๐-๙]/g,ch=>map[ch]||ch);
+}
+
+function repairThaiVowelOrder(text){
+  return String(text||'')
+    .replace(/ใ็ช้/g,'ใช้')
+    .replace(/่([ก-ฮ])/g,'$1่')
+    .replace(/้([ก-ฮ])/g,'$1้')
+    .replace(/๊([ก-ฮ])/g,'$1๊')
+    .replace(/๋([ก-ฮ])/g,'$1๋');
 }
