@@ -1,7 +1,7 @@
 const OCR_REVIEW_WORDS=[
   'เป้าหมาย','ชื่อส่วนงาน','เกี่ยวข้อง','เรื่องโทรศัพท์','ลิงก์ทดสอบ','อาการเจอบ่อย','ได้รับการยืนยัน','Route Pattern',
-  'Host assigned','Default Gateway','Network Connection Details','Ethernet','Wireless','IPv4 Address','Subnet Mask','DHCP Enabled','Lease Obtained','Lease Expires',
-  'โทรศัพท์','เปลี่ยน','ขั้นตอน','เอกสาร','อุปกรณ์','ประเมิน','ใช้งาน','ทดแทน','ยืนยัน','ข้อมูล','ข้อความ','ตัวอักษร','ช่องว่าง','เครื่อง','เชื่อม','เกี่ยว','เรื่อง','เพื่อ','แจ้ง','ระบุ','ระบบ','ลูกค้า','ทดสอบ','อาการ','บ่อย','ชื่อ','งาน','ปิด'
+  'Host assigned','Default Gateway','Network Connection Details','Ethernet','Wireless','IPv4 Address','Subnet Mask','DHCP Enabled','Lease Obtained','Lease Expires','email','e-mail','อีเมล','หรืออีเมล','ติดต่อได้','ผู้ติดต่อ',
+  'โทรศัพท์','เปลี่ยน','ขั้นตอน','เอกสาร','อุปกรณ์','ประเมิน','ใช้งาน','ทดแทน','ยืนยัน','ข้อมูล','ข้อความ','ตัวอักษร','ช่องว่าง','เครื่อง','เชื่อม','เกี่ยว','เรื่อง','เพื่อ','แจ้ง','ระบุ','ระบบ','ลูกค้า','ทดสอบ','อาการ','บ่อย','ชื่อ','งาน','ปิด','ผู้'
 ];
 
 function escapeReviewRegExp(value){
@@ -39,8 +39,24 @@ function normalizeBrowserNoise(text){
     .replace(/\s{2,}/g,' ');
 }
 
+function normalizeEmailOcrText(text){
+  let out=text||'';
+  out=out
+    .replace(/รือซีเมลี่/g,'หรืออีเมลที่')
+    .replace(/รือ\s*ซี\s*เม\s*ลี่/g,'หรืออีเมลที่')
+    .replace(/หรือ\s*ซี\s*เมล(?:ี่|ี|ิ)?/g,'หรืออีเมล')
+    .replace(/อี\s*เม\s*ล/g,'อีเมล')
+    .replace(/e\s*-?\s*mail/gi,'email')
+    .replace(/0อทไชอ018|๐อทไชอ๐18|อทไชอ/g,'ติดต่อ')
+    .replace(/ติดต่อ\s*ได้/g,'ติดต่อได้')
+    .replace(/ผู่/g,'ผู้')
+    .replace(/ผู\s*้/g,'ผู้')
+    .replace(/\s{2,}/g,' ');
+  return out;
+}
+
 function normalizeIpLikeText(text){
-  let out=normalizeBrowserNoise(text||'');
+  let out=normalizeEmailOcrText(normalizeBrowserNoise(text||''));
   out=out
     .replace(/Host\s+assigned\s+to/gi,'Host assigned to')
     .replace(/assigned\s+to/gi,'assigned to')
@@ -64,7 +80,8 @@ function finalOcrReview(text){
     [/ที\s+เกี\s*ยว/g,'ที่เกี่ยว'],[/ที่\s+เกี่ยว/g,'ที่เกี่ยว'],[/เกี\s*ยว\s*ข้อง/g,'เกี่ยวข้อง'],[/เกี\s*ยว/g,'เกี่ยว'],
     [/เรื\s*อง\s*โทร\s*ศัพท์/g,'เรื่องโทรศัพท์'],[/เรื\s*อง/g,'เรื่อง'],[/เรื่อง\s+โทรศัพท์/g,'เรื่องโทรศัพท์'],
     [/โทร\s*ศั\s*พ\s*ท์/g,'โทรศัพท์'],[/โทร\s*ศัพ\s*ท์/g,'โทรศัพท์'],[/โทร\s*ศัพท์/g,'โทรศัพท์'],
-    [/อุ\s*ป\s*กร\s*ณ์/g,'อุปกรณ์'],[/ประ\s*เมิ\s*น/g,'ประเมิน'],[/ใช้\s*งา\s*น/g,'ใช้งาน'],[/ขั้?\s*น\s*ตอน/g,'ขั้นตอน']
+    [/อุ\s*ป\s*กร\s*ณ์/g,'อุปกรณ์'],[/ประ\s*เมิ\s*น/g,'ประเมิน'],[/ใช้\s*งา\s*น/g,'ใช้งาน'],[/ขั้?\s*น\s*ตอน/g,'ขั้นตอน'],
+    [/รือซีเมลี่/g,'หรืออีเมลที่'],[/๐อทไชอ๐18/g,'ติดต่อ'],[/ผู่/g,'ผู้']
   ];
 
   for(const [pattern,replacement] of directRules){
