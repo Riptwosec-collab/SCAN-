@@ -1,5 +1,6 @@
 const OCR_REVIEW_WORDS=[
   'เป้าหมาย','ชื่อส่วนงาน','เกี่ยวข้อง','เรื่องโทรศัพท์','ลิงก์ทดสอบ','อาการเจอบ่อย','ได้รับการยืนยัน','Route Pattern',
+  'Host assigned','Default Gateway','Network Connection Details','Ethernet','Wireless','IPv4 Address','Subnet Mask','DHCP Enabled','Lease Obtained','Lease Expires',
   'โทรศัพท์','เปลี่ยน','ขั้นตอน','เอกสาร','อุปกรณ์','ประเมิน','ใช้งาน','ทดแทน','ยืนยัน','ข้อมูล','ข้อความ','ตัวอักษร','ช่องว่าง','เครื่อง','เชื่อม','เกี่ยว','เรื่อง','เพื่อ','แจ้ง','ระบุ','ระบบ','ลูกค้า','ทดสอบ','อาการ','บ่อย','ชื่อ','งาน','ปิด'
 ];
 
@@ -11,8 +12,22 @@ function reviewWordRegex(word){
   return new RegExp(Array.from(word).map(ch=>escapeReviewRegExp(ch)).join('\\s*'),'g');
 }
 
-function finalOcrReview(text){
+function normalizeIpLikeText(text){
   let out=text||'';
+  out=out
+    .replace(/Host\s+assigned\s+to/gi,'Host assigned to')
+    .replace(/assigned\s+to/gi,'assigned to')
+    .replace(/10\s+39\s+20/g,'10.39.20')
+    .replace(/(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})/g,'$1.$2.$3.$4')
+    .replace(/(\d{1,3})\s*\.\s*(\d{1,3})\s*\.\s*(\d{1,3})\s*\.\s*(\d{1,3})/g,'$1.$2.$3.$4')
+    .replace(/เทท|ไล|ท5|ว22|วไซษ์ี|รรุ5/g,'')
+    .replace(/[“”«»]/g,'')
+    .replace(/\s{2,}/g,' ');
+  return out;
+}
+
+function finalOcrReview(text){
+  let out=normalizeIpLikeText(text||'');
 
   const directRules=[
     [/ํ(?=า)/g,''],[/[ÊÉÈË]/g,''],[/\$1\$2/g,''],[/เพื่อ[่้๊๋์]*อ+/g,'เพื่อ'],[/เพื่ออ+/g,'เพื่อ'],
@@ -33,7 +48,7 @@ function finalOcrReview(text){
     out=replaceTrack(out,reviewWordRegex(word),word);
   }
 
-  out=out
+  out=normalizeIpLikeText(out)
     .replace(/([ะาำิีึืุูั็่้๊๋์])\1+/g,'$1')
     .replace(/([เแโใไ])\1+/g,'$1')
     .replace(/อ{3,}/g,'อ')
