@@ -30,6 +30,24 @@ function replaceTrack(text,pattern,replacement){
   return out;
 }
 
+function spacedWordRegex(word){
+  const chars=Array.from(word).map(ch=>ch.replace(/[.*+?^{}()|[\]\\]/g,'\\$&'));
+  return new RegExp(chars.join('\\s*'),'g');
+}
+
+function applyKnownThaiWordJoin(text){
+  let out=text;
+  const words=[
+    'เกี่ยวข้อง','เรื่องโทรศัพท์','ลิงก์ทดสอบ','อาการเจอบ่อย','ได้รับการยืนยัน','Route Pattern',
+    'โทรศัพท์','เปลี่ยน','ขั้นตอน','เอกสาร','อุปกรณ์','ประเมิน','ใช้งาน','ทดแทน','ยืนยัน','ข้อมูล','ข้อความ','ตัวอักษร','ช่องว่าง','เครื่อง','เชื่อม','เกี่ยว','เรื่อง','เพื่อ','แจ้ง','ระบุ','ระบบ','ลูกค้า','ทดสอบ','อาการ','บ่อย','ปิด'
+  ];
+  words.sort((a,b)=>Array.from(b).length-Array.from(a).length);
+  for(const word of words){
+    out=replaceTrack(out,spacedWordRegex(word),word);
+  }
+  return out;
+}
+
 function cleanText(text){
   resetFixReport();
   let result=(text||'')
@@ -86,6 +104,7 @@ function fixThaiWords(text){
     ['ง 3 ระบบ','ทั้ง 3 ระบบ'],['ทั ง 3 ระบบ','ทั้ง 3 ระบบ'],['ทั้ง 3 ระบบ','ทั้ง 3 ระบบ']
   ];
   for(const [from,to] of replacements)out=replaceTrack(out,from,to);
+  out=applyKnownThaiWordJoin(out);
   out=replaceTrack(out,/([เแโใไ])\s+([ก-ฮ])/g,'$1$2');
   out=replaceTrack(out,/([ก-ฮ])\s+([ะาำิีึืุูั็่้๊๋์])/g,'$1$2');
   out=replaceTrack(out,/([ก-ฮ])\s+([ก-ฮ])(?=(?:ว่า|ที่|แล้ว|อยู่|ด้วย|จาก|ให้|ของ|การ|งาน|ระบบ|เครื่อง|เอกสาร|ขั้นตอน|บ่อย|ข้อมูล|ข้อความ|ลิงก์|ประเมิน|อุปกรณ์|ทดแทน|เพื่อ|เปลี่ยน|เกี่ยว|ข้อง|เรื่อง|โทรศัพท์))/g,'$1$2');
@@ -135,6 +154,7 @@ function postCleanThai(text){
     .replace(/ใช้งา\s*น/g,'ใช้งาน')
     .replace(/ลิงก์ทดสอบ\s*ใช้งาน/g,'ลิงก์ทดสอบใช้งาน')
     .replace(/ATA\s+Hardware\s+เสีย/g,'ATA Hardware เสีย');
+  out=applyKnownThaiWordJoin(out);
   out=normalizeRepeatedThai(out);
   return out
     .replace(/\s{2,}/g,' ')
