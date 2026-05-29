@@ -1,6 +1,6 @@
 // RIPTWOSEC.SCAN Real AI Review
 // Supports 2 modes:
-// 1) Paid Owner Mode: user pays site owner, enters Access Code, backend uses owner's OPENAI_API_KEY
+// 1) Donate Mode: user supports site owner, enters Access Code, backend uses owner's OPENAI_API_KEY
 // 2) BYOK Mode: user enters their own OpenAI API key in browser
 const AI_REVIEW_KEY='riptwosec.scan.aiReview';
 
@@ -27,19 +27,19 @@ function injectAiReviewPanel(){
   panel.className='ai-review-box';
   panel.open=!!settings.enabled;
   panel.innerHTML=`
-    <summary>AI Review Pro หลัง OCR <span style="color:#86efac;font-size:12px">จ่ายเจ้าของเว็บ / ใช้โค้ด</span></summary>
+    <summary>AI Review Pro หลัง OCR <span style="color:#86efac;font-size:12px">Donate + Access Code</span></summary>
     <div class="ai-review-inner">
       <label class="ai-review-toggle"><input id="aiReviewEnabled" type="checkbox" ${settings.enabled?'checked':''}> เปิด AI Review วิเคราะห์ทั้งย่อหน้า</label>
       <div class="ai-review-grid">
         <select id="aiReviewMode">
-          <option value="paid" ${mode==='paid'?'selected':''}>Pro Mode: ใช้ Key เจ้าของเว็บ + Access Code</option>
+          <option value="paid" ${mode==='paid'?'selected':''}>Donate Mode: ใช้ Key เจ้าของเว็บ + Access Code</option>
           <option value="byok" ${mode==='byok'?'selected':''}>BYOK Mode: ใส่ OpenAI API Key เอง</option>
         </select>
         <input id="aiReviewModel" placeholder="Model เช่น gpt-4o-mini" value="${escapeHtml(settings.model||'gpt-4o-mini')}">
       </div>
       <div class="ai-review-grid" id="paidReviewFields">
-        <input id="aiReviewAccessCode" type="password" placeholder="Access Code หลังชำระเงิน เช่น RIP-XXXX" value="${escapeHtml(settings.accessCode||'')}">
-        <input disabled value="API Key เจ้าของเว็บถูกเก็บใน Backend ไม่โชว์หน้าเว็บ">
+        <input id="aiReviewAccessCode" type="password" placeholder="Access Code หลัง Donate เช่น RIP-XXXX" value="${escapeHtml(settings.accessCode||'')}">
+        <input disabled value="API Key เจ้าของเว็บอยู่ใน Backend ไม่โชว์หน้าเว็บ">
       </div>
       <div class="ai-review-grid" id="byokReviewFields">
         <input id="aiReviewApiKey" type="password" placeholder="OpenAI API Key ของผู้ใช้: sk-..." value="${escapeHtml(settings.apiKey||'')}">
@@ -49,8 +49,8 @@ function injectAiReviewPanel(){
         <button class="btn small" id="saveAiReviewBtn" type="button">บันทึก AI Review</button>
         <button class="btn small danger" id="clearAiReviewKeyBtn" type="button">ลบ Key/Code</button>
       </div>
-      <div class="hint">Pro Mode: ผู้ใช้จ่ายเงินให้เจ้าของเว็บ แล้วได้รับ Access Code จากเจ้าของเว็บ จากนั้นเว็บเรียก Backend /api/ai-review โดยใช้ API Key เจ้าของเว็บ</div>
-      <div class="hint">ถ้าไม่มี Access Code หรือ Backend ยังไม่ตั้งค่า ระบบจะใช้ Rule-based เดิมแทน</div>
+      <div class="hint">Donate Mode: ผู้ใช้สนับสนุนเว็บ แล้วได้รับ Access Code จากเจ้าของเว็บ จากนั้นเว็บเรียก Backend /api/ai-review โดยใช้ API Key เจ้าของเว็บ</div>
+      <div class="hint">ตั้งค่าโค้ดที่ Vercel Environment: PAID_ACCESS_CODES=RIP100,RIP300,RIPPRO</div>
     </div>
   `;
   anchor.insertAdjacentElement('afterend',panel);
@@ -119,7 +119,7 @@ function extractOpenAiText(data){
 async function reviewWithPaidBackend(rawText,cleanedText,settings){
   const accessCode=(settings.accessCode||'').trim();
   if(!accessCode){
-    setStatus('AI Review Pro ยังไม่ทำงาน: ต้องใส่ Access Code หลังชำระเงิน','err');
+    setStatus('AI Review Pro ยังไม่ทำงาน: ต้องใส่ Access Code หลัง Donate','err');
     return cleanedText;
   }
   setStatus('AI Review Pro กำลังตรวจบริบททั้งย่อหน้า...','ok');
