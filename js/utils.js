@@ -32,14 +32,14 @@ function setOutputSuccess(){
   if(outputSuccessTimer){clearTimeout(outputSuccessTimer);outputSuccessTimer=null;}
   output.classList.remove('output-processing','output-success-hide');
   output.classList.add('output-success','output-done-pulse');
-  setTimeout(()=>output.classList.remove('output-done-pulse'),800);
+  setTimeout(()=>output.classList.remove('output-done-pulse'),900);
   outputSuccessTimer=setTimeout(()=>{
     output.classList.add('output-success-hide');
     setTimeout(()=>{
       output.classList.remove('output-success','output-success-hide','output-done-pulse');
       outputSuccessTimer=null;
-    },260);
-  },2000);
+    },520);
+  },3000);
 }
 
 function clearOutputState(){
