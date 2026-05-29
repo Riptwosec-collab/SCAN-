@@ -12,8 +12,35 @@ function reviewWordRegex(word){
   return new RegExp(Array.from(word).map(ch=>escapeReviewRegExp(ch)).join('\\s*'),'g');
 }
 
-function normalizeIpLikeText(text){
+function removeOcrGarbageLines(text){
+  return String(text||'')
+    .split('\n')
+    .map(line=>line.trim())
+    .filter(line=>{
+      if(!line)return false;
+      const compact=line.replace(/\s/g,'');
+      if(compact.length>18 && /(.)\1{10,}/.test(compact))return false;
+      if(compact.length>18 && /(กร|รร){8,}/.test(compact))return false;
+      return true;
+    })
+    .join('\n');
+}
+
+function normalizeBrowserNoise(text){
   let out=text||'';
+  return out
+    .replace(/งเ๑๐พ\s*15:11\s*4\s*2\s*อคด/gi,'')
+    .replace(/NE\s*CE\s*INC/gi,'')
+    .replace(/เ@\s*92\s*axaudit\.rdgoth\s*\(?1\)?/gi,'axaudit.rdgoth')
+    .replace(/กรร{8,}5?/g,'')
+    .replace(/(?:กร){8,}5?/g,'')
+    .replace(/รร{8,}5?/g,'')
+    .replace(/[“”«»]/g,'')
+    .replace(/\s{2,}/g,' ');
+}
+
+function normalizeIpLikeText(text){
+  let out=normalizeBrowserNoise(text||'');
   out=out
     .replace(/Host\s+assigned\s+to/gi,'Host assigned to')
     .replace(/assigned\s+to/gi,'assigned to')
@@ -23,9 +50,8 @@ function normalizeIpLikeText(text){
     .replace(/(\d{1,3})\s*\.\s*(\d{1,3})\s*\.\s*(\d{1,3})\s*\.\s*(\d{1,3})/g,'$1.$2.$3.$4')
     .replace(/(\d{1,3}(?:\.\d{1,3}){3})(?:\s*(?:ไท|งไส|งใส|งไส\d+|๓|๐|๕|๒|เทท|ไล|ท5|ว22|วไซษ์ี|รรุ5))+/g,'$1')
     .replace(/เทท|ไล|ท5|ว22|วไซษ์ี|รรุ5|งไส\d*|งใส\d*|ไท/g,'')
-    .replace(/[“”«»]/g,'')
     .replace(/\s{2,}/g,' ');
-  return out;
+  return removeOcrGarbageLines(out);
 }
 
 function finalOcrReview(text){
@@ -61,7 +87,7 @@ function finalOcrReview(text){
     .replace(/\n\s+/g,'\n')
     .trim();
 
-  return out;
+  return removeOcrGarbageLines(out);
 }
 
 function findSuspiciousOcrTokens(text){
