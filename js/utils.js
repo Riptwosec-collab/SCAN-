@@ -17,6 +17,27 @@ function escapeHtml(text){
   return String(text).replace(/[&<>]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
 }
 
+function setOutputProcessing(){
+  const output=$('output');
+  if(!output)return;
+  output.classList.remove('output-success','output-done-pulse');
+  output.classList.add('output-processing');
+}
+
+function setOutputSuccess(){
+  const output=$('output');
+  if(!output)return;
+  output.classList.remove('output-processing');
+  output.classList.add('output-success','output-done-pulse');
+  setTimeout(()=>output.classList.remove('output-done-pulse'),900);
+}
+
+function clearOutputState(){
+  const output=$('output');
+  if(!output)return;
+  output.classList.remove('output-processing','output-success','output-done-pulse');
+}
+
 function showOutput(text){
   AppState.lastText=(text||'').trim();
   $('output').textContent=AppState.lastText||'ไม่พบข้อความ';
@@ -41,12 +62,6 @@ function clearFileSuccess(infoId,nameId,defaultText){
   if(name)name.textContent=defaultText;
 }
 
-function showOutput(text){
-  AppState.lastText=(text||'').trim();
-  $('output').textContent=AppState.lastText||'ไม่พบข้อความ';
-  if(AppState.lastText)saveHistory(AppState.lastText);
-}
-
 function clearOutput(){
   AppState.lastText='';
   AppState.rawText='';
@@ -56,6 +71,7 @@ function clearOutput(){
 
   const output=$('output');
   if(output)output.textContent='ผลลัพธ์จะแสดงที่นี่';
+  clearOutputState();
 
   const fixReport=$('fixReport');
   if(fixReport)fixReport.textContent='ยังไม่มีรายการคำที่แก้';
