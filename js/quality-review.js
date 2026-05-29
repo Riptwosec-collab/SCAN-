@@ -18,9 +18,11 @@ function normalizeIpLikeText(text){
     .replace(/Host\s+assigned\s+to/gi,'Host assigned to')
     .replace(/assigned\s+to/gi,'assigned to')
     .replace(/10\s+39\s+20/g,'10.39.20')
+    .replace(/0\s*\.\s*2\s*\.\s*32\s*\.\s*0\s*(?:ไท|งไส|งไส28|๓)*/g,'0.2.32.0')
     .replace(/(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})/g,'$1.$2.$3.$4')
     .replace(/(\d{1,3})\s*\.\s*(\d{1,3})\s*\.\s*(\d{1,3})\s*\.\s*(\d{1,3})/g,'$1.$2.$3.$4')
-    .replace(/เทท|ไล|ท5|ว22|วไซษ์ี|รรุ5/g,'')
+    .replace(/(\d{1,3}(?:\.\d{1,3}){3})(?:\s*(?:ไท|งไส|งใส|งไส\d+|๓|๐|๕|๒|เทท|ไล|ท5|ว22|วไซษ์ี|รรุ5))+/g,'$1')
+    .replace(/เทท|ไล|ท5|ว22|วไซษ์ี|รรุ5|งไส\d*|งใส\d*|ไท/g,'')
     .replace(/[“”«»]/g,'')
     .replace(/\s{2,}/g,' ');
   return out;
