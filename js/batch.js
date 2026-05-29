@@ -26,9 +26,11 @@ async function scanBatch(){
     setProgress((i/AppState.batchFiles.length)*100);
     setStatus('Batch OCR '+(i+1)+'/'+AppState.batchFiles.length+' · '+file.name);
     let raw='';
+    const fileLine='████████████████████████████████████\nไฟล์: '+file.name+'\n████████████████████████████████████';
     if(file.type.startsWith('image/')){
       const canvas=await imageFileToCanvas(file);
-      raw=await runOcr(preprocessCanvas(canvas),(i/AppState.batchFiles.length)*100,((i+1)/AppState.batchFiles.length)*100);
+      const text=await runOcr(preprocessCanvas(canvas),(i/AppState.batchFiles.length)*100,((i+1)/AppState.batchFiles.length)*100);
+      raw=fileLine+'\n\n'+formatPageBlock(1,text.trim()||'ไม่พบข้อความในรูปภาพ','ภาพ');
     }else if(file.type==='application/pdf'){
       const data=new Uint8Array(await file.arrayBuffer());
       const previousDoc=AppState.pdfDoc;
@@ -37,20 +39,21 @@ async function scanBatch(){
       AppState.pdfPages=AppState.pdfDoc.numPages;
       const parts=[];
       for(let p=1;p<=AppState.pdfPages;p++){
+        setStatus('Batch OCR '+file.name+' · หน้า '+p+'/'+AppState.pdfPages);
         let text=await extractPdfText(p);
         if(!text.trim()){
           const canvas=await pdfPageToCanvas(p);
           text=await runOcr(preprocessCanvas(canvas));
         }
-        if(text.trim())parts.push('[หน้า '+p+']\n'+text.trim());
+        parts.push(formatPageBlock(p,text.trim()||'ไม่พบข้อความในหน้านี้'));
       }
-      raw=parts.join('\n\n');
+      raw=fileLine+'\n\n'+parts.join('\n\n');
       AppState.pdfDoc=previousDoc;
       AppState.pdfPages=previousPages;
     }
     const cleaned=cleanText(raw);
     AppState.batchResults.push({filename:file.name,rawText:raw,cleanedText:cleaned,fixedWords:[...AppState.fixedWords],confidence:AppState.confidence});
-    all.push('===== '+file.name+' =====\n'+cleaned);
+    all.push(cleaned);
   }
   return all.join('\n\n');
 }
