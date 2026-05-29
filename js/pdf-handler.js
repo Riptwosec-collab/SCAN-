@@ -2,6 +2,12 @@ if(window.pdfjsLib){
   pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 }
 
+function formatPageBlock(pageNumber,text,title='หน้า'){
+  const pageTitle=title+' '+pageNumber;
+  const line='━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+  return line+'\n'+pageTitle+'\n'+line+'\n'+(text||'').trim();
+}
+
 async function loadPdfFile(file){
   if(!window.pdfjsLib)throw new Error('โหลด pdf.js ไม่สำเร็จ กรุณาต่ออินเทอร์เน็ต');
   const data=new Uint8Array(await file.arrayBuffer());
@@ -13,9 +19,11 @@ async function loadPdfFile(file){
   $('pageTo').value=AppState.pdfPages;
   $('pageFrom').max=AppState.pdfPages;
   $('pageTo').max=AppState.pdfPages;
+  const separate=$('separatePages');
+  if(separate)separate.checked=true;
   await renderPdfPreview(1);
   await renderPdfThumbnails();
-  setStatus('โหลด PDF แล้ว '+AppState.pdfPages+' หน้า','ok');
+  setStatus('โหลด PDF แล้ว '+AppState.pdfPages+' หน้า · เปิดโหมดแบ่งหน้าผลลัพธ์แล้ว','ok');
 }
 
 async function renderPdfPreview(pageNumber){
@@ -27,7 +35,8 @@ async function renderPdfPreview(pageNumber){
   canvas.height=viewport.height;
   canvas.style.display='block';
   await page.render({canvasContext:ctx,viewport}).promise;
-  drawCanvasTo($('sourceCompare'),canvas);
+  const source=$('sourceCompare');
+  if(source)drawCanvasTo(source,canvas);
 }
 
 async function renderPdfThumbnails(){
@@ -99,11 +108,12 @@ async function scanPdf(){
 
   AppState.pdfPageInfo=[];
   const parts=[];
+  const splitPages=$('separatePages')?.checked!==false;
   for(let i=0;i<pages.length;i++){
     const pageNo=pages[i];
     const pct=(i/pages.length)*100;
     setProgress(pct);
-    setStatus('กำลังอ่านหน้า '+pageNo);
+    setStatus('กำลังอ่านหน้า '+pageNo+' ('+(i+1)+'/'+pages.length+')');
     let text=await extractPdfText(pageNo);
     const hadTextLayer=!!text.trim();
     const shouldOcr=!hadTextLayer||!$('ocrOnlyNoText')?.checked;
@@ -112,11 +122,12 @@ async function scanPdf(){
       const canvas=await pdfPageToCanvas(pageNo);
       text=await runOcr(preprocessCanvas(canvas),pct,Math.min(95,pct+(100/pages.length)));
     }
-    const cleaned=text.trim();
-    AppState.pdfPageInfo.push({page:pageNo,text:cleaned,hadTextLayer,usedOcr:shouldOcr&&!hadTextLayer});
-    if(cleaned){
-      if($('separatePages')?.checked)parts.push('[หน้า '+pageNo+']\n'+cleaned);
-      else parts.push(cleaned);
+    const rawPageText=text.trim();
+    AppState.pdfPageInfo.push({page:pageNo,text:rawPageText,hadTextLayer,usedOcr:shouldOcr&&!hadTextLayer});
+    if(rawPageText){
+      parts.push(splitPages?formatPageBlock(pageNo,rawPageText):rawPageText);
+    }else if(splitPages){
+      parts.push(formatPageBlock(pageNo,'ไม่พบข้อความในหน้านี้'));
     }
   }
   return parts.join('\n\n');
