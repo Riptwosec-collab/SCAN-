@@ -7,10 +7,40 @@ const OCR_REVIEW_WORDS=[
 const OCR_CORRECT_WORDS=[
   ...OCR_REVIEW_WORDS,
   'ลบอักษรแปลก','รวมคำไทยผิดช่องว่าง','รายการคำที่แก้','เพิ่มคำแก้เอง','ขยายภาพ','เลือกทั้งภาพ','ลากเมาส์บนภาพ','พื้นที่ OCR','ตั้งค่าไว้','พรีวิวรูปถูกซ่อน',
+  'ใบกำกับภาษี','หนังสือมอบอำนาจ','เลขประจำตัว','จำนวนเงิน','สำคัญ','บริษัท','จำกัด','ที่อยู่','ใบเสร็จ','สัญญา','อนุมัติ','โหมด Incognito','รบกวน','ตรวจสอบ','ข้อมูลเพิ่มเติม','ขอแสดงความนับถือ',
+  'วันที่','จาก','ถึง','เรื่อง','Ticket No.','URL','Domain','email','workd.go.th','network@dga.or.th',
   'Options','Preset','Cleanup','Balanced','Dictionary','Contrast','Original','Crop','Search','Clear','Copy','Output','History','Confidence'
 ];
 
 const OCR_WRONG_WORD_RULES=[
+  [/ใบกาํ?\s*กับภาษี|ใบกากับภาษี/g,'ใบกำกับภาษี'],
+  [/หนังสือมอมอำนาจ|หนงสือมอบอานาจ/g,'หนังสือมอบอำนาจ'],
+  [/เลขประจาํ?\s*ตัว/g,'เลขประจำตัว'],
+  [/จานว[นณ]เงิน/g,'จำนวนเงิน'],
+  [/สาํ?\s*คัญ/g,'สำคัญ'],
+  [/บริษท|บรีษัท/g,'บริษัท'],
+  [/จากัด|จากด/g,'จำกัด'],
+  [/ที่อยู(?!่)|ทอยู/g,'ที่อยู่'],
+  [/โทรศัพท(?!์)|โทรศพท์/g,'โทรศัพท์'],
+  [/ใบเสรจ็?|ใบเสรจ/g,'ใบเสร็จ'],
+  [/สญญา/g,'สัญญา'],
+  [/อนุมต(?!ิ)|อนมัติ/g,'อนุมัติ'],
+  [/ธีเมล/g,'อีเมล'],
+  [/เหมศ|เหมเศิ/g,'โหมด'],
+  [/หรัต/g,'หรือ'],
+  [/ชีกครัง|อีกครัง/g,'อีกครั้ง'],
+  [/รบกรน/g,'รบกวน'],
+  [/ทตสอบ/g,'ทดสอบ'],
+  [/ทาการ/g,'ทำการ'],
+  [/เสืตกพตรป/g,'เลือกรูป'],
+  [/ตรวจส[ขร]บ/g,'ตรวจสอบ'],
+  [/ขัตมูลเพ็มเติม|ขอมูลเพิ่มเติม/g,'ข้อมูลเพิ่มเติม'],
+  [/ทุกขั้น/g,'ทุกวัน'],
+  [/ตลดต/g,'ตลอด'],
+  [/ซั้วโมง/g,'ชั่วโมง'],
+  [/ขตแสดงตวามนับถืต/g,'ขอแสดงความนับถือ'],
+  [/เจลาๆ/g,'เวลา'],
+  [/คสุณ/g,'คุณ'],
   [/คา(?=ไทย|แก้|ที่)/g,'คำ'],
   [/ซ่องว่าง/g,'ช่องว่าง'],
   [/ช่อ\s*งว่าง/g,'ช่องว่าง'],
@@ -25,6 +55,8 @@ const OCR_WRONG_WORD_RULES=[
   [/ITNT/g,'IT/NOC'],
   [/0CR/g,'OCR']
 ];
+
+const THAI_DIGIT_MAP={'๐':'0','๑':'1','๒':'2','๓':'3','๔':'4','๕':'5','๖':'6','๗':'7','๘':'8','๙':'9','ฟ':'9','ๅ':'1','ข':'2','ฃ':'3','น':'0','ม':'3'};
 
 function escapeReviewRegExp(value){
   return String(value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
@@ -43,6 +75,8 @@ function removeOcrGarbageLines(text){
       const compact=line.replace(/\s/g,'');
       if(compact.length>18 && /(.)\1{10,}/.test(compact))return false;
       if(compact.length>18 && /(กร|รร){8,}/.test(compact))return false;
+      if(/^(?:[;:=\-_=~`!|Il0oO.\[\]{}()<>\/\\]+\s*){4,}$/i.test(line))return false;
+      if(/PERE|F——|oo\s*PERE|ซ่\s*Be|IRATE\s*--|=\s*=\s*=\s*F/i.test(line))return false;
       return true;
     })
     .join('\n');
@@ -77,6 +111,38 @@ function normalizeEmailOcrText(text){
   return out;
 }
 
+function normalizeDocumentEmailAndDomains(text){
+  let out=String(text||'');
+  out=out
+    .replace(/^\s*(Audi|Dale|Date|วันที่|วนที่|ที่)\s*[:：]?/gim,'วันที่:')
+    .replace(/^\s*(From|Fron|จาก)\s*[:：]?/gim,'จาก:')
+    .replace(/^\s*(To|T0|ถึง)\s*[:：]?/gim,'ถึง:')
+    .replace(/^\s*(Subject|Subj|เรื่อง|เรือง)\s*[:：]?/gim,'เรื่อง:')
+    .replace(/Ticket\s*(Mo|N0|No|N๐)\s*[.:]?/gi,'Ticket No.');
+
+  out=out.replace(/Ticket No\.\s*([ฟ๐-๙0-9\-]+)/g,(match,id)=>'Ticket No. '+thaiDigitsToArabic(id));
+  out=out.replace(/([A-Za-z0-9_-]+)\s*[,，]\s*([A-Za-z]{2,})(?=\b|>)/g,'$1.$2');
+  out=out.replace(/([A-Za-z0-9_-]+)\s*\.\s*([A-Za-z]{2,})(?=\b|>)/g,'$1.$2');
+  out=out.replace(/workd\s*[,，.]\s*go\s*[,，.]?\s*th/gi,'workd.go.th');
+  out=out.replace(/networkdrd\s*[,，.]\s*(?:oo|go|or)\s*[,，.]?\s*th/gi,'network@dga.or.th');
+  out=out.replace(/network\s*@\s*dga\s*\.\s*or\s*\.\s*th/gi,'network@dga.or.th');
+  out=out.replace(/<\s*([^<>\s]+)\s*>/g,'<$1>');
+  out=repairThaiVowelOrder(out);
+  return removeOcrGarbageLines(out);
+}
+
+function thaiDigitsToArabic(value){
+  return String(value||'').replace(/[ฟ๐-๙ๅขฃนม]/g,ch=>THAI_DIGIT_MAP[ch]??ch);
+}
+
+function repairThaiVowelOrder(text){
+  return String(text||'')
+    .replace(/([่้๊๋์])([ก-ฮ])/g,'$2$1')
+    .replace(/ใ็([ก-ฮ])/g,'ใ$1้')
+    .replace(/เ็([ก-ฮ])/g,'เ$1็')
+    .replace(/แ็([ก-ฮ])/g,'แ$1็');
+}
+
 function normalizeIpLikeText(text){
   let out=normalizeEmailOcrText(normalizeBrowserNoise(text||''));
   out=out
@@ -93,7 +159,7 @@ function normalizeIpLikeText(text){
 }
 
 function finalOcrReview(text){
-  let out=normalizeIpLikeText(text||'');
+  let out=normalizeDocumentEmailAndDomains(normalizeIpLikeText(text||''));
 
   const directRules=[
     [/ํ(?=า)/g,''],[/[ÊÉÈË]/g,''],[/\$1\$2/g,''],[/เพื่อ[่้๊๋์]*อ+/g,'เพื่อ'],[/เพื่ออ+/g,'เพื่อ'],
@@ -115,7 +181,7 @@ function finalOcrReview(text){
     out=replaceTrack(out,reviewWordRegex(word),word);
   }
 
-  out=normalizeIpLikeText(out)
+  out=normalizeDocumentEmailAndDomains(normalizeIpLikeText(out))
     .replace(/([ะาำิีึืุูั็่้๊๋์])\1+/g,'$1')
     .replace(/([เแโใไ])\1+/g,'$1')
     .replace(/อ{3,}/g,'อ')
@@ -130,14 +196,14 @@ function finalOcrReview(text){
 }
 
 function applySpellingCorrections(text){
-  let out=text||'';
+  let out=normalizeDocumentEmailAndDomains(text||'');
   for(const [pattern,replacement] of OCR_WRONG_WORD_RULES){
     out=replaceTrack(out,pattern,replacement);
   }
   for(const word of [...OCR_CORRECT_WORDS].sort((a,b)=>Array.from(b).length-Array.from(a).length)){
     if(/[ก-ฮ]/.test(word))out=replaceTrack(out,reviewWordRegex(word),word);
   }
-  return out;
+  return normalizeDocumentEmailAndDomains(out);
 }
 
 function findSuspiciousOcrTokens(text){
