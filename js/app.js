@@ -49,7 +49,7 @@ function bindAppEvents(){
   $('removeBatchBtn').onclick=removeBatchFiles;
 
   $('scanBtn').onclick=scanCurrent;
-  $('formatBtn').onclick=()=>showCleanedResult(AppState.rawText||AppState.lastText||$('output').innerText);
+  $('formatBtn').onclick=()=>showCleanedResult(AppState.rawText||AppState.lastText||$('output').innerText,true);
   $('clearBtn').onclick=clearOutput;
   $('copyBtn').onclick=copyOutput;
   $('txtBtn').onclick=exportTxt;
@@ -130,26 +130,29 @@ async function handlePdfFile(file){
 async function scanCurrent(){
   try{
     setProgress(0);
+    setOutputProcessing();
     let raw='';
     if(AppState.tab==='img')raw=await scanImage();
     else if(AppState.tab==='pdf')raw=await scanPdf();
     else raw=await scanBatch();
 
     AppState.rawText=raw;
-    showCleanedResult(raw);
+    showCleanedResult(raw,true);
     setProgress(100);
     setStatus('แปลงสำเร็จ · ตรวจละเอียดก่อนแสดงผลแล้ว','ok');
   }catch(error){
+    clearOutputState();
     setStatus('แปลงไม่ได้: '+error.message,'err');
     setProgress(0);
   }
 }
 
-function showCleanedResult(raw){
+function showCleanedResult(raw,animate=false){
   let cleaned=cleanText(raw);
   if(typeof finalOcrReview==='function')cleaned=finalOcrReview(cleaned);
   AppState.lastText=cleaned;
   showOutput(cleaned);
+  if(animate)setOutputSuccess();
   if(typeof renderOcrReview==='function')renderOcrReview(raw,cleaned);
   else renderFixReport();
   const finalScore=AppState.confidence??calculateConfidence(raw,cleaned);
