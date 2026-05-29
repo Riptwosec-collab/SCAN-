@@ -24,17 +24,18 @@ function injectAiReviewPanel(){
   panel.className='ai-review-box';
   panel.open=!!settings.enabled;
   panel.innerHTML=`
-    <summary>AI Review จริง หลัง OCR</summary>
+    <summary>AI Review จริง หลัง OCR <span style="color:#facc15;font-size:12px">ต้องมี API Credit</span></summary>
     <div class="ai-review-inner">
       <label class="ai-review-toggle"><input id="aiReviewEnabled" type="checkbox" ${settings.enabled?'checked':''}> เปิด AI Review วิเคราะห์ทั้งย่อหน้า</label>
       <div class="ai-review-grid">
-        <input id="aiReviewApiKey" type="password" placeholder="OpenAI API Key: sk-..." value="${escapeHtml(settings.apiKey||'')}">
+        <input id="aiReviewApiKey" type="password" placeholder="OpenAI API Key: sk-... ต้องมี Billing/Credit" value="${escapeHtml(settings.apiKey||'')}">
         <input id="aiReviewModel" placeholder="Model เช่น gpt-4o-mini" value="${escapeHtml(settings.model||'gpt-4o-mini')}">
       </div>
       <div class="ai-review-actions">
         <button class="btn small" id="saveAiReviewBtn" type="button">บันทึก AI Review</button>
         <button class="btn small danger" id="clearAiReviewKeyBtn" type="button">ลบ API Key</button>
       </div>
+      <div class="hint">สำคัญ: ถ้าไม่มี OpenAI API Key ที่เปิด Billing/เติมเครดิตแล้ว ผลลัพธ์จะไม่ต่างจากเดิม เพราะระบบจะใช้ Rule-based เดิมแทน</div>
       <div class="hint">โหมดนี้ส่ง Raw OCR + ข้อความที่เว็บแก้แล้ว ไปให้ AI ตรวจบริบททั้งย่อหน้า แล้วคืนเฉพาะข้อความที่แก้แล้วเท่านั้น</div>
     </div>
   `;
@@ -46,7 +47,7 @@ function injectAiReviewPanel(){
       apiKey:$('aiReviewApiKey').value.trim(),
       model:$('aiReviewModel').value.trim()||'gpt-4o-mini'
     });
-    setStatus('บันทึก AI Review แล้ว','ok');
+    setStatus('บันทึก AI Review แล้ว · ต้องมี API Credit จึงจะเห็นผลต่างจริง','ok');
   };
   $('clearAiReviewKeyBtn').onclick=()=>{
     $('aiReviewApiKey').value='';
@@ -55,7 +56,7 @@ function injectAiReviewPanel(){
   };
   $('aiReviewEnabled').onchange=()=>{
     saveAiReviewSettings({enabled:$('aiReviewEnabled').checked});
-    setStatus($('aiReviewEnabled').checked?'เปิด AI Review แล้ว':'ปิด AI Review แล้ว','ok');
+    setStatus($('aiReviewEnabled').checked?'เปิด AI Review แล้ว · ต้องมี API Key + Credit':'ปิด AI Review แล้ว','ok');
   };
 }
 
@@ -95,7 +96,7 @@ async function aiReviewTextIfEnabled(rawText,cleanedText){
   if(!settings.enabled)return cleanedText;
   const apiKey=(settings.apiKey||'').trim();
   if(!apiKey){
-    setStatus('เปิด AI Review แล้ว แต่ยังไม่ได้ใส่ OpenAI API Key · ใช้ผลลัพธ์จาก Rule-based ก่อน','err');
+    setStatus('AI Review ยังไม่ทำงาน: ยังไม่ได้ใส่ API Key ที่มี Credit · ใช้ Rule-based เดิม','err');
     return cleanedText;
   }
   const model=(settings.model||'gpt-4o-mini').trim();
@@ -128,7 +129,7 @@ async function aiReviewTextIfEnabled(rawText,cleanedText){
     setStatus('AI Review สำเร็จ · ตรวจบริบททั้งย่อหน้าแล้ว','ok');
     return reviewed;
   }catch(error){
-    setStatus('AI Review ใช้งานไม่ได้: '+error.message+' · ใช้ผลลัพธ์จาก Rule-based ก่อน','err');
+    setStatus('AI Review ใช้งานไม่ได้: '+error.message+' · ใช้ Rule-based เดิม','err');
     return cleanedText;
   }
 }
