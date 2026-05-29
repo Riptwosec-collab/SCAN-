@@ -139,7 +139,7 @@ async function scanCurrent(){
     AppState.rawText=raw;
     showCleanedResult(raw);
     setProgress(100);
-    setStatus('แปลงสำเร็จ','ok');
+    setStatus('แปลงสำเร็จ · ตรวจละเอียดก่อนแสดงผลแล้ว','ok');
   }catch(error){
     setStatus('แปลงไม่ได้: '+error.message,'err');
     setProgress(0);
@@ -147,9 +147,12 @@ async function scanCurrent(){
 }
 
 function showCleanedResult(raw){
-  const cleaned=cleanText(raw);
+  let cleaned=cleanText(raw);
+  if(typeof finalOcrReview==='function')cleaned=finalOcrReview(cleaned);
+  AppState.lastText=cleaned;
   showOutput(cleaned);
-  renderFixReport();
+  if(typeof renderOcrReview==='function')renderOcrReview(raw,cleaned);
+  else renderFixReport();
   const finalScore=AppState.confidence??calculateConfidence(raw,cleaned);
   AppState.confidence=finalScore;
   renderConfidence(finalScore);
