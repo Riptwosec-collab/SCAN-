@@ -89,7 +89,7 @@ async function extractPdfText(pageNumber){
 
 async function pdfPageToCanvas(pageNumber){
   const page=await AppState.pdfDoc.getPage(pageNumber);
-  const viewport=page.getViewport({scale:2.2});
+  const viewport=page.getViewport({scale:2.8});
   const canvas=document.createElement('canvas');
   canvas.width=viewport.width;
   canvas.height=viewport.height;
@@ -118,9 +118,9 @@ async function scanPdf(){
     const hadTextLayer=!!text.trim();
     const shouldOcr=!hadTextLayer||!$('ocrOnlyNoText')?.checked;
     if(shouldOcr&&!hadTextLayer){
-      setStatus('หน้า '+pageNo+' ไม่มี Text Layer กำลัง OCR จากภาพ...');
+      setStatus('หน้า '+pageNo+' ไม่มี Text Layer กำลัง OCR จากภาพแบบ PDF-grade...');
       const canvas=await pdfPageToCanvas(pageNo);
-      text=await runOcr(preprocessCanvas(canvas),pct,Math.min(95,pct+(100/pages.length)));
+      text=await runOcr(canvas,pct,Math.min(95,pct+(100/pages.length)),'pdf');
     }
     const rawPageText=text.trim();
     AppState.pdfPageInfo.push({page:pageNo,text:rawPageText,hadTextLayer,usedOcr:shouldOcr&&!hadTextLayer});
