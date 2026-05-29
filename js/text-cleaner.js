@@ -77,6 +77,12 @@ function cleanText(text){
   const mode=$('modeSelect')?.value||'clean';
   if(mode==='plain')return result;
   if(mode==='document')return toDocument(result);
+  if(mode==='email')return toEmail(result);
+  if(mode==='ticket')return toTicket(result);
+  if(mode==='keyvalue')return toKeyValue(result);
+  if(mode==='bullets')return toBullets(result);
+  if(mode==='checklist')return toChecklist(result);
+  if(mode==='compact')return toCompact(result);
   if(mode==='table')return toTable(result);
   if(mode==='summary')return summarize(result);
   return result.split('\n').map(line=>line.trim()).filter(Boolean).join('\n');
@@ -282,6 +288,103 @@ function postCleanThai(text){
 function toDocument(text){
   const lines=text.split('\n').map(x=>x.trim()).filter(Boolean);
   return lines.join('\n\n');
+}
+
+function getCleanLines(text){
+  return String(text||'')
+    .split('\n')
+    .map(line=>line.trim())
+    .filter(Boolean);
+}
+
+function normalizeLabelLine(line){
+  let out=String(line||'')
+    .replace(/^(วันที่|จาก|ถึง|เรื่อง|Subject|From|To|Date|Ticket No\.?|Case|ผู้ติดต่อ|โทรศัพท์|อีเมล|email)\s+[:：]?\s*/i,'$1: ')
+    .replace(/\s*[:：]\s*/g,': ')
+    .replace(/\s{2,}/g,' ')
+    .trim();
+  out=out.replace(/^Ticket No\.?:/i,'Ticket No.:');
+  return out;
+}
+
+function splitHeaderBody(lines){
+  const headers=[];
+  const body=[];
+  const headerRegex=/^(วันที่|จาก|ถึง|เรื่อง|Subject|From|To|Date|Ticket No\.?|Case|ผู้ติดต่อ|โทรศัพท์|อีเมล|email)\s*:/i;
+  for(const raw of lines){
+    const line=normalizeLabelLine(raw);
+    if(headerRegex.test(line))headers.push(line);
+    else body.push(line);
+  }
+  return {headers,body};
+}
+
+function toEmail(text){
+  const {headers,body}=splitHeaderBody(getCleanLines(text));
+  const preferred=['วันที่','จาก','ถึง','เรื่อง','Date','From','To','Subject','Ticket No.'];
+  const sortedHeaders=[...headers].sort((a,b)=>{
+    const ai=preferred.findIndex(label=>a.toLowerCase().startsWith(label.toLowerCase()));
+    const bi=preferred.findIndex(label=>b.toLowerCase().startsWith(label.toLowerCase()));
+    return (ai<0?99:ai)-(bi<0?99:bi);
+  });
+  return [...sortedHeaders,'',...body.map(line=>line.replace(/^[-•]\s*/,'- '))].join('\n').trim();
+}
+
+function toTicket(text){
+  const lines=getCleanLines(text).map(normalizeLabelLine);
+  const ticketFields=[];
+  const detail=[];
+  const fieldRegex=/^(Ticket No\.?|Case|วันที่|จาก|ถึง|เรื่อง|ผู้ติดต่อ|โทรศัพท์|อีเมล|email|ระบบ|อาการ|สาเหตุ|วิธีแก้|สถานะ)\s*:/i;
+  for(const line of lines){
+    if(fieldRegex.test(line))ticketFields.push(line);
+    else detail.push(line);
+  }
+  const sections=[];
+  if(ticketFields.length)sections.push('Ticket Info', ...ticketFields.map(x=>'- '+x));
+  if(detail.length)sections.push('', 'Details', ...detail.map(x=>'- '+x.replace(/^[-•]\s*/,'')));
+  return sections.join('\n').trim();
+}
+
+function toKeyValue(text){
+  return getCleanLines(text).map(line=>{
+    const normalized=normalizeLabelLine(line);
+    if(/:\s*/.test(normalized))return normalized;
+    const pair=normalized.match(/^(.{2,32}?)[\s]{2,}(.+)$/);
+    if(pair)return pair[1].trim()+': '+pair[2].trim();
+    return normalized;
+  }).join('\n');
+}
+
+function toBullets(text){
+  return getCleanLines(text)
+    .map(line=>'- '+line.replace(/^[-•*]\s*/,''))
+    .join('\n');
+}
+
+function toChecklist(text){
+  return getCleanLines(text)
+    .map(line=>'- [ ] '+line.replace(/^[-•*]\s*/,''))
+    .join('\n');
+}
+
+function toCompact(text){
+  const lines=getCleanLines(text);
+  const blocks=[];
+  let current='';
+  for(const line of lines){
+    if(/^(วันที่|จาก|ถึง|เรื่อง|Ticket No\.?|Case|Subject|From|To|Date)\s*:/i.test(line)){
+      if(current)blocks.push(current.trim());
+      blocks.push(normalizeLabelLine(line));
+      current='';
+    }else if(line.length<42){
+      if(current)blocks.push(current.trim());
+      current=line;
+    }else{
+      current=(current?current+' ':'')+line;
+    }
+  }
+  if(current)blocks.push(current.trim());
+  return blocks.join('\n');
 }
 
 function toTable(text){
