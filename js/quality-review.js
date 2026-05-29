@@ -237,9 +237,34 @@ function renderOcrReview(raw,cleaned){
   const issues=findSuspiciousOcrTokens(cleaned);
   const box=$('fixReport');
   if(!box)return;
-  const fixed=(AppState.fixedWords||[]).slice(0,80).map(x=>'<span class="fix-item">'+escapeHtml(x.from)+' → '+escapeHtml(x.to)+'</span>').join('');
+  const fixed=renderFixedWordsSummary(AppState.fixedWords||[]);
   const review=issues.length
     ? '<div class="hint">ยังพบจุดน่าสงสัย: '+issues.map(i=>i.name+' '+i.count+' จุด').join(' · ')+'</div>'
     : '<div class="hint">ตรวจละเอียดแล้ว ไม่พบรูปแบบ OCR แปลกที่พบบ่อย</div>';
   box.innerHTML=(fixed||'ไม่มีรายการคำที่แก้')+review+renderSpellReport(cleaned);
+}
+
+function renderFixedWordsSummary(items){
+  if(!items.length)return '';
+  const grouped=new Map();
+  for(const item of items){
+    const from=String(item.from??'');
+    const to=String(item.to??'');
+    const type=item.type||classifyFix?.(from,to)||'แก้คำ';
+    const key=type+'|'+from+'|'+to;
+    const current=grouped.get(key)||{type,from,to,count:0};
+    current.count++;
+    grouped.set(key,current);
+  }
+  const rows=[...grouped.values()].sort((a,b)=>b.count-a.count).slice(0,80);
+  const typeCounts=rows.reduce((acc,row)=>{
+    acc[row.type]=(acc[row.type]||0)+row.count;
+    return acc;
+  },{});
+  const summary=Object.entries(typeCounts).map(([type,count])=>'<span class="fix-summary-chip">'+escapeHtml(type)+' '+count+'</span>').join('');
+  const chips=rows.map(row=>{
+    const to=row.to?escapeHtml(row.to):'<em>ลบออก</em>';
+    return '<span class="fix-item grouped"><b>'+escapeHtml(row.type)+'</b> '+escapeHtml(row.from)+' → '+to+' <small>x'+row.count+'</small></span>';
+  }).join('');
+  return '<div class="fix-summary"><div class="fix-summary-head"><b>รายการคำที่แก้</b>'+summary+'</div><div class="fix-list">'+chips+'</div></div>';
 }

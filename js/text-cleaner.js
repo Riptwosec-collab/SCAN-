@@ -84,6 +84,7 @@ function cleanText(text){
 
 function fixNoise(text){
   let out=text;
+  out=removeStrangeCharacters(out);
   const rules=[
     [/[○●◦▪▫◆◇□■�💀]/g,''],
     [/[ÊÉÈË]/g,''],[/[Ɵθϴ]/g,'ti'],[/[ƩΣ]/g,'tt'],[/ํ(?=า)/g,''],
@@ -92,6 +93,43 @@ function fixNoise(text){
     [/ประ\s*เมิ\s*น/g,'ประเมิน'],[/อุ\s*ปกร\s*ณ์/g,'อุปกรณ์'],[/ง\s*3\s*ระบบ/g,'ทั้ง 3 ระบบ']
   ];
   for(const [pattern,replacement] of rules)out=replaceTrack(out,pattern,replacement);
+  return out;
+}
+
+function classifyFix(from,to){
+  const source=String(from||'');
+  const target=String(to||'');
+  if(!target&&/[^\w\sก-ฮะาำิีึืุูั็่้๊๋์.,:;()\/\-+%]/.test(source))return 'ลบอักษรแปลก';
+  if(/[�ƟθϴƩΣÊÉÈË○●◦▪▫◆◇□■💀]/.test(source))return 'ลบอักษรแปลก';
+  if(/\s{2,}|[เแโใไ]\s+[ก-ฮ]|[ก-ฮ]\s+[ะาำิีึืุูั็่้๊๋์]/.test(source))return 'แก้ช่องว่าง';
+  if(/[A-Za-z]/.test(source+target))return 'Dictionary IT/NOC';
+  return 'แก้คำไทย';
+}
+
+function trackNoiseRemoval(match){
+  if(match)AppState.fixedWords.push({from:match,to:'',type:'ลบอักษรแปลก'});
+  return '';
+}
+
+function removeStrangeCharacters(text){
+  let out=text||'';
+  out=out.replace(/[�]/g,trackNoiseRemoval);
+  out=out.replace(/[\u200B-\u200D\uFEFF]/g,trackNoiseRemoval);
+  out=out.replace(/[○●◦▪▫◆◇□■▢▣▤▥▦▧▨▩]/g,trackNoiseRemoval);
+  out=out.replace(/[💀☠️✅☑️✔️❌✖️]/g,trackNoiseRemoval);
+  out=out.replace(/[“”«»]/g,'"').replace(/[‘’]/g,"'");
+  out=out.replace(/[│┃┆┇┊┋┌┐└┘├┤┬┴┼─━═]+/g,match=>{
+    AppState.fixedWords.push({from:match,to:' ',type:'ลบเส้นตาราง'});
+    return ' ';
+  });
+  out=out.replace(/(^|\n)\s*[\[\]{}|/\\_=+\-–—.,'"]{3,}\s*(?=\n|$)/g,match=>{
+    AppState.fixedWords.push({from:match.trim(),to:'',type:'ลบบรรทัดขยะ'});
+    return match.startsWith('\n')?'\n':'';
+  });
+  out=out.replace(/[ \t]{2,}/g,match=>{
+    AppState.fixedWords.push({from:match,to:' ',type:'แก้ช่องว่าง'});
+    return ' ';
+  });
   return out;
 }
 
