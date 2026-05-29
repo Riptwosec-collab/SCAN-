@@ -71,6 +71,7 @@ function cleanText(text){
   result=applyCustomRules(result);
   if($('cleanThai')?.checked)result=fixThaiWords(result);
   result=fixUiOcrWords(result);
+  if(typeof applySpellingCorrections==='function')result=applySpellingCorrections(result);
   result=postCleanThai(result);
 
   const mode=$('modeSelect')?.value||'clean';

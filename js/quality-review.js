@@ -4,6 +4,28 @@ const OCR_REVIEW_WORDS=[
   'โทรศัพท์','เปลี่ยน','ขั้นตอน','เอกสาร','อุปกรณ์','ประเมิน','ใช้งาน','ทดแทน','ยืนยัน','ข้อมูล','ข้อความ','ตัวอักษร','ช่องว่าง','เครื่อง','เชื่อม','เกี่ยว','เรื่อง','เพื่อ','แจ้ง','ระบุ','ระบบ','ลูกค้า','ทดสอบ','อาการ','บ่อย','ชื่อ','งาน','ปิด','ผู้'
 ];
 
+const OCR_CORRECT_WORDS=[
+  ...OCR_REVIEW_WORDS,
+  'ลบอักษรแปลก','รวมคำไทยผิดช่องว่าง','รายการคำที่แก้','เพิ่มคำแก้เอง','ขยายภาพ','เลือกทั้งภาพ','ลากเมาส์บนภาพ','พื้นที่ OCR','ตั้งค่าไว้','พรีวิวรูปถูกซ่อน',
+  'Options','Preset','Cleanup','Balanced','Dictionary','Contrast','Original','Crop','Search','Clear','Copy','Output','History','Confidence'
+];
+
+const OCR_WRONG_WORD_RULES=[
+  [/คา(?=ไทย|แก้|ที่)/g,'คำ'],
+  [/ซ่องว่าง/g,'ช่องว่าง'],
+  [/ช่อ\s*งว่าง/g,'ช่องว่าง'],
+  [/อกษร|อักษ[นร]/g,'อักษร'],
+  [/แปตาก|แปสก/g,'แปลก'],
+  [/ศาทหแก้|ศาทหแก|คำทหแก้|คําทหแก้/g,'คำที่แก้'],
+  [/พืนที|พืนที่/g,'พื้นที่'],
+  [/เมาสับน|เมาส์บ\s*น/g,'เมาส์บน'],
+  [/ตั้งคา/g,'ตั้งค่า'],
+  [/แปปลง/g,'แปลง'],
+  [/สแกนแปลง|scnan\s*แปลง/gi,'สแกน แปลง'],
+  [/ITNT/g,'IT/NOC'],
+  [/0CR/g,'OCR']
+];
+
 function escapeReviewRegExp(value){
   return String(value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 }
@@ -107,6 +129,17 @@ function finalOcrReview(text){
   return removeOcrGarbageLines(out);
 }
 
+function applySpellingCorrections(text){
+  let out=text||'';
+  for(const [pattern,replacement] of OCR_WRONG_WORD_RULES){
+    out=replaceTrack(out,pattern,replacement);
+  }
+  for(const word of [...OCR_CORRECT_WORDS].sort((a,b)=>Array.from(b).length-Array.from(a).length)){
+    if(/[ก-ฮ]/.test(word))out=replaceTrack(out,reviewWordRegex(word),word);
+  }
+  return out;
+}
+
 function findSuspiciousOcrTokens(text){
   const found=[];
   const checks=[
@@ -123,6 +156,83 @@ function findSuspiciousOcrTokens(text){
   return found;
 }
 
+function analyzeThaiSpelling(text){
+  const value=text||'';
+  const correctWords=[];
+  const suspiciousWords=[];
+  const spacingIssues=[];
+  const seenCorrect=new Set();
+  const seenSuspicious=new Set();
+  const seenSpacing=new Set();
+
+  for(const word of OCR_CORRECT_WORDS){
+    if(!word||seenCorrect.has(word))continue;
+    const re=new RegExp(escapeReviewRegExp(word),'gi');
+    const matches=value.match(re)||[];
+    if(matches.length){
+      seenCorrect.add(word);
+      correctWords.push({word,count:matches.length});
+    }
+  }
+
+  const wrongChecks=[
+    {regex:/คา(?=ไทย|แก้|ที่)/g,suggest:'คำ'},
+    {regex:/ซ่องว่าง|ช่อ\s*งว่าง/g,suggest:'ช่องว่าง'},
+    {regex:/อกษร|อักษ[นร]/g,suggest:'อักษร'},
+    {regex:/แปตาก|แปสก/g,suggest:'แปลก'},
+    {regex:/ศาทหแก้|ศาทหแก|คำทหแก้/g,suggest:'คำที่แก้'},
+    {regex:/พืนที|พืนที่/g,suggest:'พื้นที่'},
+    {regex:/เมาสับน|เมาส์บ\s*น/g,suggest:'เมาส์บน'},
+    {regex:/ตั้งคา/g,suggest:'ตั้งค่า'},
+    {regex:/แปปลง/g,suggest:'แปลง'},
+    {regex:/[�ƟθϴƩΣÉÊÈË]/g,suggest:'ตรวจอักษรแปลก'}
+  ];
+  for(const check of wrongChecks){
+    const matches=value.match(check.regex)||[];
+    for(const match of matches.slice(0,8)){
+      const key=match+'>'+check.suggest;
+      if(seenSuspicious.has(key))continue;
+      seenSuspicious.add(key);
+      suspiciousWords.push({word:match,suggest:check.suggest});
+    }
+  }
+
+  const spacingChecks=[
+    {regex:/[เแโใไ]\s+[ก-ฮ]/g,suggest:'สระนำหน้าไม่ควรเว้น'},
+    {regex:/[ก-ฮ]\s+[ะาำิีึืุูั็่้๊๋์]/g,suggest:'สระ/วรรณยุกต์ติดกับพยัญชนะ'},
+    {regex:/[ก-ฮ]\s{2,}[ก-ฮ]/g,suggest:'ลดช่องว่างซ้ำ'},
+    {regex:/\b(?:SD|S D)\s*[- ]?\s*WAN\b/gi,suggest:'SD-WAN'},
+    {regex:/\bI\s*T\s*[/|\\]?\s*N\s*[O0]\s*C\b/gi,suggest:'IT/NOC'}
+  ];
+  for(const check of spacingChecks){
+    const matches=value.match(check.regex)||[];
+    for(const match of matches.slice(0,8)){
+      const key=match+'>'+check.suggest;
+      if(seenSpacing.has(key))continue;
+      seenSpacing.add(key);
+      spacingIssues.push({text:match,suggest:check.suggest});
+    }
+  }
+
+  return {correctWords,suspiciousWords,spacingIssues};
+}
+
+function renderSpellReport(cleaned){
+  const report=analyzeThaiSpelling(cleaned||'');
+  const goodCount=report.correctWords.reduce((sum,item)=>sum+item.count,0);
+  const badCount=report.suspiciousWords.length;
+  const spacingCount=report.spacingIssues.length;
+  const good=report.correctWords.slice(0,12).map(item=>'<span class="spell-chip ok">'+escapeHtml(item.word)+' '+item.count+'</span>').join('');
+  const bad=report.suspiciousWords.slice(0,12).map(item=>'<span class="spell-chip bad">'+escapeHtml(item.word)+' → '+escapeHtml(item.suggest)+'</span>').join('');
+  const spacing=report.spacingIssues.slice(0,12).map(item=>'<span class="spell-chip warn">'+escapeHtml(item.text)+' → '+escapeHtml(item.suggest)+'</span>').join('');
+  return '<div class="spell-report">'+
+    '<div class="spell-summary"><b>ตรวจคำ</b><span>คำถูก '+goodCount+'</span><span>คำน่าสงสัย '+badCount+'</span><span>ช่องว่าง '+spacingCount+'</span></div>'+
+    '<div class="spell-group"><b>คำที่มั่นใจ</b>'+(good||'<span class="hint">ยังไม่พบคำใน dictionary</span>')+'</div>'+
+    '<div class="spell-group"><b>คำผิด/น่าสงสัย</b>'+(bad||'<span class="hint">ไม่พบคำผิดที่รู้จัก</span>')+'</div>'+
+    '<div class="spell-group"><b>ช่องว่าง</b>'+(spacing||'<span class="hint">ไม่พบช่องว่างผิดรูปแบบ</span>')+'</div>'+
+  '</div>';
+}
+
 function renderOcrReview(raw,cleaned){
   const issues=findSuspiciousOcrTokens(cleaned);
   const box=$('fixReport');
@@ -131,5 +241,5 @@ function renderOcrReview(raw,cleaned){
   const review=issues.length
     ? '<div class="hint">ยังพบจุดน่าสงสัย: '+issues.map(i=>i.name+' '+i.count+' จุด').join(' · ')+'</div>'
     : '<div class="hint">ตรวจละเอียดแล้ว ไม่พบรูปแบบ OCR แปลกที่พบบ่อย</div>';
-  box.innerHTML=(fixed||'ไม่มีรายการคำที่แก้')+review;
+  box.innerHTML=(fixed||'ไม่มีรายการคำที่แก้')+review+renderSpellReport(cleaned);
 }
