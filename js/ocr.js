@@ -44,8 +44,19 @@ function updateProcessedPreview(){
   drawCanvasTo($('processedPreview'),AppState.processedCanvas);
 }
 
+function getSmartScale(source,mode='default'){
+  const minSide=Math.min(source.width,source.height);
+  const maxSide=Math.max(source.width,source.height);
+  let scale=$('upscale')?.checked?3:1;
+  if(mode==='pdf-like'||mode==='doc-clean'||mode==='receipt')scale=Math.max(scale,3.4);
+  if(minSide<900)scale=Math.max(scale,4.2);
+  if(minSide<520)scale=Math.max(scale,5);
+  if(maxSide>2600)scale=Math.min(scale,2.4);
+  return Math.max(1,Math.min(5,scale));
+}
+
 function preprocessCanvas(source,mode='default'){
-  const scale=$('upscale')?.checked?3:1;
+  const scale=getSmartScale(source,mode);
   const canvas=document.createElement('canvas');
   canvas.width=Math.max(1,Math.round(source.width*scale));
   canvas.height=Math.max(1,Math.round(source.height*scale));
@@ -85,6 +96,18 @@ function preprocessCanvas(source,mode='default'){
     }else if(mode==='ui-detail'){
       v=(v-150)*1.75+150;
       d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v));
+    }else if(mode==='pdf-like'){
+      v=(v-132)*1.72+132;
+      d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v));
+    }else if(mode==='doc-clean'){
+      v=(v-120)*1.9+120;
+      const threshold=Math.max(128,Math.min(188,avg*.92));
+      v=v>threshold?255:0;
+      d[i]=d[i+1]=d[i+2]=v;
+    }else if(mode==='receipt'){
+      v=(v-145)*1.62+145;
+      v=Math.max(0,Math.min(255,v));
+      d[i]=d[i+1]=d[i+2]=v;
     }
   }
   ctx.putImageData(img,0,0);
@@ -98,22 +121,26 @@ function scoreOcrText(text,confidence){
   const nums=(value.match(/[0-9]/g)||[]).length;
   const ipLike=(value.match(/\b\d{1,3}[\.\s]\d{1,3}[\.\s]\d{1,3}[\.\s]\d{1,3}\b/g)||[]).length;
   const networkTerms=(value.match(/DHCP|IPv4|Subnet|Mask|Gateway|DNS|Ethernet|Wireless|Network|Connection|Details|Intel/gi)||[]).length;
+  const docTerms=(value.match(/ใบกำกับ|ภาษี|หนังสือ|บริษัท|จำกัด|จำนวนเงิน|ใบเสร็จ|สัญญา|เลขประจำตัว|วันที่|เรื่อง|จาก|ถึง|Ticket|อีเมล|โครงการ|ระบบ|ตรวจสอบ/gi)||[]).length;
+  const lineCount=value.split('\n').filter(x=>x.trim().length>2).length;
   const weird=(value.match(/[�ƟθϴƩΣÉÊÈË|{}<>~`_^«»]/g)||[]).length;
   const shortNoise=(value.match(/\b[a-zA-Z]{1,2}\b/g)||[]).length;
   const repeated=(value.match(/(.)\1{4,}/g)||[]).length;
   const len=value.replace(/\s/g,'').length;
   let score=0;
-  score+=Math.min(70,thai*1.5);
+  score+=Math.min(90,thai*1.65);
   score+=Math.min(25,eng*.55);
-  score+=Math.min(15,nums*.35);
+  score+=Math.min(18,nums*.35);
+  score+=Math.min(35,lineCount*3);
   score+=ipLike*28;
   score+=networkTerms*18;
-  score+=confidence?confidence*.8:0;
-  score-=weird*13;
-  score-=shortNoise*1.2;
-  score-=repeated*8;
+  score+=docTerms*22;
+  score+=confidence?confidence*.85:0;
+  score-=weird*14;
+  score-=shortNoise*1.15;
+  score-=repeated*12;
   if(len<8)score-=40;
-  if(thai===0&&eng>20&&networkTerms<2)score-=15;
+  if(thai===0&&eng>20&&networkTerms<2&&docTerms<2)score-=15;
   return score;
 }
 
@@ -164,7 +191,7 @@ function extractNetworkConnectionDetails(text){
   return lines.join('\n')+'\n\n--- Raw OCR ---\n'+src;
 }
 
-async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6'){
+async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6',extra={}){
   const lang=$('langSelect')?.value||'tha+eng';
   const result=await Tesseract.recognize(canvas,lang,{
     logger:m=>{
@@ -172,23 +199,39 @@ async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6'){
       if(m.status)setStatus(label+' · '+m.status+' '+Math.round((m.progress||0)*100)+'%');
     },
     tessedit_pageseg_mode:psm,
-    preserve_interword_spaces:'1'
+    preserve_interword_spaces:'1',
+    tessedit_char_whitelist:extra.whitelist||undefined
   });
   const confidence=extractAverageConfidence(result);
   return {text:result.data.text||'',confidence};
 }
 
-async function runOcr(canvas,start=0,end=100){
-  if(!window.Tesseract)throw new Error('โหลด Tesseract.js ไม่สำเร็จ กรุณาต่ออินเทอร์เน็ต');
-
-  const passes=[
-    {name:'UI Detail',mode:'ui-detail',psm:'11'},
-    {name:'Auto Sharp',mode:'binary',psm:'6'},
+function createImageOcrPasses(){
+  return [
+    {name:'PDF-like Document',mode:'pdf-like',psm:'6'},
+    {name:'Document Clean',mode:'doc-clean',psm:'6'},
+    {name:'Thai Dense Text',mode:'pdf-like',psm:'4'},
+    {name:'Sparse UI/Text',mode:'ui-detail',psm:'11'},
     {name:'Soft Contrast',mode:'soft',psm:'6'},
     {name:'Gray Detail',mode:'gray',psm:'11'},
+    {name:'Receipt Detail',mode:'receipt',psm:'4'},
     {name:'Invert Check',mode:'invert',psm:'11'}
   ];
+}
 
+function createPdfOcrPasses(){
+  return [
+    {name:'PDF Page OCR',mode:'pdf-like',psm:'6'},
+    {name:'PDF Clean OCR',mode:'doc-clean',psm:'6'},
+    {name:'PDF Dense OCR',mode:'pdf-like',psm:'4'},
+    {name:'PDF Sparse OCR',mode:'gray',psm:'11'}
+  ];
+}
+
+async function runOcr(canvas,start=0,end=100,profile='image'){
+  if(!window.Tesseract)throw new Error('โหลด Tesseract.js ไม่สำเร็จ กรุณาต่ออินเทอร์เน็ต');
+
+  const passes=profile==='pdf'?createPdfOcrPasses():createImageOcrPasses();
   let best={text:'',confidence:0,score:-Infinity,mode:''};
   for(let i=0;i<passes.length;i++){
     const pass=passes[i];
@@ -196,7 +239,7 @@ async function runOcr(canvas,start=0,end=100){
     const to=start+((end-start)*(i+1)/passes.length);
     setStatus('กำลังตรวจ OCR หลายโหมด: '+pass.name+' ('+(i+1)+'/'+passes.length+')');
     const processed=preprocessCanvas(canvas,pass.mode);
-    const result=await recognizeOnce(processed,from,to,pass.name,pass.psm);
+    const result=await recognizeOnce(processed,from,to,pass.name,pass.psm,pass);
     const normalized=normalizeNetworkOcrText(result.text);
     const extracted=extractNetworkConnectionDetails(normalized);
     const candidateText=extracted||normalized||result.text;
@@ -205,7 +248,7 @@ async function runOcr(canvas,start=0,end=100){
       best={text:candidateText,confidence:result.confidence,score,mode:pass.name,canvas:processed};
     }
     if(extracted&&result.confidence>=55)break;
-    if(result.confidence>=83&&score>160)break;
+    if(result.confidence>=88&&score>230)break;
   }
 
   AppState.confidence=best.confidence;
@@ -230,10 +273,10 @@ async function scanImage(){
     setStatus('ยังไม่ได้เลือกรูปภาพ','err');
     return '';
   }
-  setStatus('กำลัง OCR รูปภาพแบบละเอียด...');
+  setStatus('กำลัง OCR รูปภาพแบบ PDF-grade...');
   const base=cropCanvas(AppState.imageCanvas);
-  const preview=preprocessCanvas(base,'auto-preview');
+  const preview=preprocessCanvas(base,'pdf-like');
   AppState.processedCanvas=preview;
   drawCanvasTo($('processedPreview'),preview);
-  return runOcr(base,5,95);
+  return runOcr(base,5,95,'image');
 }
