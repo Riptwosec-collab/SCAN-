@@ -1,11 +1,12 @@
 // RIPTWOSEC.SCAN document OCR post-processor
-// Rule-based AI helper for Thai document, IT ticket, and email OCR cleanup in browser.
+// Rule-based AI helper for Thai document, IT ticket, tax system, and email OCR cleanup in browser.
 function aiThaiDocumentPostProcess(text){
   let out = text || '';
 
   out = removeItEmailGarbage(out);
   out = normalizeItEmailHeader(out);
   out = normalizeDomainAndEmail(out);
+  out = normalizeThaiProjectText(out);
 
   const rules = [
     ['ใบกากับภาษี','ใบกำกับภาษี'],['ใบกาํ กับภาษี','ใบกำกับภาษี'],['ใบกำกับ ภาษี','ใบกำกับภาษี'],
@@ -23,6 +24,9 @@ function aiThaiDocumentPostProcess(text){
     ['ขัตมูลเพ็มเติม','ข้อมูลเพิ่มเติม'],['ขอมูลเพิ่มเติม','ข้อมูลเพิ่มเติม'],['ทุกขั้น','ทุกวัน'],['ตลดต','ตลอด'],['ซั้วโมง','ชั่วโมง'],
     ['ขตแสดงตวามนับถืต','ขอแสดงความนับถือ'],['เจลาๆ','เวลา'],['คสุณ','คุณ'],
     ['เสืตกพตรป','เลือกรูป'],['เลือกรูปภาพ','เลือกรูปภาพ'],['เลือกเมนู','เลือกเมนู'],
+    ['การฉัดสรร','การจัดสรร'],['ฉัดสรร','จัดสรร'],['เพื่อรองรัน','เพื่อรองรับ'],['รองรัน','รองรับ'],
+    ['โครงการปฐับปรง','โครงการปรับปรุง'],['ปฐับปรง','ปรับปรุง'],['ปรับปรง','ปรับปรุง'],
+    ['ระบบควบคุมลกหนี่กาษีอากร','ระบบควบคุมลูกหนี้ภาษีอากร'],['ลกหนี่','ลูกหนี้'],['ลูกหนี่','ลูกหนี้'],['กาษีอากร','ภาษีอากร'],
     ['Ticket Mo.','Ticket No.'],['Ticket No,','Ticket No.'],['Ticket N0.','Ticket No.'],
     ['รือซีเมลี่','หรืออีเมลที่'],['๐อทไชอ๐18','ติดต่อ'],['0อทไชอ018','ติดต่อ'],['อทไชอ','ติดต่อ'],['ผู่','ผู้']
   ];
@@ -35,7 +39,8 @@ function aiThaiDocumentPostProcess(text){
 
   const docWords = [
     'บริษัท','จำกัด','ใบกำกับภาษี','หนังสือมอบอำนาจ','เลขประจำตัว','จำนวนเงิน','ใบเสร็จ','สัญญา','อนุมัติ','ใบสำคัญจ่าย','ราคาสุทธิ','ผู้รับเงิน','ผู้ว่าจ้าง','สิ่งที่ส่งมาด้วย','เพื่อทราบ','ได้รับ','ยอดรวมทั้งหมด','ยอดรวมทั้งสิ้น','สงวนสิทธิ์','ข้อมูล','ข้อมูลเพิ่มเติม','กำไร','บาทถ้วน',
-    'อีเมล','โหมด','Incognito','รบกวน','ทดสอบ','ทำการ','ตรวจสอบ','ทุกวัน','ตลอด','ชั่วโมง','ขอแสดงความนับถือ','เวลา','คุณ','เลือกรูป','เลือกเมนู','ติดต่อ','Ticket No.','จาก','ถึง','วันที่','เรื่อง'
+    'อีเมล','โหมด','Incognito','รบกวน','ทดสอบ','ทำการ','ตรวจสอบ','ทุกวัน','ตลอด','ชั่วโมง','ขอแสดงความนับถือ','เวลา','คุณ','เลือกรูป','เลือกเมนู','ติดต่อ','Ticket No.','จาก','ถึง','วันที่','เรื่อง',
+    'การจัดสรร','เพื่อรองรับ','โครงการปรับปรุง','ระบบควบคุมลูกหนี้ภาษีอากร','ลูกหนี้','ภาษีอากร','กรมสรรพากร'
   ];
   if(typeof spacedWordRegex === 'function' && typeof replaceTrack === 'function'){
     for(const word of docWords.sort((a,b)=>b.length-a.length)){
@@ -67,7 +72,7 @@ function removeItEmailGarbage(text){
       const compact=line.replace(/\s/g,'');
       if(compact.length<=10 && /^[;:=\-_=~`!|Il0oO\.\[\]{}()<>\/\\]+$/.test(compact))return false;
       if(/^[;:\-=\s\dA-Za-zIl|!\.\[\]{}()<>\/\\]+$/.test(line) && compact.length<14 && !/\d{2,}/.test(compact))return false;
-      if(/PERE|F——|oo\s*PERE|ซ่\s*Be/i.test(line))return false;
+      if(/PERE|F——|oo\s*PERE|ซ่\s*Be|IRATE\s*--/i.test(line))return false;
       return true;
     })
     .join('\n');
@@ -75,7 +80,7 @@ function removeItEmailGarbage(text){
 
 function normalizeItEmailHeader(text){
   return String(text||'')
-    .replace(/^\s*(Audi|Date|Dale|วันที่|วนที่)\s*[:：]?/gim,'วันที่:')
+    .replace(/^\s*(Audi|Date|Dale|วันที่|วนที่|ที่)\s*[:：]?/gim,'วันที่:')
     .replace(/^\s*(From|Fron|จาก)\s*[:：]?/gim,'จาก:')
     .replace(/^\s*(To|T0|ถึง)\s*[:：]?/gim,'ถึง:')
     .replace(/^\s*(Subject|Subj|เรื่อง|เรือง)\s*[:：]?/gim,'เรื่อง:')
@@ -91,6 +96,15 @@ function normalizeDomainAndEmail(text){
   out = out.replace(/network\s*@\s*dga\s*\.\s*or\s*\.\s*th/gi,'network@dga.or.th');
   out = out.replace(/<\s*([^<>\s]+)\s*>/g,'<$1>');
   return out;
+}
+
+function normalizeThaiProjectText(text){
+  return String(text||'')
+    .replace(/2ฮ็ั็ืไฝ\s*2\s*เจ\s*IRATE\s*--/g,'')
+    .replace(/\[0\.\s*เส่ส655\.?/g,'')
+    .replace(/60904/g,'')
+    .replace(/เรื่อง\s*การ/g,'เรื่อง การ')
+    .replace(/\s{2,}/g,' ');
 }
 
 function repairItTicketNumbers(text){
