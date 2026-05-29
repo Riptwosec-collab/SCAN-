@@ -1,0 +1,18 @@
+window.AppState={
+  tab:'img',
+  imageFile:null,
+  imageCanvas:null,
+  processedCanvas:null,
+  crop:null,
+  cropEnabled:false,
+  pdfDoc:null,
+  pdfPages:0,
+  pdfPageInfo:[],
+  batchFiles:[],
+  batchResults:[],
+  lastText:'',
+  rawText:'',
+  fixedWords:[],
+  confidence:null,
+  sourceName:''
+};

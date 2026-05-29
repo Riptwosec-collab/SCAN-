@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RIPTWOSEC.SCAN | OCR สำหรับเอกสาร IT ภาษาไทย</title>
+  <meta name="description" content="OCR สำหรับเอกสาร IT, PDF, รูปภาพ และข้อความภาษาไทย แก้คำไทยเพี้ยน รองรับ Batch OCR และ Export หลายรูปแบบ">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/features.css">
+  <link rel="stylesheet" href="css/background.css">
+  <link rel="stylesheet" href="css/tool-cleanup.css">
+  <link rel="stylesheet" href="css/output-rim.css">
+  <link rel="stylesheet" href="css/pro-tool.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="site-header">
+      <a class="brand-block" href="index.html">
+        <span class="brand">RIPTWOSEC.SCAN</span>
+        <span class="sub">OCR for IT · PDF · Image · Thai Cleanup</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#tool">Tool</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </nav>
+    </header>
+
+    <section class="hero clean-section">
+      <div class="hero-copy">
+        <div class="eyebrow">OCR FOR NOC / HELPDESK / ENGINEER</div>
+        <h1>OCR สำหรับเอกสาร IT, PDF, รูปภาพ และข้อความภาษาไทย</h1>
+        <p class="hero-lead">แปลงรูปภาพหรือ PDF เป็นข้อความ พร้อมช่วยแก้คำไทยเพี้ยน สระหาย ช่องว่างกลางคำ และคำเฉพาะทางสาย IT เช่น CUCM, SD-WAN, NOC, Case</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#tool">เริ่มใช้งาน</a>
+          <a class="btn" href="#features">ดูความสามารถ</a>
+        </div>
+      </div>
+      <div class="hero-card clean-card">
+        <div class="mini-label">Workflow</div>
+        <ol class="workflow-list">
+          <li>Upload Image / PDF</li>
+          <li>OCR ไทย + อังกฤษ</li>
+          <li>Clean Thai + IT Dictionary</li>
+          <li>Export TXT / DOC / CSV / JSON / PDF</li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="features" class="clean-section feature-showcase">
+      <div class="section-head feature-head">
+        <div>
+          <div class="label">Real Use Cases</div>
+          <h2>จุดเด่นที่ใช้กับงานจริง</h2>
+          <p>จัดมาให้ตรงกับงาน NOC / Helpdesk / Engineer: แปลงไว อ่านง่าย ลดเวลาพิมพ์ซ้ำ และเก็บผลลัพธ์ไปใช้งานต่อได้ทันที</p>
+        </div>
+      </div>
+      <div class="feature-grid real-grid">
+        <article class="feature-card main-feature">
+          <span class="feature-icon">🧠</span>
+          <b>แก้ข้อความไทยจาก OCR ให้อ่านรู้เรื่อง</b>
+          <p>ช่วยรวมคำที่โดนเว้นวรรคผิด แก้สระหาย และลบอักษรแปลก เช่น <code>เครื อง</code> → <code>เครื่อง</code>, <code>ขั นตอน</code> → <code>ขั้นตอน</code></p>
+          <div class="feature-tags"><span>Thai Cleanup</span><span>Noise Fix</span></div>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon">📄</span>
+          <b>อ่าน PDF ได้ทั้ง Text และ Scan</b>
+          <p>ถ้า PDF มี Text Layer จะดึงข้อความโดยตรง ถ้าเป็นไฟล์สแกนจะ fallback ไป OCR จากภาพหน้าเอกสาร</p>
+          <div class="feature-tags"><span>PDF</span><span>OCR Fallback</span></div>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon">📦</span>
+          <b>Batch OCR หลายไฟล์</b>
+          <p>เหมาะกับรูปจาก LINE/Teams, คู่มือหลายหน้า หรือเอกสารงาน Support ที่ต้องแปลงต่อเนื่องหลายไฟล์</p>
+          <div class="feature-tags"><span>Batch</span><span>Multi-file</span></div>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon">🛠</span>
+          <b>Dictionary สำหรับสาย IT / NOC</b>
+          <p>รู้จักคำเฉพาะทาง เช่น SD-WAN, CUCM, NOC, Case, Engineer, Route Pattern ลดปัญหาคำอังกฤษเพี้ยน</p>
+          <div class="feature-tags"><span>NOC</span><span>IT Terms</span></div>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon">✂️</span>
+          <b>Crop เฉพาะจุดที่ต้องการ</b>
+          <p>ลากเลือกเฉพาะพื้นที่ข้อความในรูป เพื่อลดสิ่งรบกวนจากเมนู ไอคอน หรือพื้นหลังที่ทำให้ OCR อ่านมั่ว</p>
+          <div class="feature-tags"><span>Crop</span><span>Cleaner Output</span></div>
+        </article>
+        <article class="feature-card">
+          <span class="feature-icon">📤</span>
+          <b>Export พร้อมใช้งานต่อ</b>
+          <p>คัดลอกหรือส่งออกเป็น TXT, DOC, CSV, JSON และไฟล์สำหรับ Print เป็น PDF เพื่อใช้ต่อใน Ticket, Report หรือเอกสารงาน</p>
+          <div class="feature-tags"><span>Export</span><span>Report Ready</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="privacy-note clean-section">
+      <div>
+        <div class="label">Privacy First</div>
+        <h2>ไฟล์ถูกประมวลผลบน Browser เป็นหลัก</h2>
+        <p>History จะอยู่ใน localStorage ของ Browser ผู้ใช้ และสามารถล้างได้เอง</p>
+      </div>
+      <div class="hero-actions">
+        <a class="btn" href="privacy.html">Privacy Policy</a>
+        <a class="btn" href="terms.html">Terms of Use</a>
+      </div>
+    </section>
+
+    <section id="tool" class="tool-shell clean-section">
+      <div class="tool-title-row">
+        <div>
+          <div class="label">SCAN TOOL</div>
+          <h2>เครื่องมือแปลงข้อความ</h2>
+        </div>
+        <div class="top-actions tool-actions">
+          <button class="btn" id="copyBtn">Copy</button>
+          <button class="btn" id="txtBtn">TXT</button>
+          <button class="btn" id="docBtn">DOC</button>
+          <button class="btn" id="csvBtn">CSV</button>
+          <button class="btn" id="jsonBtn">JSON</button>
+          <button class="btn" id="printBtn">PDF</button>
+          <button class="btn danger" id="clearBtn">Clear</button>
+        </div>
+      </div>
+
+      <nav class="tabs tool-tabs">
+        <button id="tabImg" class="tab active" data-tab="img">รูปภาพ</button>
+        <button id="tabPdf" class="tab" data-tab="pdf">PDF</button>
+        <button id="tabBatch" class="tab" data-tab="batch">Batch</button>
+      </nav>
+
+      <main class="tool-grid">
+        <aside class="panel input-panel">
+          <div class="step-title"><span>01</span><b>Input / Preview</b></div>
+
+          <div id="imgPanel" class="input-mode">
+            <div class="drop" id="imgDrop">
+              <input id="imgInput" type="file" accept="image/*">
+              <div class="drop-icon">🖼</div>
+              <b>เลือกหรือวางรูปภาพ</b>
+              <span class="hint">PNG · JPG · WEBP · Ctrl+V · Crop OCR</span>
+            </div>
+            <div id="imgFileInfo" class="file-info hide">
+              <span id="imgFileName">ยังไม่ได้เลือกไฟล์</span>
+              <button class="btn small danger" id="removeImgBtn">ยกเลิกไฟล์นี้</button>
+            </div>
+            <div class="preview-grid">
+              <div><div class="mini-label">Original</div><canvas id="imgPreview" class="preview-canvas"></canvas></div>
+              <div><div class="mini-label">Processed</div><canvas id="processedPreview" class="preview-canvas"></canvas></div>
+            </div>
+            <div class="row compact-row">
+              <button class="btn" id="enableCropBtn">เปิด Crop</button>
+              <button class="btn" id="resetCropBtn">Reset Crop</button>
+            </div>
+            <div class="hint">ลากเมาส์บนภาพ Original เพื่อเลือกพื้นที่ OCR</div>
+          </div>
+
+          <div id="pdfPanel" class="input-mode hide">
+            <div class="drop" id="pdfDrop">
+              <input id="pdfInput" type="file" accept="application/pdf">
+              <div class="drop-icon">📄</div>
+              <b>เลือก PDF</b>
+              <span class="hint">Text Layer + OCR fallback</span>
+            </div>
+            <div id="pdfFileInfo" class="file-info hide">
+              <span id="pdfFileName">ยังไม่ได้เลือกไฟล์</span>
+              <button class="btn small danger" id="removePdfBtn">ยกเลิกไฟล์นี้</button>
+            </div>
+            <div class="row compact-row">
+              <input id="pageFrom" type="number" min="1" value="1" placeholder="หน้าเริ่ม">
+              <input id="pageTo" type="number" min="1" value="1" placeholder="หน้าสุดท้าย">
+              <button class="btn small" id="allPagesBtn">ทุกหน้า</button>
+            </div>
+            <div class="checks one-col compact-checks">
+              <label><input id="ocrOnlyNoText" type="checkbox" checked> OCR เฉพาะหน้าที่ไม่มี Text Layer</label>
+              <label><input id="separatePages" type="checkbox"> แยกผลลัพธ์ตามหน้า</label>
+            </div>
+            <div id="pdfThumbs" class="thumbs"></div>
+            <canvas id="pdfPreview" class="preview-canvas wide"></canvas>
+          </div>
+
+          <div id="batchPanel" class="input-mode hide">
+            <div class="drop" id="batchDrop">
+              <input id="batchInput" type="file" accept="image/*,application/pdf" multiple>
+              <div class="drop-icon">📦</div>
+              <b>เลือกหลายไฟล์</b>
+              <span class="hint">รูปภาพ + PDF หลายไฟล์</span>
+            </div>
+            <div id="batchFileInfo" class="file-info hide">
+              <span id="batchFileName">ยังไม่ได้เลือกไฟล์</span>
+              <button class="btn small danger" id="removeBatchBtn">ยกเลิกไฟล์ทั้งหมด</button>
+            </div>
+            <div id="batchList" class="batch-list"></div>
+          </div>
+
+          <div class="step-title space-top"><span>02</span><b>Options</b></div>
+          <div class="row compact-row">
+            <select id="langSelect"><option value="tha+eng">ไทย + อังกฤษ</option><option value="tha">ไทย</option><option value="eng">อังกฤษ</option></select>
+            <select id="modeSelect"><option value="plain">ข้อความล้วน</option><option value="clean" selected>ลบช่องว่าง/อักษรแปลก</option><option value="document">จัดเป็นเอกสาร</option><option value="table">จัดเป็นตาราง</option><option value="summary">สรุปพื้นฐาน</option></select>
+          </div>
+
+          <div class="checks compact-checks">
+            <label><input id="removeNoise" type="checkbox" checked> ลบอักษรแปลก</label>
+            <label><input id="cleanThai" type="checkbox" checked> รวมคำไทยผิดช่องว่าง</label>
+            <label><input id="itDictionary" type="checkbox" checked> Dictionary IT/NOC</label>
+            <label><input id="highlightFixes" type="checkbox" checked> รายการคำที่แก้</label>
+            <label><input id="upscale" type="checkbox" checked> ขยายภาพ</label>
+            <label><input id="threshold" type="checkbox" checked> Contrast</label>
+          </div>
+
+          <details class="dictionary-box">
+            <summary>เพิ่มคำแก้เอง</summary>
+            <div class="row compact-row">
+              <input id="customFrom" placeholder="คำผิด เช่น เครื อง">
+              <input id="customTo" placeholder="แก้เป็น เช่น เครื่อง">
+              <button class="btn small" id="addRuleBtn">เพิ่ม</button>
+            </div>
+            <div id="customRules" class="rules"></div>
+          </details>
+
+          <div class="row action-row">
+            <button class="btn primary" id="scanBtn">⚡ แปลง</button>
+            <button class="btn" id="formatBtn">จัดข้อความใหม่</button>
+          </div>
+          <div class="progress"><span id="progressBar"></span></div>
+          <div id="status" class="status">พร้อมใช้งาน</div>
+          <div id="confidenceBox" class="confidence">Confidence: -</div>
+
+          <details class="history-box">
+            <summary>History</summary>
+            <div id="history" class="history"></div>
+          </details>
+        </aside>
+
+        <section class="panel output-panel">
+          <div class="output-head">
+            <div><div class="step-title"><span>03</span><b>Output</b></div><div class="hint">แสดงเฉพาะข้อความที่แปลงได้</div></div>
+          </div>
+          <div class="search-row">
+            <input id="searchInput" placeholder="ค้นหา เช่น CUCM, SD-WAN, NOC">
+            <button class="btn small" id="searchBtn">Search</button>
+            <button class="btn small" id="clearSearchBtn">Clear</button>
+          </div>
+          <div id="output" class="out output-only">ผลลัพธ์จะแสดงที่นี่</div>
+          <details class="fix-box">
+            <summary>Fixed Words</summary>
+            <div id="fixReport" class="fix-report">ยังไม่มีรายการคำที่แก้</div>
+          </details>
+        </section>
+      </main>
+    </section>
+
+    <footer class="footer-links"><span>© RIPTWOSEC.SCAN</span><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Use</a></footer>
+  </div>
+
+  <script src="js/state.js"></script><script src="js/utils.js"></script><script src="js/dictionary-it.js"></script><script src="js/custom-rules.js"></script><script src="js/text-cleaner.js"></script><script src="js/quality-review.js"></script><script src="js/document-ai-review.js"></script><script src="js/crop.js"></script><script src="js/ocr.js"></script><script src="js/pdf-handler.js"></script><script src="js/batch.js"></script><script src="js/search.js"></script><script src="js/exporter.js"></script><script src="js/history.js"></script><script src="js/app.js"></script>
+</body>
+</html>

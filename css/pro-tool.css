@@ -1,0 +1,209 @@
+:root{
+  --bg:#0b0e11;
+  --card:rgba(14,18,22,.92);
+  --card2:rgba(18,23,28,.98);
+  --line:rgba(180,190,200,.18);
+  --accent:#a7f23b;
+  --radius:10px;
+}
+
+body{
+  background:#0b0e11!important;
+  background-image:none!important;
+}
+
+body:before,
+body:after,
+.wrap:before,
+.feature-showcase:before,
+.feature-card:before,
+.hero-copy:after{
+  display:none!important;
+}
+
+.wrap{
+  max-width:1440px;
+  padding:14px;
+}
+
+.site-header,
+.hero-copy,
+.clean-card,
+.privacy-note,
+.tool-shell,
+.panel,
+.feature-showcase,
+.feature-card{
+  border-radius:10px!important;
+  background:var(--card)!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+}
+
+.site-header{
+  top:0;
+  margin-bottom:12px;
+  padding:10px 12px;
+}
+
+.brand{
+  font-size:20px;
+  letter-spacing:0;
+  text-shadow:none;
+  filter:none;
+}
+
+.nav-links a,
+.btn,
+.tab,
+select,
+input{
+  border-radius:7px!important;
+  padding:7px 10px;
+  box-shadow:none!important;
+}
+
+.hero{
+  grid-template-columns:minmax(0,1.4fr) minmax(300px,.6fr);
+  gap:12px;
+}
+
+.hero-copy{
+  padding:22px;
+}
+
+.hero h1{
+  font-size:clamp(28px,3.4vw,42px);
+  letter-spacing:0;
+  margin:8px 0 10px;
+}
+
+.hero-lead{
+  font-size:16px;
+  line-height:1.6;
+  margin-bottom:14px;
+}
+
+.hero-card{
+  padding:16px;
+}
+
+.workflow-list{
+  line-height:1.65;
+}
+
+.feature-showcase{
+  padding:14px;
+}
+
+.real-grid{
+  gap:10px;
+}
+
+.feature-card{
+  min-height:160px;
+  padding:14px!important;
+  transform:none!important;
+}
+
+.feature-card:hover{
+  transform:none!important;
+}
+
+.feature-icon{
+  width:34px;
+  height:34px;
+  border-radius:8px;
+  margin-bottom:8px;
+  font-size:18px;
+}
+
+.feature-card b{
+  font-size:16px;
+}
+
+.feature-card p{
+  line-height:1.55!important;
+}
+
+.feature-tags span,
+.rule-chip,
+.fix-item{
+  border-radius:6px;
+}
+
+.privacy-note,
+.tool-shell{
+  padding:14px;
+}
+
+.tool-title-row{
+  margin-bottom:10px;
+}
+
+.tool-grid{
+  grid-template-columns:390px minmax(0,1fr);
+  gap:10px;
+}
+
+.panel{
+  padding:12px;
+}
+
+.drop{
+  min-height:112px;
+  border-radius:8px!important;
+}
+
+.drop-icon{
+  font-size:26px;
+}
+
+.checks{
+  gap:6px;
+}
+
+.checks label,
+.inline-check,
+.dictionary-box,
+.history-box,
+.fix-box,
+.file-info,
+.hist,
+.batch-item,
+.thumb,
+.status,
+.confidence,
+.fix-report,
+.out,
+.preview-canvas,
+.preview-grid>div,
+.tabs.tool-tabs{
+  border-radius:8px!important;
+}
+
+.out{
+  min-height:560px;
+  padding:14px;
+  line-height:1.65;
+  font-size:14px;
+}
+
+.progress span{
+  background:var(--accent)!important;
+  animation:none!important;
+}
+
+.btn.primary{
+  background:#a7f23b!important;
+  color:#11160f!important;
+  border-color:#a7f23b!important;
+}
+
+@media(max-width:1050px){
+  .hero,
+  .tool-grid{
+    grid-template-columns:1fr;
+  }
+}
+
