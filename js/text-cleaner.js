@@ -96,18 +96,35 @@ function fixNoise(text){
 
 function fixUiOcrWords(text){
   let out=text||'';
+  const isUiGarbageLine=line=>{
+    const compact=line.replace(/\s/g,'');
+    if(!compact)return false;
+    if(compact.length<=24&&/(?:utv|vut|\[=|=11|=๑๑)/i.test(compact))return true;
+    return /^[vVdDutเอ\[\]=\-_,.01๑๒]+$/.test(compact)&&compact.length<=18;
+  };
+  out=out.split('\n').filter(line=>!isUiGarbageLine(line)).join('\n');
   const rules=[
+    [/^\s*v(?:d)?\s+(?=\S)/gim,''],
+    [/\s+v(?:d)?\s*$/gim,''],
     [/แป\s*ป\s*ลง/g,'แปลง'],
     [/scnan\s*แป\s*ป\s*ลง/gi,'แปลง'],
     [/สแกน\s*แป\s*ป\s*ลง/g,'สแกน แปลง'],
     [/ลบช่องว่างง/g,'ลบช่องว่าง'],
     [/ช่องว่างง/g,'ช่องว่าง'],
     [/สบอกษรแปลก/g,'ลบอักษรแปลก'],
+    [/สบยกษรแปตาก/g,'ลบอักษรแปลก'],
+    [/ส[บป]ย?กษรแป[ลต]าก/g,'ลบอักษรแปลก'],
     [/ลบอ[กั]ษรแปลก/g,'ลบอักษรแปลก'],
     [/รวมคาไทยผิดช่องว่าง/g,'รวมคำไทยผิดช่องว่าง'],
+    [/รวมคศ์ฯไทยผิดซ่องว่าง/g,'รวมคำไทยผิดช่องว่าง'],
+    [/รวมค\S{0,4}ไทยผิด[ซช]่องว่าง/g,'รวมคำไทยผิดช่องว่าง'],
     [/รวมคำไทยผิดช่องว่างง/g,'รวมคำไทยผิดช่องว่าง'],
     [/รายการศาทหแก/g,'รายการคำที่แก้'],
+    [/รายคทารศาทหแก้/g,'รายการคำที่แก้'],
+    [/ราย\S{0,4}ารศา\S{0,3}แก้/g,'รายการคำที่แก้'],
     [/รายการศา[ทที]่?แก/g,'รายการคำที่แก้'],
+    [/Dictionary\s+ITNT/gi,'Dictionary IT/NOC'],
+    [/Dictionary\s+IT\s*[/|\\]?\s*N[O0]C/gi,'Dictionary IT/NOC'],
     [/คาแก้เอง/g,'คำแก้เอง'],
     [/เพิ่มคาแก้เอง/g,'เพิ่มคำแก้เอง'],
     [/ขยายภาพ\s+Contrast/gi,'ขยายภาพ\nContrast'],
@@ -117,6 +134,7 @@ function fixUiOcrWords(text){
     [/ลบช่องว่าง\/อักษรแปลก\s*[”"']/g,'ลบช่องว่าง/อักษรแปลก']
   ];
   for(const [pattern,replacement] of rules)out=replaceTrack(out,pattern,replacement);
+  out=out.split('\n').filter(line=>!isUiGarbageLine(line)).join('\n');
   return out;
 }
 
