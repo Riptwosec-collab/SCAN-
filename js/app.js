@@ -101,11 +101,10 @@ async function handleImageFile(file){
     AppState.sourceName=file.name;
     AppState.imageCanvas=await imageFileToCanvas(file);
     AppState.crop=null;
-    $('imgFileName').textContent=file.name;
-    $('imgFileInfo').classList.remove('hide');
+    setFileSuccess('imgFileInfo','imgFileName',file);
     drawImagePreview();
     updateProcessedPreview();
-    setStatus('โหลดรูปภาพแล้ว: '+file.name,'ok');
+    setStatus('อัปโหลดรูปภาพสำเร็จ: '+file.name,'ok');
   }catch(error){
     setStatus('โหลดรูปไม่ได้: '+error.message,'err');
   }
@@ -119,10 +118,10 @@ async function handlePdfFile(file){
       return;
     }
     clearOutput();
-    $('pdfFileName').textContent=file.name;
-    $('pdfFileInfo').classList.remove('hide');
+    setFileSuccess('pdfFileInfo','pdfFileName',file);
     setStatus('กำลังโหลด PDF...');
     await loadPdfFile(file);
+    setFileSuccess('pdfFileInfo','pdfFileName',file);
   }catch(error){
     setStatus('โหลด PDF ไม่ได้: '+error.message,'err');
   }
