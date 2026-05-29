@@ -62,6 +62,7 @@ function cleanText(text){
   if(level==='raw')return result;
   if($('removeNoise')?.checked)result=fixNoise(result);
   if(level==='light'){
+    result=fixUiOcrWords(result);
     if($('itDictionary')?.checked)result=applyItDictionary(result);
     result=applyCustomRules(result);
     return result.split('\n').map(line=>line.trim()).filter(Boolean).join('\n');
@@ -69,6 +70,7 @@ function cleanText(text){
   if($('itDictionary')?.checked)result=applyItDictionary(result);
   result=applyCustomRules(result);
   if($('cleanThai')?.checked)result=fixThaiWords(result);
+  result=fixUiOcrWords(result);
   result=postCleanThai(result);
 
   const mode=$('modeSelect')?.value||'clean';
@@ -87,6 +89,32 @@ function fixNoise(text){
     [/ที\s*[ÉEÊ]/g,'ที่'],[/เกี\s*[ÉEÊ]\s*ยว/g,'เกี่ยว'],[/เพื\s*[ÉEÊ]?/g,'เพื่อ'],
     [/ขึ\s*น/g,'ขึ้น'],[/ขั\s*น/g,'ขั้น'],[/ป\s*ด/g,'ปิด'],[/ว่\s*า/g,'ว่า'],
     [/ประ\s*เมิ\s*น/g,'ประเมิน'],[/อุ\s*ปกร\s*ณ์/g,'อุปกรณ์'],[/ง\s*3\s*ระบบ/g,'ทั้ง 3 ระบบ']
+  ];
+  for(const [pattern,replacement] of rules)out=replaceTrack(out,pattern,replacement);
+  return out;
+}
+
+function fixUiOcrWords(text){
+  let out=text||'';
+  const rules=[
+    [/แป\s*ป\s*ลง/g,'แปลง'],
+    [/scnan\s*แป\s*ป\s*ลง/gi,'แปลง'],
+    [/สแกน\s*แป\s*ป\s*ลง/g,'สแกน แปลง'],
+    [/ลบช่องว่างง/g,'ลบช่องว่าง'],
+    [/ช่องว่างง/g,'ช่องว่าง'],
+    [/สบอกษรแปลก/g,'ลบอักษรแปลก'],
+    [/ลบอ[กั]ษรแปลก/g,'ลบอักษรแปลก'],
+    [/รวมคาไทยผิดช่องว่าง/g,'รวมคำไทยผิดช่องว่าง'],
+    [/รวมคำไทยผิดช่องว่างง/g,'รวมคำไทยผิดช่องว่าง'],
+    [/รายการศาทหแก/g,'รายการคำที่แก้'],
+    [/รายการศา[ทที]่?แก/g,'รายการคำที่แก้'],
+    [/คาแก้เอง/g,'คำแก้เอง'],
+    [/เพิ่มคาแก้เอง/g,'เพิ่มคำแก้เอง'],
+    [/ขยายภาพ\s+Contrast/gi,'ขยายภาพ\nContrast'],
+    [/Preset:\s*Auto\s*v/gi,'Preset: Auto'],
+    [/Cleanup:\s*Balanced\s*\w*/gi,'Cleanup: Balanced'],
+    [/ไทย\s*\+\s*อังกฤษ\s*[”"']/g,'ไทย + อังกฤษ'],
+    [/ลบช่องว่าง\/อักษรแปลก\s*[”"']/g,'ลบช่องว่าง/อักษรแปลก']
   ];
   for(const [pattern,replacement] of rules)out=replaceTrack(out,pattern,replacement);
   return out;

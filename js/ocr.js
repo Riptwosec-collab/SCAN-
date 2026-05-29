@@ -49,6 +49,7 @@ function getSmartScale(source,mode='default'){
   const maxSide=Math.max(source.width,source.height);
   let scale=$('upscale')?.checked?3:1;
   if(mode==='pdf-like'||mode==='doc-clean'||mode==='receipt')scale=Math.max(scale,3.4);
+  if(mode==='ui-detail'||mode==='ui-crisp'||mode==='ui-binary')scale=Math.max(scale,4.6);
   if(minSide<900)scale=Math.max(scale,4.2);
   if(minSide<520)scale=Math.max(scale,5);
   if(maxSide>2600)scale=Math.min(scale,2.4);
@@ -96,6 +97,14 @@ function preprocessCanvas(source,mode='default'){
     }else if(mode==='ui-detail'){
       v=(v-150)*1.75+150;
       d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v));
+    }else if(mode==='ui-crisp'){
+      v=(v-142)*2.05+142;
+      d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v));
+    }else if(mode==='ui-binary'){
+      v=(v-132)*1.85+132;
+      const threshold=Math.max(118,Math.min(182,avg*.88));
+      v=v>threshold?255:0;
+      d[i]=d[i+1]=d[i+2]=v;
     }else if(mode==='pdf-like'){
       v=(v-132)*1.72+132;
       d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v));
@@ -122,6 +131,7 @@ function scoreOcrText(text,confidence){
   const ipLike=(value.match(/\b\d{1,3}[\.\s]\d{1,3}[\.\s]\d{1,3}[\.\s]\d{1,3}\b/g)||[]).length;
   const networkTerms=(value.match(/DHCP|IPv4|Subnet|Mask|Gateway|DNS|Ethernet|Wireless|Network|Connection|Details|Intel/gi)||[]).length;
   const docTerms=(value.match(/ใบกำกับ|ภาษี|หนังสือ|บริษัท|จำกัด|จำนวนเงิน|ใบเสร็จ|สัญญา|เลขประจำตัว|วันที่|เรื่อง|จาก|ถึง|Ticket|อีเมล|โครงการ|ระบบ|ตรวจสอบ/gi)||[]).length;
+  const uiTerms=(value.match(/Options|Preset|Cleanup|Contrast|Dictionary|OCR|Auto|Balanced|Raw|Light|Strict|Search|Clear|Copy|PDF|Batch|Output|แปลง|ภาษา|ไทย|อังกฤษ|ช่องว่าง|อักษร|รายการ|แก้|ขยายภาพ/gi)||[]).length;
   const lineCount=value.split('\n').filter(x=>x.trim().length>2).length;
   const weird=(value.match(/[�ƟθϴƩΣÉÊÈË|{}<>~`_^«»]/g)||[]).length;
   const shortNoise=(value.match(/\b[a-zA-Z]{1,2}\b/g)||[]).length;
@@ -135,6 +145,7 @@ function scoreOcrText(text,confidence){
   score+=ipLike*28;
   score+=networkTerms*18;
   score+=docTerms*22;
+  score+=Math.min(70,uiTerms*10);
   score+=confidence?confidence*.85:0;
   score-=weird*14;
   score-=shortNoise*1.15;
@@ -157,7 +168,8 @@ function ocrRiskScore(text){
     return compact.length>12&&(/^(.)\1+$/.test(compact)||/^[^\wก-ฮ]+$/.test(compact));
   }).length;
   const symbolRatio=((value.match(/[|{}<>~`_^=+*\\/]/g)||[]).length/len)*100;
-  return Math.round((weird*3)+(floatingMarks*2)+(splitThai*1.4)+(repeated*4)+(junkLines*5)+symbolRatio);
+  const danglingUi=(value.match(/[”"']\s*$|^\s*[-,vV]\s*$/gm)||[]).length;
+  return Math.round((weird*3)+(floatingMarks*2)+(splitThai*1.4)+(repeated*4)+(junkLines*5)+(danglingUi*2)+symbolRatio);
 }
 
 function normalizeNetworkOcrText(text){
@@ -232,7 +244,9 @@ function createImageOcrPasses(){
       {name:'Gray Document',mode:'gray',psm:'6'}
     ],
     screenshot:[
-      {name:'IT Screenshot Detail',mode:'ui-detail',psm:'11'},
+      {name:'UI Crisp Text',mode:'ui-crisp',psm:'6'},
+      {name:'UI Sparse Text',mode:'ui-detail',psm:'11'},
+      {name:'UI Binary Text',mode:'ui-binary',psm:'6'},
       {name:'Screenshot Gray',mode:'gray',psm:'11'},
       {name:'Screenshot Soft',mode:'soft',psm:'6'},
       {name:'Network Document',mode:'pdf-like',psm:'6'}
@@ -252,6 +266,7 @@ function createImageOcrPasses(){
   };
   if(sets[preset])return sets[preset];
   return [
+    {name:'Auto UI Crisp',mode:'ui-crisp',psm:'6'},
     {name:'PDF-like Document',mode:'pdf-like',psm:'6'},
     {name:'Document Clean',mode:'doc-clean',psm:'6'},
     {name:'Thai Dense Text',mode:'pdf-like',psm:'4'},
