@@ -144,7 +144,7 @@ async function scanCurrent(){
     else raw=await scanBatch();
 
     AppState.rawText=raw;
-    showCleanedResult(raw,true);
+    await showCleanedResult(raw,true);
     setProgress(100);
     setStatus('แปลงสำเร็จ · ตรวจละเอียดก่อนแสดงผลแล้ว','ok');
     setTimeout(scrollToOutputBox,120);
@@ -155,10 +155,11 @@ async function scanCurrent(){
   }
 }
 
-function showCleanedResult(raw,animate=false){
+async function showCleanedResult(raw,animate=false){
   let cleaned=cleanText(raw);
   if(typeof finalOcrReview==='function')cleaned=finalOcrReview(cleaned);
   if(typeof aiThaiDocumentPostProcess==='function')cleaned=aiThaiDocumentPostProcess(cleaned);
+  if(typeof aiReviewTextIfEnabled==='function')cleaned=await aiReviewTextIfEnabled(raw,cleaned);
   AppState.lastText=cleaned;
   showOutput(cleaned);
   if(animate)setOutputSuccess();
