@@ -2,6 +2,11 @@ function setBatchFiles(files){
   AppState.batchFiles=[...files];
   AppState.batchResults=[];
   renderBatchList();
+  if(AppState.batchFiles.length){
+    const label=AppState.batchFiles.length+' ไฟล์ · '+AppState.batchFiles.map(f=>f.name).slice(0,3).join(', ')+(AppState.batchFiles.length>3?' ...':'');
+    setFileSuccess('batchFileInfo','batchFileName',label,'batch');
+    setStatus('อัปโหลด Batch สำเร็จ: '+AppState.batchFiles.length+' ไฟล์','ok');
+  }
 }
 
 function renderBatchList(){
@@ -11,8 +16,8 @@ function renderBatchList(){
   if(!AppState.batchFiles.length){box.innerHTML='<div class="hint">ยังไม่มีไฟล์ Batch</div>';return;}
   AppState.batchFiles.forEach((file,index)=>{
     const div=document.createElement('div');
-    div.className='batch-item';
-    div.textContent=(index+1)+'. '+file.name+' · '+file.type;
+    div.className='batch-item file-success batch-uploaded';
+    div.innerHTML='<span class="file-check">✓</span><span>'+(index+1)+'. '+escapeHtml(file.name)+'</span><span class="hint">'+escapeHtml(file.type||'file')+'</span>';
     box.appendChild(div);
   });
 }
