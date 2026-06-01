@@ -281,19 +281,28 @@ input:hover{
 
 .out{
   min-height:520px;
-  padding:14px;
+  padding:16px;
   line-height:1.65;
   font-size:14px;
-  background:rgba(5,8,11,.86)!important;
+  color:#eefdf4;
+  background:
+    linear-gradient(180deg,rgba(9,20,16,.94),rgba(3,8,10,.92) 48%,rgba(4,12,10,.96)),
+    radial-gradient(circle at 16% 0%,rgba(187,247,208,.12),transparent 34%),
+    radial-gradient(circle at 92% 14%,rgba(34,197,94,.085),transparent 30%)!important;
   position:relative;
   isolation:isolate;
-  border-color:rgba(187,247,208,.18)!important;
+  border-color:rgba(187,247,208,.24)!important;
+  outline:1px solid rgba(255,255,255,.025);
+  outline-offset:-3px;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.035),
-    inset 0 0 26px rgba(187,247,208,.025),
-    0 18px 44px rgba(0,0,0,.22),
-    0 0 0 1px rgba(187,247,208,.035)!important;
-  transition:border-color .28s ease,box-shadow .28s ease,background .28s ease;
+    inset 0 1px 0 rgba(255,255,255,.06),
+    inset 0 -34px 70px rgba(0,0,0,.20),
+    inset 0 0 34px rgba(187,247,208,.04),
+    0 18px 44px rgba(0,0,0,.24),
+    0 0 26px rgba(134,239,172,.06),
+    0 0 0 1px rgba(187,247,208,.055)!important;
+  text-shadow:0 1px 0 rgba(0,0,0,.32);
+  transition:border-color .32s ease,box-shadow .38s ease,background .38s ease,transform .38s ease;
 }
 
 .out:after{
@@ -303,27 +312,32 @@ input:hover{
   border-radius:inherit;
   pointer-events:none;
   background:
-    radial-gradient(circle at 18% 0%,rgba(220,252,231,.10),transparent 30%),
-    radial-gradient(circle at 100% 18%,rgba(187,247,208,.075),transparent 34%),
-    linear-gradient(180deg,rgba(187,247,208,.035),transparent 22%,transparent 78%,rgba(187,247,208,.03));
-  opacity:.72;
+    linear-gradient(90deg,rgba(220,252,231,.07),transparent 18%,transparent 82%,rgba(187,247,208,.055)),
+    linear-gradient(180deg,rgba(255,255,255,.045),transparent 16%,transparent 76%,rgba(187,247,208,.045)),
+    radial-gradient(circle at 18% 0%,rgba(220,252,231,.14),transparent 30%),
+    radial-gradient(circle at 100% 18%,rgba(134,239,172,.09),transparent 34%),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 28px);
+  opacity:.84;
   z-index:0;
   mix-blend-mode:screen;
-  transition:opacity .35s ease;
+  transition:opacity .38s ease,filter .38s ease;
 }
 
 .out:hover{
-  border-color:rgba(187,247,208,.34)!important;
+  border-color:rgba(187,247,208,.42)!important;
+  transform:translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.045),
-    inset 0 0 30px rgba(187,247,208,.045),
-    0 20px 46px rgba(0,0,0,.24),
-    0 0 22px rgba(187,247,208,.075),
-    0 0 0 1px rgba(187,247,208,.08)!important;
+    inset 0 1px 0 rgba(255,255,255,.075),
+    inset 0 -34px 74px rgba(0,0,0,.18),
+    inset 0 0 42px rgba(187,247,208,.06),
+    0 22px 52px rgba(0,0,0,.26),
+    0 0 34px rgba(134,239,172,.10),
+    0 0 0 1px rgba(187,247,208,.10)!important;
 }
 
 .out:hover:after{
-  opacity:.95;
+  opacity:1;
+  filter:saturate(1.08);
 }
 
 .progress span{
