@@ -53,6 +53,17 @@ function showOutput(text){
   AppState.lastText=(text||'').trim();
   $('output').textContent=AppState.lastText||'ไม่พบข้อความ';
   if(AppState.lastText)saveHistory(AppState.lastText);
+  showNextActions();
+}
+
+function showNextActions(){
+  const panel=$('nextActions');
+  if(panel)panel.classList.toggle('hide',!AppState.lastText);
+}
+
+function hideNextActions(){
+  const panel=$('nextActions');
+  if(panel)panel.classList.add('hide');
 }
 
 function setFileSuccess(infoId,nameId,fileOrText,mode='single'){
@@ -85,6 +96,7 @@ function clearOutput(){
   const output=$('output');
   if(output)output.textContent='ผลลัพธ์จะแสดงที่นี่';
   clearOutputState();
+  hideNextActions();
 
   const fixReport=$('fixReport');
   if(fixReport)fixReport.textContent='ยังไม่มีรายการคำที่แก้';

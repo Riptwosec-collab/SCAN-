@@ -18,5 +18,7 @@ window.AppState={
   ocrPreset:'auto',
   fixedWords:[],
   confidence:null,
-  sourceName:''
+  sourceName:'',
+  uploadSource:'local',
+  pdfOrientation:'portrait'
 };

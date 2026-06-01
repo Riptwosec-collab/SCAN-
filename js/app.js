@@ -60,6 +60,8 @@ function bindAppEvents(){
   $('addRuleBtn').onclick=addCustomRule;
   $('searchBtn').onclick=searchOutput;
   $('clearSearchBtn').onclick=clearSearch;
+  bindUploadSourceButtons();
+  bindNextActions();
 
   ['upscale','threshold'].forEach(id=>$(id).addEventListener('change',updateProcessedPreview));
   $('ocrPreset')?.addEventListener('change',()=>{
@@ -69,6 +71,43 @@ function bindAppEvents(){
   $('cleanupLevel')?.addEventListener('change',()=>{
     AppState.cleanupLevel=$('cleanupLevel').value;
     if(AppState.rawText)showCleanedResult(AppState.rawText,true);
+  });
+  $('pdfOrientation')?.addEventListener('change',()=>{
+    AppState.pdfOrientation=$('pdfOrientation').value;
+    setStatus('ตั้งค่า PDF เป็น '+($('pdfOrientation').value==='landscape'?'แนวนอน':'แนวตั้ง'),'ok');
+  });
+}
+
+function getActiveFileInput(){
+  if(AppState.tab==='pdf')return $('pdfInput');
+  if(AppState.tab==='batch')return $('batchInput');
+  return $('imgInput');
+}
+
+function bindUploadSourceButtons(){
+  document.querySelectorAll('[data-upload-source]').forEach(button=>{
+    button.onclick=()=>{
+      const source=button.dataset.uploadSource||'local';
+      AppState.uploadSource=source;
+      document.querySelectorAll('[data-upload-source]').forEach(item=>item.classList.toggle('active',item===button));
+      const labels={local:'เครื่อง',drive:'Google Drive',dropbox:'Dropbox'};
+      setStatus('เลือกแหล่งอัปโหลด: '+labels[source]+' · เลือกไฟล์จากหน้าต่างไฟล์ของ Browser','ok');
+      getActiveFileInput()?.click();
+    };
+  });
+}
+
+function bindNextActions(){
+  const actions={
+    copy:copyOutput,
+    txt:exportTxt,
+    doc:exportDoc,
+    csv:exportCsv,
+    json:exportJson,
+    pdf:exportPrintPdf
+  };
+  document.querySelectorAll('[data-next-action]').forEach(button=>{
+    button.onclick=()=>actions[button.dataset.nextAction]?.();
   });
 }
 
@@ -170,6 +209,7 @@ async function showCleanedResult(raw,animate=false){
   if(level==='strict'&&typeof finalOcrReview==='function')cleaned=finalOcrReview(cleaned);
   AppState.lastText=cleaned;
   showOutput(cleaned);
+  showNextActions();
   if(animate)setOutputSuccess();
   renderOcrCandidates();
   if(typeof renderOcrReview==='function')renderOcrReview(raw,cleaned);

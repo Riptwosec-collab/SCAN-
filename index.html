@@ -139,6 +139,11 @@
       <main class="tool-grid">
         <aside class="panel input-panel">
           <div class="step-title"><span>01</span><b>Input / Preview</b></div>
+          <div class="upload-source" aria-label="เลือกแหล่งอัปโหลด">
+            <button class="source-btn active" data-upload-source="local" type="button"><span>▣</span><b>เครื่อง</b></button>
+            <button class="source-btn" data-upload-source="drive" type="button"><span>◈</span><b>Drive</b></button>
+            <button class="source-btn" data-upload-source="dropbox" type="button"><span>◇</span><b>Dropbox</b></button>
+          </div>
 
           <div id="imgPanel" class="input-mode">
             <div class="drop" id="imgDrop">
@@ -219,6 +224,10 @@
               <option value="normal" selected>Cleanup: Balanced</option>
               <option value="strict">Cleanup: Strict</option>
             </select>
+            <select id="pdfOrientation">
+              <option value="portrait" selected>PDF: แนวตั้ง</option>
+              <option value="landscape">PDF: แนวนอน</option>
+            </select>
           </div>
 
           <div class="checks compact-checks">
@@ -269,6 +278,20 @@
             <summary>Fixed Words</summary>
             <div id="fixReport" class="fix-report">ยังไม่มีรายการคำที่แก้</div>
           </details>
+          <div id="nextActions" class="next-actions hide" aria-live="polite">
+            <div class="next-head">
+              <b>ดำเนินการต่อเพื่อ...</b>
+              <span>เลือกงานต่อหลังแปลงเสร็จ</span>
+            </div>
+            <div class="next-grid">
+              <button class="next-action" data-next-action="copy" type="button"><span class="next-icon green">⧉</span><b>คัดลอก</b><i>Copy</i></button>
+              <button class="next-action" data-next-action="txt" type="button"><span class="next-icon mint">TXT</span><b>ส่งออก TXT</b><i>Text file</i></button>
+              <button class="next-action" data-next-action="doc" type="button"><span class="next-icon blue">DOC</span><b>ส่งออก DOC</b><i>Word-ready</i></button>
+              <button class="next-action" data-next-action="csv" type="button"><span class="next-icon amber">CSV</span><b>ส่งออก CSV</b><i>ทีละบรรทัด</i></button>
+              <button class="next-action" data-next-action="json" type="button"><span class="next-icon violet">{ }</span><b>ส่งออก JSON</b><i>พร้อม metadata</i></button>
+              <button class="next-action" data-next-action="pdf" type="button"><span class="next-icon red">PDF</span><b>ทำไฟล์ PDF</b><i>ตามแนวที่เลือก</i></button>
+            </div>
+          </div>
         </section>
       </main>
     </section>

@@ -30,8 +30,10 @@ function exportJson(){
   const payload={
     app:'RIPTWOSEC.SCAN',
     sourceName:AppState.sourceName||'',
+    uploadSource:AppState.uploadSource||'local',
     language:$('langSelect')?.value||'',
     mode:$('modeSelect')?.value||'',
+    pdfOrientation:$('pdfOrientation')?.value||AppState.pdfOrientation||'portrait',
     confidence:AppState.confidence,
     rawText:AppState.rawText||'',
     cleanedText:AppState.lastText||$('output').innerText,
@@ -44,8 +46,9 @@ function exportJson(){
 }
 
 function exportPrintPdf(){
+  const orientation=$('pdfOrientation')?.value||AppState.pdfOrientation||'portrait';
   const text=escapeHtml(AppState.lastText||$('output').innerText);
-  const html='<!doctype html><html><head><meta charset="utf-8"><title>RIPTWOSEC.SCAN PDF</title><style>body{font-family:Sarabun,Arial;padding:28px;line-height:1.7;white-space:pre-wrap}</style></head><body>'+text+'</body></html>';
+  const html='<!doctype html><html><head><meta charset="utf-8"><title>RIPTWOSEC.SCAN PDF</title><style>@page{size:A4 '+orientation+';margin:18mm}body{font-family:Sarabun,Arial;padding:0;line-height:1.7;white-space:pre-wrap;color:#111}</style></head><body>'+text+'</body></html>';
   downloadFile('riptwosec-scan-print.html',html,'text/html');
-  setStatus('ดาวน์โหลดไฟล์ HTML แล้ว เปิดไฟล์และเลือก Print > Save as PDF','ok');
+  setStatus('ดาวน์โหลดไฟล์ HTML แล้ว · PDF '+(orientation==='landscape'?'แนวนอน':'แนวตั้ง')+' · เปิดไฟล์และเลือก Print > Save as PDF','ok');
 }
