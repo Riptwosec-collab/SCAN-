@@ -6,12 +6,18 @@
   border-radius:inherit;
   padding:2px;
   background:
-    linear-gradient(90deg,rgba(220,252,231,0),rgba(220,252,231,.20),#f0fdf4,#bbf7d0,#86efac,#4ade80,#bbf7d0,rgba(220,252,231,.24),rgba(220,252,231,0)),
-    conic-gradient(from 120deg at 50% 50%,rgba(187,247,208,.08),rgba(134,239,172,.22),rgba(74,222,128,.12),rgba(187,247,208,.08)),
-    radial-gradient(circle at 50% 0%,rgba(220,252,231,.22),transparent 58%);
-  background-size:340% 100%,100% 100%,100% 100%;
+    linear-gradient(90deg,rgba(220,252,231,0),rgba(220,252,231,.18),#f0fdf4,#bbf7d0,#86efac,#4ade80,#bbf7d0,rgba(220,252,231,.22),rgba(220,252,231,0));
+  background-size:340% 100%;
   animation:outputRimLightSmooth 4s cubic-bezier(.42,0,.18,1) both;
   z-index:-1;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite:exclude;
   filter:drop-shadow(0 0 12px rgba(187,247,208,.36)) drop-shadow(0 0 24px rgba(134,239,172,.16));
   opacity:1;
   transform:scale(1);
@@ -44,10 +50,10 @@
     0 0 0 1px rgba(187,247,208,.04)!important;
 }
 @keyframes outputRimLightSmooth{
-  0%{background-position:340% 0,50% 50%,50% 0;opacity:.30;transform:scale(.992)}
+  0%{background-position:340% 0;opacity:.30;transform:scale(.992)}
   10%{opacity:.96;transform:scale(1)}
   72%{opacity:1}
-  100%{background-position:-340% 0,50% 50%,50% 0;opacity:.82;transform:scale(1)}
+  100%{background-position:-340% 0;opacity:.82;transform:scale(1)}
 }
 @keyframes outputGreenCollapseSmooth{
   0%{clip-path:inset(0 0 0 0 round 8px);opacity:.82;transform:scale(1)}
