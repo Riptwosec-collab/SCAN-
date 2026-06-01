@@ -8,7 +8,6 @@ function injectCropUi(){
   const style=document.createElement('style');
   style.textContent=`
     .crop-control-panel{margin-top:10px;border:1px solid rgba(183,255,74,.18);background:rgba(183,255,74,.045);border-radius:14px;padding:10px;display:grid;gap:8px}
-    .crop-control-panel .crop-help{font-size:13px;color:#aebbc6;line-height:1.55}
     .crop-control-panel .crop-mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
     .crop-control-panel label{font-size:11px;color:#7f8b96;text-transform:uppercase;letter-spacing:1px;display:grid;gap:4px}
     .crop-control-panel input{width:100%;padding:8px 9px;text-align:center}
@@ -23,7 +22,6 @@ function injectCropUi(){
   panel.id='cropControls';
   panel.className='crop-control-panel';
   panel.innerHTML=`
-    <div class="crop-help">เปิด Crop แล้วลากกรอบบนภาพ Original ได้เอง หรือใส่ค่า Crop เป็นเปอร์เซ็นต์ด้านล่าง</div>
     <div class="crop-mini-grid">
       <label>X %<input id="cropX" type="number" min="0" max="100" value="0"></label>
       <label>Y %<input id="cropY" type="number" min="0" max="100" value="0"></label>

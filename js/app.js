@@ -40,7 +40,7 @@ function bindAppEvents(){
   $('enableCropBtn').onclick=()=>{
     AppState.cropEnabled=!AppState.cropEnabled;
     $('enableCropBtn').textContent=AppState.cropEnabled?'ปิด Crop':'เปิด Crop';
-    setStatus(AppState.cropEnabled?'เปิด Crop แล้ว ลากกรอบบนรูป Original':'ปิด Crop แล้ว','ok');
+    setStatus(AppState.cropEnabled?'เปิด Crop แล้ว':'ปิด Crop แล้ว','ok');
   };
   $('resetCropBtn').onclick=resetCrop;
 
