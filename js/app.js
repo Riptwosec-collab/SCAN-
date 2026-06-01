@@ -85,14 +85,23 @@ function getActiveFileInput(){
 }
 
 function bindUploadSourceButtons(){
+  const externalSources={
+    drive:'https://drive.google.com/drive/my-drive',
+    dropbox:'https://www.dropbox.com/home'
+  };
   document.querySelectorAll('[data-upload-source]').forEach(button=>{
     button.onclick=()=>{
       const source=button.dataset.uploadSource||'local';
       AppState.uploadSource=source;
       document.querySelectorAll('[data-upload-source]').forEach(item=>item.classList.toggle('active',item===button));
       const labels={local:'เครื่อง',drive:'Google Drive',dropbox:'Dropbox'};
-      setStatus('เลือกแหล่งอัปโหลด: '+labels[source]+' · เลือกไฟล์จากหน้าต่างไฟล์ของ Browser','ok');
-      getActiveFileInput()?.click();
+      if(source==='local'){
+        setStatus('เลือกแหล่งอัปโหลด: '+labels[source],'ok');
+        getActiveFileInput()?.click();
+        return;
+      }
+      window.open(externalSources[source],'_blank','noopener,noreferrer');
+      setStatus('เปิด '+labels[source]+' แล้ว','ok');
     };
   });
 }

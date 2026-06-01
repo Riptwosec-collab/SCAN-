@@ -1,44 +1,11 @@
 let cropDrag=null;
 
 function injectCropUi(){
-  if($('cropControls'))return;
-  const resetBtn=$('resetCropBtn');
-  if(!resetBtn)return;
-
   const style=document.createElement('style');
   style.textContent=`
-    .crop-control-panel{margin-top:10px;border:1px solid rgba(183,255,74,.18);background:rgba(183,255,74,.045);border-radius:14px;padding:10px;display:grid;gap:8px}
-    .crop-control-panel .crop-mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-    .crop-control-panel label{font-size:11px;color:#7f8b96;text-transform:uppercase;letter-spacing:1px;display:grid;gap:4px}
-    .crop-control-panel input{width:100%;padding:8px 9px;text-align:center}
-    .crop-control-panel .crop-actions{display:flex;gap:8px;flex-wrap:wrap}
-    .crop-control-panel .crop-actions .btn{flex:1;min-height:38px}
     #imgPreview.crop-ready{cursor:crosshair;box-shadow:0 0 0 1px rgba(183,255,74,.25),0 0 22px rgba(183,255,74,.08)}
-    @media(max-width:640px){.crop-control-panel .crop-mini-grid{grid-template-columns:repeat(2,1fr)}}
   `;
   document.head.appendChild(style);
-
-  const panel=document.createElement('div');
-  panel.id='cropControls';
-  panel.className='crop-control-panel';
-  panel.innerHTML=`
-    <div class="crop-mini-grid">
-      <label>X %<input id="cropX" type="number" min="0" max="100" value="0"></label>
-      <label>Y %<input id="cropY" type="number" min="0" max="100" value="0"></label>
-      <label>W %<input id="cropW" type="number" min="1" max="100" value="100"></label>
-      <label>H %<input id="cropH" type="number" min="1" max="100" value="100"></label>
-    </div>
-    <div class="crop-actions">
-      <button class="btn" id="applyCropBtn" type="button">ใช้ค่า Crop</button>
-      <button class="btn" id="fullCropBtn" type="button">เลือกทั้งภาพ</button>
-    </div>
-  `;
-
-  const row=resetBtn.closest('.row')||resetBtn.parentElement;
-  row.insertAdjacentElement('afterend',panel);
-
-  $('applyCropBtn').onclick=applyCropFromInputs;
-  $('fullCropBtn').onclick=selectFullImageCrop;
 }
 
 function bindCropCanvas(){
@@ -124,42 +91,6 @@ function clampCrop(crop){
 }
 
 function updateCropInputsFromState(){
-  if(!AppState.imageCanvas||!AppState.crop)return;
-  const {x,y,w,h}=AppState.crop;
-  $('cropX').value=Math.round((x/AppState.imageCanvas.width)*100);
-  $('cropY').value=Math.round((y/AppState.imageCanvas.height)*100);
-  $('cropW').value=Math.round((w/AppState.imageCanvas.width)*100);
-  $('cropH').value=Math.round((h/AppState.imageCanvas.height)*100);
-}
-
-function applyCropFromInputs(){
-  if(!AppState.imageCanvas){setStatus('ยังไม่ได้เลือกรูปภาพ','err');return;}
-  const px=n=>Math.max(0,Math.min(100,Number(n)||0));
-  const xPct=px($('cropX').value);
-  const yPct=px($('cropY').value);
-  const wPct=Math.max(1,Math.min(100,Number($('cropW').value)||100));
-  const hPct=Math.max(1,Math.min(100,Number($('cropH').value)||100));
-  AppState.crop=clampCrop({
-    x:AppState.imageCanvas.width*xPct/100,
-    y:AppState.imageCanvas.height*yPct/100,
-    w:AppState.imageCanvas.width*wPct/100,
-    h:AppState.imageCanvas.height*hPct/100
-  });
-  AppState.cropEnabled=true;
-  $('enableCropBtn').textContent='ปิด Crop';
-  updateCropInputsFromState();
-  drawImagePreview();
-  updateProcessedPreview();
-  setStatus('ใช้ค่า Crop แล้ว · OCR จะอ่านเฉพาะส่วนนี้','ok');
-}
-
-function selectFullImageCrop(){
-  if(!AppState.imageCanvas){setStatus('ยังไม่ได้เลือกรูปภาพ','err');return;}
-  AppState.crop={x:0,y:0,w:AppState.imageCanvas.width,h:AppState.imageCanvas.height};
-  updateCropInputsFromState();
-  drawImagePreview();
-  updateProcessedPreview();
-  setStatus('เลือกทั้งภาพแล้ว','ok');
 }
 
 function drawCropOverlay(selection){
@@ -199,8 +130,6 @@ function resetCrop(){
   if(btn)btn.textContent='เปิด Crop';
   const canvas=$('imgPreview');
   if(canvas)canvas.classList.remove('crop-ready');
-  ['cropX','cropY'].forEach(id=>{if($(id))$(id).value=0});
-  ['cropW','cropH'].forEach(id=>{if($(id))$(id).value=100});
   setStatus('Reset Crop แล้ว · กลับไป OCR ทั้งภาพ','ok');
   drawImagePreview();
   updateProcessedPreview();
