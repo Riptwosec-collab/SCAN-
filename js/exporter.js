@@ -47,8 +47,20 @@ function exportJson(){
 
 function exportPrintPdf(){
   const orientation=$('pdfOrientation')?.value||AppState.pdfOrientation||'portrait';
+  AppState.pdfOrientation=orientation;
+  const isLandscape=orientation==='landscape';
+  const pageSize=isLandscape?'297mm 210mm':'210mm 297mm';
+  const pageWidth=isLandscape?'297mm':'210mm';
+  const pageMinHeight=isLandscape?'210mm':'297mm';
+  const fileSuffix=isLandscape?'landscape':'portrait';
   const text=escapeHtml(AppState.lastText||$('output').innerText);
-  const html='<!doctype html><html><head><meta charset="utf-8"><title>RIPTWOSEC.SCAN PDF</title><style>@page{size:A4 '+orientation+';margin:18mm}body{font-family:Sarabun,Arial;padding:0;line-height:1.7;white-space:pre-wrap;color:#111}</style></head><body>'+text+'</body></html>';
-  downloadFile('riptwosec-scan-print.html',html,'text/html');
-  setStatus('ดาวน์โหลดไฟล์ HTML แล้ว · PDF '+(orientation==='landscape'?'แนวนอน':'แนวตั้ง')+' · เปิดไฟล์และเลือก Print > Save as PDF','ok');
+  const html='<!doctype html><html><head><meta charset="utf-8"><title>RIPTWOSEC.SCAN PDF</title><style>'+
+    '@page{size:'+pageSize+';margin:14mm}'+
+    'html,body{width:'+pageWidth+';min-height:'+pageMinHeight+';margin:0;background:#fff}'+
+    'body{font-family:Sarabun,Arial;color:#111;line-height:1.7}'+
+    '.page{box-sizing:border-box;width:'+pageWidth+';min-height:'+pageMinHeight+';padding:14mm;white-space:pre-wrap;overflow-wrap:anywhere}'+
+    '@media print{html,body{width:'+pageWidth+';min-height:'+pageMinHeight+'}.page{padding:0}}'+
+    '</style></head><body><main class="page">'+text+'</main></body></html>';
+  downloadFile('riptwosec-scan-print-'+fileSuffix+'.html',html,'text/html');
+  setStatus('ดาวน์โหลดไฟล์ HTML แล้ว · PDF '+(isLandscape?'แนวนอน':'แนวตั้ง')+' · เปิดไฟล์และเลือก Print > Save as PDF','ok');
 }
