@@ -49,11 +49,58 @@ function getSmartScale(source,mode='default'){
   const maxSide=Math.max(source.width,source.height);
   let scale=$('upscale')?.checked?3:1;
   if(mode==='pdf-like'||mode==='doc-clean'||mode==='receipt')scale=Math.max(scale,3.4);
-  if(mode==='ui-detail'||mode==='ui-crisp'||mode==='ui-binary')scale=Math.max(scale,4.6);
+  if(mode==='ui-detail'||mode==='ui-crisp'||mode==='ui-binary'||mode==='ui-sharp'||mode==='ui-adaptive')scale=Math.max(scale,4.8);
+  if(mode==='doc-adaptive')scale=Math.max(scale,3.8);
   if(minSide<900)scale=Math.max(scale,4.2);
   if(minSide<520)scale=Math.max(scale,5);
   if(maxSide>2600)scale=Math.min(scale,2.4);
   return Math.max(1,Math.min(5,scale));
+}
+
+function clampByte(value){
+  return Math.max(0,Math.min(255,value));
+}
+
+function sharpenImageData(data,width,height,amount=.34){
+  const src=new Uint8ClampedArray(data);
+  for(let y=1;y<height-1;y++){
+    for(let x=1;x<width-1;x++){
+      const i=(y*width+x)*4;
+      const top=((y-1)*width+x)*4;
+      const bottom=((y+1)*width+x)*4;
+      const left=(y*width+x-1)*4;
+      const right=(y*width+x+1)*4;
+      for(let c=0;c<3;c++){
+        const edge=(src[i+c]*4-src[top+c]-src[bottom+c]-src[left+c]-src[right+c])*amount;
+        data[i+c]=clampByte(src[i+c]+edge);
+      }
+    }
+  }
+}
+
+function adaptiveThresholdImageData(data,width,height,radius=14,bias=8){
+  const gray=new Uint8ClampedArray(width*height);
+  for(let i=0,p=0;i<data.length;i+=4,p++)gray[p]=Math.round(.299*data[i]+.587*data[i+1]+.114*data[i+2]);
+  const integral=new Uint32Array((width+1)*(height+1));
+  for(let y=1;y<=height;y++){
+    let row=0;
+    for(let x=1;x<=width;x++){
+      row+=gray[(y-1)*width+(x-1)];
+      integral[y*(width+1)+x]=integral[(y-1)*(width+1)+x]+row;
+    }
+  }
+  for(let y=0;y<height;y++){
+    const y1=Math.max(0,y-radius),y2=Math.min(height-1,y+radius);
+    for(let x=0;x<width;x++){
+      const x1=Math.max(0,x-radius),x2=Math.min(width-1,x+radius);
+      const area=(x2-x1+1)*(y2-y1+1);
+      const sum=integral[(y2+1)*(width+1)+(x2+1)]-integral[y1*(width+1)+(x2+1)]-integral[(y2+1)*(width+1)+x1]+integral[y1*(width+1)+x1];
+      const threshold=(sum/area)-bias;
+      const v=gray[y*width+x]>threshold?255:0;
+      const i=(y*width+x)*4;
+      data[i]=data[i+1]=data[i+2]=v;
+    }
+  }
 }
 
 function preprocessCanvas(source,mode='default'){
@@ -97,7 +144,7 @@ function preprocessCanvas(source,mode='default'){
     }else if(mode==='ui-detail'){
       v=(v-150)*1.75+150;
       d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v));
-    }else if(mode==='ui-crisp'){
+    }else if(mode==='ui-crisp'||mode==='ui-sharp'){
       v=(v-142)*2.05+142;
       d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v));
     }else if(mode==='ui-binary'){
@@ -105,6 +152,9 @@ function preprocessCanvas(source,mode='default'){
       const threshold=Math.max(118,Math.min(182,avg*.88));
       v=v>threshold?255:0;
       d[i]=d[i+1]=d[i+2]=v;
+    }else if(mode==='ui-adaptive'||mode==='doc-adaptive'){
+      v=(v-128)*1.42+128;
+      d[i]=d[i+1]=d[i+2]=clampByte(v);
     }else if(mode==='pdf-like'){
       v=(v-132)*1.72+132;
       d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v));
@@ -119,6 +169,9 @@ function preprocessCanvas(source,mode='default'){
       d[i]=d[i+1]=d[i+2]=v;
     }
   }
+  if(mode==='ui-sharp')sharpenImageData(d,canvas.width,canvas.height,.42);
+  if(mode==='ui-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,16,7);
+  if(mode==='doc-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,18,9);
   ctx.putImageData(img,0,0);
   return canvas;
 }
@@ -137,6 +190,7 @@ function scoreOcrText(text,confidence){
   const shortNoise=(value.match(/\b[a-zA-Z]{1,2}\b/g)||[]).length;
   const repeated=(value.match(/(.)\1{4,}/g)||[]).length;
   const len=value.replace(/\s/g,'').length;
+  const suspiciousIp=(value.match(/\b(?:0\.0\.\d{1,3}\.\d{1,3}|0\.100\.\d{1,3}\.\d{1,3}|0\.0\.100\.100)\b/g)||[]).length;
   let score=0;
   score+=Math.min(90,thai*1.65);
   score+=Math.min(25,eng*.55);
@@ -150,6 +204,7 @@ function scoreOcrText(text,confidence){
   score-=weird*14;
   score-=shortNoise*1.15;
   score-=repeated*12;
+  if(suspiciousIp&&networkTerms<2)score-=suspiciousIp*42;
   if(len<8)score-=40;
   if(thai===0&&eng>20&&networkTerms<2&&docTerms<2)score-=15;
   score-=ocrRiskScore(value)*2.2;
@@ -169,7 +224,8 @@ function ocrRiskScore(text){
   }).length;
   const symbolRatio=((value.match(/[|{}<>~`_^=+*\\/]/g)||[]).length/len)*100;
   const danglingUi=(value.match(/[”"']\s*$|^\s*[-,vV]\s*$/gm)||[]).length;
-  return Math.round((weird*3)+(floatingMarks*2)+(splitThai*1.4)+(repeated*4)+(junkLines*5)+(danglingUi*2)+symbolRatio);
+  const suspiciousIp=(value.match(/\b(?:0\.0\.\d{1,3}\.\d{1,3}|0\.100\.\d{1,3}\.\d{1,3}|0\.0\.100\.100)\b/g)||[]).length;
+  return Math.round((weird*3)+(floatingMarks*2)+(splitThai*1.4)+(repeated*4)+(junkLines*5)+(danglingUi*2)+(suspiciousIp*4)+symbolRatio);
 }
 
 function normalizeNetworkOcrText(text){
@@ -244,6 +300,8 @@ function createImageOcrPasses(){
       {name:'Gray Document',mode:'gray',psm:'6'}
     ],
     screenshot:[
+      {name:'UI Sharp Read',mode:'ui-sharp',psm:'6'},
+      {name:'UI Adaptive Read',mode:'ui-adaptive',psm:'6'},
       {name:'UI Crisp Text',mode:'ui-crisp',psm:'6'},
       {name:'UI Sparse Text',mode:'ui-detail',psm:'11'},
       {name:'UI Binary Text',mode:'ui-binary',psm:'6'},
@@ -266,9 +324,12 @@ function createImageOcrPasses(){
   };
   if(sets[preset])return sets[preset];
   return [
+    {name:'Auto UI Sharp',mode:'ui-sharp',psm:'6'},
+    {name:'Auto UI Adaptive',mode:'ui-adaptive',psm:'6'},
     {name:'Auto UI Crisp',mode:'ui-crisp',psm:'6'},
     {name:'PDF-like Document',mode:'pdf-like',psm:'6'},
     {name:'Document Clean',mode:'doc-clean',psm:'6'},
+    {name:'Document Adaptive',mode:'doc-adaptive',psm:'6'},
     {name:'Thai Dense Text',mode:'pdf-like',psm:'4'},
     {name:'Sparse UI/Text',mode:'ui-detail',psm:'11'},
     {name:'Soft Contrast',mode:'soft',psm:'6'},
