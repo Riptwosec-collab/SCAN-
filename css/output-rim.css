@@ -8,7 +8,7 @@
   background:
     linear-gradient(90deg,rgba(220,252,231,0),rgba(220,252,231,.18),#f0fdf4,#bbf7d0,#86efac,#4ade80,#bbf7d0,rgba(220,252,231,.22),rgba(220,252,231,0));
   background-size:340% 100%;
-  animation:outputRimLightSmooth 4s cubic-bezier(.42,0,.18,1) both;
+  animation:outputRimLightSmooth 5s cubic-bezier(.42,0,.18,1) both;
   z-index:-1;
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,

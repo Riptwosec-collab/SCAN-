@@ -39,7 +39,7 @@ function setOutputSuccess(){
       output.classList.remove('output-success','output-success-hide','output-done-pulse');
       outputSuccessTimer=null;
     },760);
-  },4000);
+  },5000);
 }
 
 function clearOutputState(){
