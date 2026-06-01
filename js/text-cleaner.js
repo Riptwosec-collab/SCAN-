@@ -65,6 +65,7 @@ function cleanText(text){
     result=fixUiOcrWords(result);
     if($('itDictionary')?.checked)result=applyItDictionary(result);
     result=applyCustomRules(result);
+    if(typeof applySpellingCorrections==='function')result=applySpellingCorrections(result);
     return result.split('\n').map(line=>line.trim()).filter(Boolean).join('\n');
   }
   if($('itDictionary')?.checked)result=applyItDictionary(result);
