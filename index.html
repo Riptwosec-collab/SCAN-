@@ -240,7 +240,13 @@
           <div class="checks compact-checks">
             <label><input id="removeNoise" type="checkbox" checked> ลบอักษรแปลก</label>
             <label><input id="cleanThai" type="checkbox" checked> รวมคำไทยผิดช่องว่าง</label>
-            <label><input id="itDictionary" type="checkbox" checked> Dictionary: IT/NOC · บัญชี · ภาษี · ราชการ</label>
+            <label class="dictionary-check">
+              <input id="itDictionary" type="checkbox" checked>
+              <span class="check-copy">
+                <b>Dictionary หลายสาย</b>
+                <small><span>IT/NOC</span><span>บัญชี</span><span>ภาษี</span><span>ราชการ</span></small>
+              </span>
+            </label>
             <label><input id="highlightFixes" type="checkbox" checked> รายการคำที่แก้</label>
             <label><input id="upscale" type="checkbox" checked> ขยายภาพ</label>
             <label><input id="threshold" type="checkbox" checked> Contrast</label>
