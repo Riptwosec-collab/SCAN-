@@ -327,6 +327,34 @@ input:hover{
   border-color:#a7f23b!important;
 }
 
+.icon-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:38px;
+}
+
+.icon-btn span{
+  display:inline-grid;
+  place-items:center;
+  width:18px;
+  height:18px;
+  border-radius:6px;
+  background:rgba(187,247,208,.10);
+  color:#bbf7d0;
+  font-family:'Space Mono',monospace;
+  font-size:11px;
+  font-weight:800;
+  line-height:1;
+}
+
+.icon-btn.danger span,
+.danger.icon-btn span{
+  background:rgba(255,107,107,.10);
+  color:#fecaca;
+}
+
 .candidate-box{
   display:grid;
   gap:8px;
