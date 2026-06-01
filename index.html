@@ -96,16 +96,66 @@
           <span class="feature-icon">📤</span>
           <b>Export พร้อมใช้งานต่อ</b>
           <p>คัดลอกหรือส่งออกเป็น TXT, DOC, CSV, JSON และไฟล์สำหรับ Print เป็น PDF เพื่อใช้ต่อใน Ticket, Report หรือเอกสารงาน</p>
-          <div class="export-guide">
-            <span><b>Copy</b> คัดลอกไปวางใน Ticket/Email</span>
-            <span><b>TXT</b> เก็บข้อความล้วน</span>
-            <span><b>DOC</b> เปิดต่อใน Word</span>
-            <span><b>CSV</b> แยกผลลัพธ์ทีละบรรทัด</span>
-            <span><b>JSON</b> เก็บ raw/clean/fixed words</span>
-            <span><b>PDF</b> ทำไฟล์สำหรับ Print/Save as PDF</span>
-          </div>
           <div class="feature-tags"><span>Export</span><span>Report Ready</span></div>
         </article>
+      </div>
+      <div class="function-guide">
+        <div class="function-guide-head">
+          <div>
+            <div class="label">Function Guide</div>
+            <h3>คำอธิบายปุ่มและตัวเลือกทั้งหมด</h3>
+          </div>
+          <p>แยกตามลำดับใช้งานจริง ตั้งแต่เลือกไฟล์ ปรับ OCR ตรวจผล ไปจนถึงส่งออกไฟล์หลังแปลงเสร็จ</p>
+        </div>
+        <div class="guide-grid">
+          <article class="guide-card">
+            <b>ก่อนแปลง</b>
+            <dl>
+              <dt>รูปภาพ / PDF / Batch</dt><dd>เลือกชนิดงาน: รูปเดี่ยว, PDF รายหน้า หรือหลายไฟล์พร้อมกัน</dd>
+              <dt>เครื่อง / Drive / Dropbox</dt><dd>เลือกแหล่งไฟล์ก่อนอัปโหลด เครื่องจะเปิดตัวเลือกไฟล์ทันที ส่วน Drive/Dropbox เปิดหน้าแหล่งไฟล์</dd>
+              <dt>เปิด Crop / Reset Crop</dt><dd>ใช้กับรูปภาพเพื่อเลือกเฉพาะพื้นที่ข้อความ และล้างกรอบเลือกกลับทั้งภาพ</dd>
+              <dt>หน้าเริ่ม / หน้าสุดท้าย / ทุกหน้า</dt><dd>กำหนดช่วงหน้า PDF ที่ต้องการอ่าน หรือเลือกทุกหน้าครั้งเดียว</dd>
+              <dt>OCR เฉพาะหน้าที่ไม่มี Text Layer</dt><dd>ลดความมั่วด้วยการดึงข้อความจริงจาก PDF ก่อน แล้วค่อย OCR เฉพาะหน้าสแกน</dd>
+              <dt>แยกผลลัพธ์ตามหน้า</dt><dd>คงหัวข้อหน้าใน output เพื่อเอาไปตรวจหรือ export แยกหน้าได้ง่าย</dd>
+            </dl>
+          </article>
+          <article class="guide-card">
+            <b>ตัวเลือกตรวจคำ</b>
+            <dl>
+              <dt>ไทย + อังกฤษ</dt><dd>เลือกภาษา OCR ให้เหมาะกับเอกสารไทยล้วน อังกฤษล้วน หรือปนกัน</dd>
+              <dt>ข้อความล้วน / จัดเป็นเอกสาร / อีเมล / Ticket</dt><dd>เลือกรูปแบบจัดข้อความหลัง OCR ตามงานที่จะเอาไปใช้ต่อ</dd>
+              <dt>Preset: Auto / Document / IT Screenshot / Mobile / Table</dt><dd>ปรับวิธีเตรียมภาพให้เข้ากับต้นฉบับ เช่น เอกสารสแกน ภาพมือถือ หรือหน้าจอระบบ</dd>
+              <dt>Cleanup: Raw / Light / Balanced / Strict</dt><dd>กำหนดความแรงในการล้างคำเพี้ยน โดย Balanced เหมาะกับงานทั่วไป</dd>
+              <dt>PDF: แนวตั้ง / แนวนอน</dt><dd>กำหนดแนวเอกสารสำหรับ DOC/PDF export และ metadata ของไฟล์ที่ส่งออก</dd>
+              <dt>ลบอักษรแปลก / รวมคำไทยผิดช่องว่าง</dt><dd>ล้างเศษ OCR และรวมคำไทยที่โดนเว้นวรรคผิด เช่น ข้ อมูล ให้กลับเป็นคำเดียว</dd>
+              <dt>Dictionary หลายสาย</dt><dd>เปิดคลังคำ IT/NOC, บัญชี, ภาษี, ราชการ เพื่อช่วยแก้คำเฉพาะทาง</dd>
+              <dt>รายการคำที่แก้ / ขยายภาพ / Contrast</dt><dd>แสดงคำที่ถูกแก้ และช่วยเพิ่มความชัดก่อน OCR เมื่อภาพเล็กหรือจาง</dd>
+            </dl>
+          </article>
+          <article class="guide-card">
+            <b>แปลงและตรวจผล</b>
+            <dl>
+              <dt>เพิ่มคำแก้เอง</dt><dd>ใส่คู่คำผิด-คำถูกเอง เพื่อให้ระบบจำกฎแก้คำเฉพาะของงานนั้น</dd>
+              <dt>แปลง</dt><dd>เริ่ม OCR ตามไฟล์และตัวเลือกที่ตั้งไว้ พร้อมเลื่อนไปยังกล่อง Output</dd>
+              <dt>จัดข้อความใหม่</dt><dd>นำข้อความเดิมใน Output มาจัด/ล้างใหม่โดยไม่ต้อง OCR ซ้ำ</dd>
+              <dt>Search / Clear</dt><dd>ค้นคำในผลลัพธ์ เช่น CUCM, SD-WAN, NOC และล้างไฮไลต์ค้นหา</dd>
+              <dt>OCR Candidates</dt><dd>ถ้ามีหลายผลอ่าน ให้สลับ candidate ที่อ่านใกล้เคียงกว่าได้</dd>
+              <dt>Fixed Words / Confidence / History</dt><dd>ดูคำที่ระบบแก้ คะแนนความมั่นใจ และย้อนดูผลล่าสุดที่เคยแปลง</dd>
+            </dl>
+          </article>
+          <article class="guide-card export-function-card">
+            <b>หลังแปลง / Export พร้อมใช้งานต่อ</b>
+            <div class="export-guide">
+              <span><b>Copy</b> คัดลอกข้อความไปวางใน Ticket, Email หรือ Report</span>
+              <span><b>TXT</b> ส่งออกข้อความล้วน อ่านง่าย เปิดได้ทุกเครื่อง</span>
+              <span><b>DOC</b> ส่งออกไฟล์ Word-ready ตามแนวตั้ง/แนวนอนที่เลือก</span>
+              <span><b>CSV</b> แยกผลลัพธ์ทีละบรรทัด พร้อมชื่อไฟล์และแนวเอกสาร</span>
+              <span><b>JSON</b> เก็บ raw text, cleaned text, fixed words, confidence และ metadata</span>
+              <span><b>PDF</b> สร้างไฟล์ HTML สำหรับ Print / Save as PDF ตามแนวที่เลือกทุกไฟล์</span>
+              <span><b>Clear</b> ล้าง output และสถานะงานปัจจุบันเพื่อเริ่มงานใหม่</span>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
 
