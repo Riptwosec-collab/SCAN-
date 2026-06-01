@@ -141,6 +141,25 @@ input{
   min-height:36px;
 }
 
+select{
+  color:#f8fafc!important;
+  background-color:#111820!important;
+  color-scheme:dark;
+  font-weight:700;
+}
+
+select option{
+  color:#111827!important;
+  background:#ffffff!important;
+  font-weight:700;
+}
+
+select option:checked,
+select option:hover{
+  color:#ffffff!important;
+  background:#475569!important;
+}
+
 .nav-links a:hover,
 .btn:hover,
 .tab:hover,
@@ -258,6 +277,7 @@ input:hover{
 .precision-row select{
   background:linear-gradient(180deg,rgba(25,31,38,.98),rgba(15,20,25,.98));
   border-color:rgba(167,242,59,.20);
+  color:#f8fafc!important;
 }
 
 .checks label,
