@@ -231,6 +231,32 @@ input:hover{
   line-height:1.55!important;
 }
 
+.export-guide{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:6px;
+  margin-top:12px;
+}
+
+.export-guide span{
+  display:block;
+  border:1px solid rgba(187,247,208,.14);
+  border-radius:7px;
+  background:rgba(4,8,12,.42);
+  color:#aebbc6;
+  padding:7px 8px;
+  font-size:12px;
+  line-height:1.35;
+}
+
+.export-guide b{
+  display:inline!important;
+  margin:0 5px 0 0!important;
+  color:#bbf7d0!important;
+  font-family:'Space Mono',monospace;
+  font-size:12px!important;
+}
+
 .feature-tags span,
 .rule-chip,
 .fix-item{
