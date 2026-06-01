@@ -192,10 +192,10 @@ function normalizeEmailOcrText(text){
 function normalizeDocumentEmailAndDomains(text){
   let out=String(text||'');
   out=out
-    .replace(/^\s*(Audi|Dale|Date|วันที่|วนที่|ที่)\s*[:：]?/gim,'วันที่:')
-    .replace(/^\s*(From|Fron|จาก)\s*[:：]?/gim,'จาก:')
-    .replace(/^\s*(To|T0|ถึง)\s*[:：]?/gim,'ถึง:')
-    .replace(/^\s*(Subject|Subj|เรื่อง|เรือง)\s*[:：]?/gim,'เรื่อง:')
+    .replace(/^\s*(Audi|Dale|Date|วันที่|วนที่|ที่)\s*[:：]?\s*/gim,'วันที่: ')
+    .replace(/^\s*(From|Fron|จาก)\s*[:：]?\s*/gim,'จาก: ')
+    .replace(/^\s*(To|T0|ถึง)\s*[:：]?\s*/gim,'ถึง: ')
+    .replace(/^\s*(Subject|Subj|เรื่อง|เรือง)\s*[:：]?\s*/gim,'เรื่อง: ')
     .replace(/Ticket\s*(Mo|N0|No|N๐)\s*[.:]?/gi,'Ticket No.');
 
   out=out.replace(/Ticket No\.\s*([ฟ๐-๙0-9\-]+)/g,(match,id)=>'Ticket No. '+thaiDigitsToArabic(id));

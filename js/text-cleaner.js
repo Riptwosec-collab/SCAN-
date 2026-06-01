@@ -109,7 +109,7 @@ function classifyFix(from,to){
   if(!target&&/[^\w\sก-ฮะาำิีึืุูั็่้๊๋์.,:;()\/\-+%]/.test(source))return 'ลบอักษรแปลก';
   if(/[�ƟθϴƩΣÊÉÈË○●◦▪▫◆◇□■💀]/.test(source))return 'ลบอักษรแปลก';
   if(/\s{2,}|[เแโใไ]\s+[ก-ฮ]|[ก-ฮ]\s+[ะาำิีึืุูั็่้๊๋์]/.test(source))return 'แก้ช่องว่าง';
-  if(/[A-Za-z]/.test(source+target))return 'Dictionary IT/NOC';
+  if(/[A-Za-z]/.test(source+target))return 'Dictionary หลายสาย';
   return 'แก้คำไทย';
 }
 
@@ -184,10 +184,11 @@ function fixUiOcrWords(text){
     [/ราย\S{0,4}ารศา\S{0,3}แก้/g,'รายการคำที่แก้'],
     [/ราย\S{0,4}ารคา\S{0,2}แก้?/g,'รายการคำที่แก้'],
     [/รายการศา[ทที]่?แก/g,'รายการคำที่แก้'],
-    [/Dictionary\s+ITNT/gi,'Dictionary IT/NOC'],
-    [/Dictionary\s+IT\s*[/|\\]?\s*N[O0]C/gi,'Dictionary IT/NOC'],
-    [/Dictionary\s+IT\s*[/|\\]?\s*N[O0]?C?/gi,'Dictionary IT/NOC'],
-    [/Dictionary\s+ITN[O0]?C?/gi,'Dictionary IT/NOC'],
+    [/Dictionary\s+ITNT/gi,'Dictionary: IT/NOC · บัญชี · ภาษี · ราชการ'],
+    [/Dictionary\s+IT\s*[/|\\]?\s*N[O0]C/gi,'Dictionary: IT/NOC · บัญชี · ภาษี · ราชการ'],
+    [/Dictionary\s+IT\s*[/|\\]?\s*N[O0]?C?/gi,'Dictionary: IT/NOC · บัญชี · ภาษี · ราชการ'],
+    [/Dictionary\s+ITN[O0]?C?/gi,'Dictionary: IT/NOC · บัญชี · ภาษี · ราชการ'],
+    [/Dictionary\s*[:：]?\s*หลายสาย(?:งาน)?/gi,'Dictionary: IT/NOC · บัญชี · ภาษี · ราชการ'],
     [/เป็นเปอร์เซ็นต์ค้านส่าง/g,'เป็นเปอร์เซ็นต์ด้านล่าง'],
     [/เป็นเปอร์เซ็นต์[คด]้าน[สล]่าง/g,'เป็นเปอร์เซ็นต์ด้านล่าง'],
     [/เป็นเปอร์เซ็นต[ด์]*ด้านล่าง/g,'เป็นเปอร์เซ็นต์ด้านล่าง'],
