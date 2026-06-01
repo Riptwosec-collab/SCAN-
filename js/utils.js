@@ -38,8 +38,8 @@ function setOutputSuccess(){
     setTimeout(()=>{
       output.classList.remove('output-success','output-success-hide','output-done-pulse');
       outputSuccessTimer=null;
-    },520);
-  },3000);
+    },760);
+  },4000);
 }
 
 function clearOutputState(){
