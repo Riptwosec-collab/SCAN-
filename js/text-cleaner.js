@@ -142,9 +142,12 @@ function removeStrangeCharacters(text){
 function fixUiOcrWords(text){
   let out=text||'';
   const isUiGarbageLine=line=>{
-    const compact=line.replace(/\s/g,'');
+    const compact=line.replace(/[\s"'“”‘’]/g,'');
     if(!compact)return false;
     if(compact.length<=24&&/(?:utv|vut|\[=|=11|=๑๑)/i.test(compact))return true;
+    if(/^(?:เม่|เม|แม่){2,}$/i.test(compact))return true;
+    if(/^=*[๐-๙0-9oOwW]{1,4}=*$/i.test(compact))return true;
+    if(compact.length<=12&&/^=[๐-๙0-9oOwW]+$/i.test(compact))return true;
     return /^[vVdDutเอ\[\]=\-_,.01๑๒]+$/.test(compact)&&compact.length<=18;
   };
   out=out.split('\n').filter(line=>!isUiGarbageLine(line)).join('\n');
@@ -161,12 +164,18 @@ function fixUiOcrWords(text){
     [/ส[บป]ย?กษรแป[ลต]าก/g,'ลบอักษรแปลก'],
     [/ลบอ[กั]ษรแปลก/g,'ลบอักษรแปลก'],
     [/รวมคาไทยผิดช่องว่าง/g,'รวมคำไทยผิดช่องว่าง'],
+    [/รวมคาไทยผิดชอง่ว่าง/g,'รวมคำไทยผิดช่องว่าง'],
+    [/รวมคำไทยผิดชอง่ว่าง/g,'รวมคำไทยผิดช่องว่าง'],
+    [/รวมค\S{0,4}ไทยผิดชอ\S{0,2}ว่าง/g,'รวมคำไทยผิดช่องว่าง'],
     [/รวมคศ์ฯไทยผิดซ่องว่าง/g,'รวมคำไทยผิดช่องว่าง'],
     [/รวมค\S{0,4}ไทยผิด[ซช]่องว่าง/g,'รวมคำไทยผิดช่องว่าง'],
     [/รวมคำไทยผิดช่องว่างง/g,'รวมคำไทยผิดช่องว่าง'],
     [/รายการศาทหแก/g,'รายการคำที่แก้'],
+    [/รายการคาหแก/g,'รายการคำที่แก้'],
+    [/รายการค\s*า\s*ห\s*แก/g,'รายการคำที่แก้'],
     [/รายคทารศาทหแก้/g,'รายการคำที่แก้'],
     [/ราย\S{0,4}ารศา\S{0,3}แก้/g,'รายการคำที่แก้'],
+    [/ราย\S{0,4}ารคา\S{0,2}แก้?/g,'รายการคำที่แก้'],
     [/รายการศา[ทที]่?แก/g,'รายการคำที่แก้'],
     [/Dictionary\s+ITNT/gi,'Dictionary IT/NOC'],
     [/Dictionary\s+IT\s*[/|\\]?\s*N[O0]C/gi,'Dictionary IT/NOC'],
@@ -189,7 +198,11 @@ function fixUiOcrWords(text){
     [/[`'"]\s*\|\s*$/gm,''],
     [/คาแก้เอง/g,'คำแก้เอง'],
     [/เพิ่มคาแก้เอง/g,'เพิ่มคำแก้เอง'],
+    [/เพมศาแกเอง/g,'เพิ่มคำแก้เอง'],
+    [/เพิ?ม\S{0,2}าแก้?เอง/g,'เพิ่มคำแก้เอง'],
+    [/["']\s*เพิ?ม\S{0,4}แก้?เอง/g,'เพิ่มคำแก้เอง'],
     [/ขยายภาพ\s+Contrast/gi,'ขยายภาพ\nContrast'],
+    [/=\s*[๐-๙0-9oOwW]{1,4}\s*(?:ow|0w)?/gi,''],
     [/Preset:\s*Auto\s*v/gi,'Preset: Auto'],
     [/Cleanup:\s*Balanced\s*\w*/gi,'Cleanup: Balanced'],
     [/ไทย\s*\+\s*อังกฤษ\s*[”"']/g,'ไทย + อังกฤษ'],
