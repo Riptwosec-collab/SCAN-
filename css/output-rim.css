@@ -18,43 +18,17 @@
   transition:opacity .68s ease,transform .76s cubic-bezier(.22,.82,.22,1),filter .68s ease;
 }
 .out.output-success{
-  border-color:rgba(134,239,172,.64)!important;
-  background:
-    linear-gradient(180deg,rgba(9,26,18,.96),rgba(3,10,10,.93) 48%,rgba(5,18,13,.96)),
-    radial-gradient(circle at 15% 0%,rgba(220,252,231,.16),transparent 34%),
-    radial-gradient(circle at 95% 18%,rgba(74,222,128,.12),transparent 30%)!important;
+  border-color:rgba(134,239,172,.58)!important;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.08),
-    inset 0 -32px 72px rgba(0,0,0,.18),
-    inset 0 0 48px rgba(187,247,208,.085),
+    inset 0 1px 0 rgba(255,255,255,.035),
     0 22px 56px rgba(0,0,0,.30),
-    0 0 34px rgba(134,239,172,.18),
-    0 0 76px rgba(74,222,128,.06),
+    0 0 28px rgba(134,239,172,.12),
     0 0 0 1px rgba(187,247,208,.16)!important;
   transition:border-color .32s ease,box-shadow .42s ease,background .32s ease;
 }
 .out.output-success:after{
-  content:'แปลงข้อความสำเร็จ';
-  position:absolute;
-  right:14px;
-  top:10px;
-  border:1px solid rgba(187,247,208,.42);
-  background:
-    linear-gradient(180deg,rgba(20,83,45,.90),rgba(6,78,59,.82)),
-    radial-gradient(circle at 20% 0%,rgba(220,252,231,.18),transparent 58%);
-  color:#dcfce7;
-  border-radius:999px;
-  padding:5px 11px;
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:0;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.12),
-    0 0 18px rgba(134,239,172,.18);
-  pointer-events:none;
-  opacity:1;
-  transform:translateY(0) scale(1);
-  transition:opacity .42s ease,transform .6s cubic-bezier(.22,.82,.22,1);
+  content:none!important;
+  display:none!important;
 }
 .out.output-success-hide:before{
   opacity:0;
@@ -66,7 +40,6 @@
   border-color:rgba(187,247,208,.20)!important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.035),
-    inset 0 0 24px rgba(187,247,208,.025),
     0 18px 44px rgba(0,0,0,.22),
     0 0 0 1px rgba(187,247,208,.04)!important;
 }

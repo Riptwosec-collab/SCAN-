@@ -285,59 +285,35 @@ input:hover{
   line-height:1.65;
   font-size:14px;
   color:#eefdf4;
-  background:
-    linear-gradient(180deg,rgba(9,20,16,.94),rgba(3,8,10,.92) 48%,rgba(4,12,10,.96)),
-    radial-gradient(circle at 16% 0%,rgba(187,247,208,.12),transparent 34%),
-    radial-gradient(circle at 92% 14%,rgba(34,197,94,.085),transparent 30%)!important;
+  background:rgba(5,8,11,.88)!important;
   position:relative;
   isolation:isolate;
-  border-color:rgba(187,247,208,.24)!important;
+  border-color:rgba(187,247,208,.16)!important;
   outline:1px solid rgba(255,255,255,.025);
   outline-offset:-3px;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.06),
-    inset 0 -34px 70px rgba(0,0,0,.20),
-    inset 0 0 34px rgba(187,247,208,.04),
+    inset 0 1px 0 rgba(255,255,255,.035),
     0 18px 44px rgba(0,0,0,.24),
-    0 0 26px rgba(134,239,172,.06),
-    0 0 0 1px rgba(187,247,208,.055)!important;
+    0 0 0 1px rgba(187,247,208,.035)!important;
   text-shadow:0 1px 0 rgba(0,0,0,.32);
   transition:border-color .32s ease,box-shadow .38s ease,background .38s ease,transform .38s ease;
 }
 
 .out:after{
-  content:'';
-  position:absolute;
-  inset:1px;
-  border-radius:inherit;
-  pointer-events:none;
-  background:
-    linear-gradient(90deg,rgba(220,252,231,.07),transparent 18%,transparent 82%,rgba(187,247,208,.055)),
-    linear-gradient(180deg,rgba(255,255,255,.045),transparent 16%,transparent 76%,rgba(187,247,208,.045)),
-    radial-gradient(circle at 18% 0%,rgba(220,252,231,.14),transparent 30%),
-    radial-gradient(circle at 100% 18%,rgba(134,239,172,.09),transparent 34%),
-    repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 28px);
-  opacity:.84;
-  z-index:0;
-  mix-blend-mode:screen;
-  transition:opacity .38s ease,filter .38s ease;
+  content:none;
 }
 
 .out:hover{
-  border-color:rgba(187,247,208,.42)!important;
+  border-color:rgba(187,247,208,.28)!important;
   transform:translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.075),
-    inset 0 -34px 74px rgba(0,0,0,.18),
-    inset 0 0 42px rgba(187,247,208,.06),
+    inset 0 1px 0 rgba(255,255,255,.045),
     0 22px 52px rgba(0,0,0,.26),
-    0 0 34px rgba(134,239,172,.10),
-    0 0 0 1px rgba(187,247,208,.10)!important;
+    0 0 0 1px rgba(187,247,208,.06)!important;
 }
 
 .out:hover:after{
-  opacity:1;
-  filter:saturate(1.08);
+  content:none;
 }
 
 .progress span{
