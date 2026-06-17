@@ -553,3 +553,300 @@ body[data-theme="ivory"] .search-row,
 body[data-theme="ivory"] .next-grid{
   background:rgba(255,250,240,.66)!important;
 }
+
+/* Readability sweep: loaded last so every theme keeps text above its surface. */
+body[data-theme]{
+  --readable-text:var(--text);
+  --readable-muted:var(--muted);
+  --readable-faint:color-mix(in srgb,var(--muted) 86%,var(--text));
+  --readable-surface:color-mix(in srgb,var(--card2) 90%,var(--card));
+  --readable-surface-alt:color-mix(in srgb,var(--card) 92%,var(--bg));
+  --readable-focus:color-mix(in srgb,var(--accent) 64%,var(--text));
+  --readable-ok:#38d889;
+  --readable-warn:#f0ba4a;
+  --readable-bad:#ff6b6b;
+}
+
+body[data-theme] *,
+body[data-theme] *::before,
+body[data-theme] *::after{
+  text-shadow:none!important;
+}
+
+body[data-theme] p,
+body[data-theme] li,
+body[data-theme] dt,
+body[data-theme] dd,
+body[data-theme] label,
+body[data-theme] summary,
+body[data-theme] button,
+body[data-theme] textarea,
+body[data-theme] output,
+body[data-theme] code,
+body[data-theme] pre,
+body[data-theme] .nav-links a,
+body[data-theme] .footer-links,
+body[data-theme] .footer-links a,
+body[data-theme] .drop b,
+body[data-theme] .file-info span,
+body[data-theme] .rules,
+body[data-theme] .ready-head,
+body[data-theme] .ready-list,
+body[data-theme] .quality-line,
+body[data-theme] .quality-item,
+body[data-theme] .candidate-title,
+body[data-theme] .candidate-main,
+body[data-theme] .next-head,
+body[data-theme] .export-review,
+body[data-theme] .compare-panel,
+body[data-theme] .compare-panel *{
+  color:var(--readable-text)!important;
+}
+
+body[data-theme] small,
+body[data-theme] em,
+body[data-theme] i,
+body[data-theme] .sub,
+body[data-theme] .hint,
+body[data-theme] .mini-label,
+body[data-theme] .label,
+body[data-theme] .eyebrow,
+body[data-theme] .theme-picker span,
+body[data-theme] .feature-open,
+body[data-theme] .feature-detail p,
+body[data-theme] .guide-detail dd,
+body[data-theme] .dictionary-check .check-copy small,
+body[data-theme] .next-head span,
+body[data-theme] .quality-help,
+body[data-theme] .candidate-title span,
+body[data-theme] .candidate-main small,
+body[data-theme] .file-meta,
+body[data-theme] .status-line{
+  color:var(--readable-muted)!important;
+}
+
+body[data-theme] input::placeholder,
+body[data-theme] textarea::placeholder{
+  color:var(--readable-faint)!important;
+  opacity:1!important;
+}
+
+body[data-theme] a,
+body[data-theme] .brand,
+body[data-theme] .source-btn span,
+body[data-theme] .drop-icon,
+body[data-theme] .guide-icon,
+body[data-theme] .candidate-rank,
+body[data-theme] .feature-icon,
+body[data-theme] .rule-chip,
+body[data-theme] .guide-tags i,
+body[data-theme] .feature-tags span,
+body[data-theme] .check-copy small span,
+body[data-theme] .fix-item,
+body[data-theme] mark{
+  color:var(--readable-focus)!important;
+}
+
+body[data-theme] mark,
+body[data-theme] code,
+body[data-theme] .rule-chip,
+body[data-theme] .guide-tags i,
+body[data-theme] .feature-tags span,
+body[data-theme] .check-copy small span{
+  background:color-mix(in srgb,var(--accent) 16%,var(--readable-surface-alt))!important;
+  border:1px solid color-mix(in srgb,var(--accent) 32%,var(--line))!important;
+  border-radius:6px!important;
+}
+
+body[data-theme] button,
+body[data-theme] .btn,
+body[data-theme] .tab,
+body[data-theme] .source-btn,
+body[data-theme] .sample-btn,
+body[data-theme] .next-action,
+body[data-theme] .checks label,
+body[data-theme] .inline-check,
+body[data-theme] input,
+body[data-theme] textarea,
+body[data-theme] select{
+  background:var(--readable-surface)!important;
+  border-color:var(--inner-border)!important;
+  color:var(--readable-text)!important;
+  -webkit-text-fill-color:currentColor!important;
+}
+
+body[data-theme] button:hover,
+body[data-theme] .btn:hover,
+body[data-theme] .tab:hover,
+body[data-theme] .next-action:hover{
+  background:color-mix(in srgb,var(--accent) 18%,var(--readable-surface))!important;
+  border-color:var(--section-border)!important;
+  color:var(--readable-text)!important;
+}
+
+body[data-theme] button:disabled,
+body[data-theme] select:disabled,
+body[data-theme] input:disabled,
+body[data-theme] textarea:disabled{
+  color:color-mix(in srgb,var(--readable-muted) 72%,transparent)!important;
+  -webkit-text-fill-color:color-mix(in srgb,var(--readable-muted) 72%,transparent)!important;
+  background:color-mix(in srgb,var(--readable-surface) 72%,var(--bg))!important;
+  opacity:1!important;
+}
+
+body[data-theme] .primary,
+body[data-theme] .btn.primary,
+body[data-theme] #scanBtn{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 82%,#fff 18%),color-mix(in srgb,var(--accent) 76%,#000 24%))!important;
+  border-color:color-mix(in srgb,var(--accent) 70%,var(--line))!important;
+  color:var(--primary-text,#10140c)!important;
+  -webkit-text-fill-color:currentColor!important;
+  font-weight:800!important;
+}
+
+body[data-theme] .danger,
+body[data-theme] .btn.danger{
+  background:color-mix(in srgb,var(--readable-bad) 16%,var(--readable-surface))!important;
+  border-color:color-mix(in srgb,var(--readable-bad) 44%,var(--line))!important;
+  color:color-mix(in srgb,var(--readable-bad) 70%,var(--readable-text))!important;
+}
+
+body[data-theme] .status.ok,
+body[data-theme] .confidence.good,
+body[data-theme] .file-success{
+  color:color-mix(in srgb,var(--readable-ok) 72%,var(--readable-text))!important;
+  border-color:color-mix(in srgb,var(--readable-ok) 42%,var(--line))!important;
+  background:color-mix(in srgb,var(--readable-ok) 12%,var(--readable-surface))!important;
+}
+
+body[data-theme] .status.err,
+body[data-theme] .confidence.bad{
+  color:color-mix(in srgb,var(--readable-bad) 74%,var(--readable-text))!important;
+  border-color:color-mix(in srgb,var(--readable-bad) 42%,var(--line))!important;
+  background:color-mix(in srgb,var(--readable-bad) 12%,var(--readable-surface))!important;
+}
+
+body[data-theme] .confidence.warn{
+  color:color-mix(in srgb,var(--readable-warn) 70%,var(--readable-text))!important;
+  border-color:color-mix(in srgb,var(--readable-warn) 44%,var(--line))!important;
+  background:color-mix(in srgb,var(--readable-warn) 13%,var(--readable-surface))!important;
+}
+
+body[data-theme] .progress,
+body[data-theme] .preview-canvas,
+body[data-theme] .thumbs,
+body[data-theme] .batch-list,
+body[data-theme] .history,
+body[data-theme] .out,
+body[data-theme] .fix-report,
+body[data-theme] .candidate-box,
+body[data-theme] .quality-gate,
+body[data-theme] .compare-panel,
+body[data-theme] .export-review,
+body[data-theme] .ready-card{
+  background:var(--readable-surface-alt)!important;
+  border-color:var(--inner-border)!important;
+  color:var(--readable-text)!important;
+}
+
+body[data-theme] .scan-3d-stage{
+  background:
+    linear-gradient(180deg,color-mix(in srgb,var(--readable-surface-alt) 86%,transparent),color-mix(in srgb,var(--bg) 78%,#000 22%))!important;
+  border-color:var(--inner-border)!important;
+}
+
+body[data-theme] .scan-3d-label{
+  background:linear-gradient(90deg,color-mix(in srgb,var(--bg) 74%,transparent),transparent)!important;
+  color:var(--readable-text)!important;
+  padding:10px 14px!important;
+  border-radius:8px!important;
+  border:1px solid color-mix(in srgb,var(--accent) 18%,transparent)!important;
+}
+
+body[data-theme] .scan-3d-label b{
+  color:var(--readable-text)!important;
+  letter-spacing:.9px!important;
+}
+
+body[data-theme] .scan-3d-label span{
+  color:var(--readable-muted)!important;
+}
+
+body[data-theme="ivory"] .scan-3d-stage,
+body[data-theme="pearl"] .scan-3d-stage{
+  background:
+    linear-gradient(180deg,color-mix(in srgb,var(--readable-surface-alt) 88%,#fff 12%),color-mix(in srgb,var(--bg) 82%,var(--accent) 18%))!important;
+}
+
+body[data-theme="ivory"] .scan-3d-label,
+body[data-theme="pearl"] .scan-3d-label{
+  background:linear-gradient(90deg,rgba(255,255,255,.86),rgba(255,255,255,.38))!important;
+  box-shadow:0 8px 22px rgba(84,64,35,.10)!important;
+}
+
+body[data-theme="ivory"] .scan-3d-label span,
+body[data-theme="pearl"] .scan-3d-label span{
+  color:var(--readable-text)!important;
+  opacity:.82!important;
+}
+
+body[data-theme] .next-icon{
+  color:#07110c!important;
+  -webkit-text-fill-color:#07110c!important;
+  border:1px solid rgba(255,255,255,.28)!important;
+}
+
+body[data-theme] .next-icon.green,
+body[data-theme] .next-icon.mint{
+  background:linear-gradient(180deg,#b9f8d4,#65d99a)!important;
+}
+
+body[data-theme] .next-icon.blue{
+  background:linear-gradient(180deg,#bfe6ff,#72b9f0)!important;
+}
+
+body[data-theme] .next-icon.amber{
+  background:linear-gradient(180deg,#ffe7a8,#e2aa42)!important;
+}
+
+body[data-theme] .next-icon.violet{
+  background:linear-gradient(180deg,#dccbff,#a688ef)!important;
+}
+
+body[data-theme] .next-icon.red{
+  background:linear-gradient(180deg,#ffc5be,#f0786a)!important;
+}
+
+body[data-theme="ivory"],
+body[data-theme="pearl"]{
+  --readable-ok:#087947;
+  --readable-warn:#876018;
+  --readable-bad:#a73535;
+}
+
+body[data-theme="ivory"] .primary,
+body[data-theme="ivory"] .btn.primary,
+body[data-theme="ivory"] #scanBtn{
+  color:#241b10!important;
+}
+
+body[data-theme="pearl"] .primary,
+body[data-theme="pearl"] .btn.primary,
+body[data-theme="pearl"] #scanBtn{
+  color:#102027!important;
+}
+
+body[data-theme="carbon"],
+body[data-theme="sage"],
+body[data-theme="midnight"]{
+  --readable-ok:#7bf4ad;
+  --readable-warn:#ffd36a;
+  --readable-bad:#ff9189;
+}
+
+body[data-theme="carbon"] select option,
+body[data-theme="sage"] select option,
+body[data-theme="midnight"] select option{
+  background:#111827!important;
+  color:#f8fafc!important;
+}
