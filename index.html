@@ -130,6 +130,7 @@
             </summary>
             <dl class="guide-detail">
               <dt>ไทย + อังกฤษ</dt><dd>เลือกภาษา OCR ให้เหมาะกับเอกสารไทยล้วน อังกฤษล้วน หรือปนกัน</dd>
+              <dt>Engine: Auto / Tesseract / Browser Native</dt><dd>Auto จะลอง Native OCR ถ้า browser รองรับ แล้วเทียบกับ Tesseract เพื่อเลือกผลที่ดีที่สุด</dd>
               <dt>ข้อความล้วน / จัดเป็นเอกสาร / อีเมล / Ticket</dt><dd>เลือกรูปแบบจัดข้อความหลัง OCR ตามงานที่จะเอาไปใช้ต่อ</dd>
               <dt>Preset: Auto / Document / IT Screenshot / Mobile / Table</dt><dd>ปรับวิธีเตรียมภาพให้เข้ากับต้นฉบับ เช่น เอกสารสแกน ภาพมือถือ หรือหน้าจอระบบ</dd>
               <dt>Cleanup: Raw / Light / Balanced / Strict</dt><dd>กำหนดความแรงในการล้างคำเพี้ยน โดย Balanced เหมาะกับงานทั่วไป</dd>
@@ -332,6 +333,12 @@
               <option value="light">Cleanup: Light</option>
               <option value="normal" selected>Cleanup: Balanced</option>
               <option value="strict">Cleanup: Strict</option>
+            </select>
+            <select id="ocrEngine">
+              <option value="auto" selected>Engine: Auto</option>
+              <option value="tesseract-accurate">Engine: Tesseract Accurate</option>
+              <option value="tesseract-fast">Engine: Tesseract Fast</option>
+              <option value="native">Engine: Browser Native</option>
             </select>
             <select id="pdfOrientation">
               <option value="portrait" selected>PDF: แนวตั้ง</option>

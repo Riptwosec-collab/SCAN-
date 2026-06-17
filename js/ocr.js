@@ -329,8 +329,27 @@ async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6',extr
   return {text:result.data.text||'',confidence};
 }
 
+async function recognizeNativeText(canvas,start=0,end=100){
+  if(!('TextDetector' in window))return null;
+  setStatus('Browser Native OCR · กำลังตรวจข้อความ...');
+  setProgress(start+((end-start)*.25));
+  const detector=new TextDetector();
+  const bitmap=await createImageBitmap(canvas);
+  const results=await detector.detect(bitmap);
+  bitmap.close?.();
+  setProgress(end);
+  if(!results?.length)return {text:'',confidence:0,mode:'Browser Native'};
+  const lines=results
+    .slice()
+    .sort((a,b)=>(a.boundingBox?.top??a.boundingBox?.y??0)-(b.boundingBox?.top??b.boundingBox?.y??0)||((a.boundingBox?.left??a.boundingBox?.x??0)-(b.boundingBox?.left??b.boundingBox?.x??0)))
+    .map(item=>item.rawValue||item.text||'')
+    .filter(Boolean);
+  return {text:lines.join('\n'),confidence:86,mode:'Browser Native'};
+}
+
 function createImageOcrPasses(){
   const preset=$('ocrPreset')?.value||AppState.ocrPreset||'auto';
+  const engine=$('ocrEngine')?.value||AppState.ocrEngine||'auto';
   const sets={
     invoice:[
       {name:'Invoice Thai Sharp',mode:'thai-sharp',psm:'6'},
@@ -399,8 +418,7 @@ function createImageOcrPasses(){
       {name:'Table Soft',mode:'soft',psm:'4'}
     ]
   };
-  if(sets[preset])return sets[preset];
-  return [
+  const selected=sets[preset]||[
     {name:'Auto Thai Sharp',mode:'thai-sharp',psm:'6'},
     {name:'Auto Thai Adaptive',mode:'thai-adaptive',psm:'6'},
     {name:'Auto Thai Dense',mode:'thai-soft',psm:'4'},
@@ -417,23 +435,50 @@ function createImageOcrPasses(){
     {name:'Receipt Detail',mode:'receipt',psm:'4'},
     {name:'Invert Check',mode:'invert',psm:'11'}
   ];
+  if(engine==='tesseract-fast')return selected.slice(0,Math.min(3,selected.length));
+  return selected;
 }
 
 function createPdfOcrPasses(){
-  return [
+  const passes=[
     {name:'PDF Page OCR',mode:'pdf-like',psm:'6'},
     {name:'PDF Clean OCR',mode:'doc-clean',psm:'6'},
     {name:'PDF Dense OCR',mode:'pdf-like',psm:'4'},
     {name:'PDF Sparse OCR',mode:'gray',psm:'11'}
   ];
+  const engine=$('ocrEngine')?.value||AppState.ocrEngine||'auto';
+  return engine==='tesseract-fast'?passes.slice(0,2):passes;
 }
 
 async function runOcr(canvas,start=0,end=100,profile='image'){
+  const engine=$('ocrEngine')?.value||AppState.ocrEngine||'auto';
+  AppState.ocrEngine=engine;
+  if(engine==='native'){
+    const nativeOnly=await recognizeNativeText(canvas,start,end);
+    if(!nativeOnly)throw new Error('Browser นี้ยังไม่รองรับ Native OCR (TextDetector) กรุณาเลือก Engine: Auto หรือ Tesseract');
+    AppState.ocrCandidates=[{text:nativeOnly.text,confidence:nativeOnly.confidence,score:scoreOcrText(nativeOnly.text,nativeOnly.confidence),mode:nativeOnly.mode,risk:ocrRiskScore(nativeOnly.text)}];
+    AppState.selectedCandidateIndex=0;
+    AppState.confidence=nativeOnly.confidence;
+    return nativeOnly.text;
+  }
+
   if(!window.Tesseract)throw new Error('โหลด Tesseract.js ไม่สำเร็จ กรุณาต่ออินเทอร์เน็ต');
 
   const passes=profile==='pdf'?createPdfOcrPasses():createImageOcrPasses();
   let best={text:'',confidence:0,score:-Infinity,mode:''};
   const candidates=[];
+  if(engine==='auto'){
+    try{
+      const nativeResult=await recognizeNativeText(canvas,start,Math.min(end,start+8));
+      if(nativeResult?.text?.trim()){
+        const nativeScore=scoreOcrText(nativeResult.text,nativeResult.confidence)-ocrRiskScore(nativeResult.text);
+        candidates.push({text:nativeResult.text,confidence:nativeResult.confidence,score:nativeScore,mode:nativeResult.mode,risk:ocrRiskScore(nativeResult.text)});
+        best={text:nativeResult.text,confidence:nativeResult.confidence,score:nativeScore,mode:nativeResult.mode,risk:ocrRiskScore(nativeResult.text)};
+      }
+    }catch(error){
+      setStatus('Native OCR ใช้ไม่ได้ใน browser นี้ · ใช้ Tesseract ต่อ','ok');
+    }
+  }
   for(let i=0;i<passes.length;i++){
     const pass=passes[i];
     const from=start+((end-start)*i/passes.length);

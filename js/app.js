@@ -74,7 +74,7 @@ function bindAppEvents(){
   bindNextActions();
 
   ['upscale','threshold'].forEach(id=>$(id).addEventListener('change',updateProcessedPreview));
-  ['langSelect','modeSelect','ocrPreset','cleanupLevel','pdfOrientation','removeNoise','cleanThai','itDictionary','highlightFixes','upscale','threshold'].forEach(id=>{
+  ['langSelect','modeSelect','ocrPreset','ocrEngine','cleanupLevel','pdfOrientation','removeNoise','cleanThai','itDictionary','highlightFixes','upscale','threshold'].forEach(id=>{
     $(id)?.addEventListener('change',renderReadyChecklist);
   });
   $('ocrPreset')?.addEventListener('change',()=>{
@@ -85,6 +85,10 @@ function bindAppEvents(){
   $('cleanupLevel')?.addEventListener('change',()=>{
     AppState.cleanupLevel=$('cleanupLevel').value;
     if(AppState.rawText)showCleanedResult(AppState.rawText,true);
+  });
+  $('ocrEngine')?.addEventListener('change',()=>{
+    AppState.ocrEngine=$('ocrEngine').value;
+    setStatus('ตั้งค่า OCR Engine: '+$('ocrEngine').selectedOptions[0].textContent,'ok');
   });
   $('pdfOrientation')?.addEventListener('change',()=>{
     AppState.pdfOrientation=$('pdfOrientation').value;
@@ -253,8 +257,10 @@ function applyProfessionalPreset(preset){
   if($('modeSelect'))$('modeSelect').value=config.mode;
   if($('cleanupLevel'))$('cleanupLevel').value=config.cleanup;
   if($('pdfOrientation'))$('pdfOrientation').value=config.orientation;
+  if($('ocrEngine')&&$('ocrEngine').value==='native')$('ocrEngine').value='auto';
   AppState.cleanupLevel=config.cleanup;
   AppState.pdfOrientation=config.orientation;
+  AppState.ocrEngine=$('ocrEngine')?.value||AppState.ocrEngine||'auto';
   renderReadyChecklist();
   setStatus('ตั้งค่า Preset: '+($('ocrPreset')?.selectedOptions?.[0]?.textContent||preset),'ok');
 }

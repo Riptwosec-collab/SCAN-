@@ -16,6 +16,7 @@ window.AppState={
   selectedCandidateIndex:0,
   cleanupLevel:'normal',
   ocrPreset:'auto',
+  ocrEngine:'auto',
   fixedWords:[],
   confidence:null,
   sourceName:'',

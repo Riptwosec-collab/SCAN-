@@ -11,12 +11,14 @@ function setStatus(message,type=''){
 function getReadyItems(){
   const hasInput=AppState.tab==='img'?!!AppState.imageFile:AppState.tab==='pdf'?!!AppState.pdfDoc:(AppState.batchFiles||[]).length>0;
   const preset=$('ocrPreset')?.value||AppState.ocrPreset||'auto';
+  const engine=$('ocrEngine')?.value||AppState.ocrEngine||'auto';
   const cleanup=$('cleanupLevel')?.value||AppState.cleanupLevel||'normal';
   const dictionary=$('itDictionary')?.checked;
   const contrast=$('threshold')?.checked;
   const upscale=$('upscale')?.checked;
   return [
     {ok:hasInput,label:'เลือกไฟล์แล้ว',hint:hasInput?'พร้อมอ่านจาก '+(AppState.tab==='batch'?(AppState.batchFiles.length+' ไฟล์'):AppState.tab.toUpperCase()):'เลือกไฟล์ก่อนเริ่มแปลง'},
+    {ok:engine!=='native'||('TextDetector' in window),label:'OCR Engine',hint:engine==='native'?(('TextDetector' in window)?'Browser Native พร้อมใช้':'Browser นี้ไม่รองรับ Native OCR'):(engine==='auto'?'Auto: Native + Tesseract':'ใช้ '+engine)},
     {ok:preset!=='auto'||contrast||upscale,label:'ภาพพร้อม OCR',hint:preset==='auto'?'Auto + '+(contrast?'Contrast':'ไม่เปิด Contrast'):'Preset '+preset},
     {ok:cleanup!=='raw',label:'เปิด Cleanup',hint:cleanup==='raw'?'Raw OCR ไม่ช่วยแก้คำ':'ระดับ '+cleanup},
     {ok:dictionary,label:'Dictionary เฉพาะทาง',hint:dictionary?'IT/NOC + บัญชี/ภาษี/ราชการ':'ปิดคลังคำเฉพาะทาง'}
