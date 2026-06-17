@@ -111,7 +111,7 @@ const OCR_WRONG_WORD_RULES=[
   [/กาษีอากร/g,'ภาษีอากร'],
   [/คา(?=ไทย|แก้|ที่)/g,'คำ'],
   [/เป็นเปอร์เซ็นต[ด์]*ด้านล่าง|เป็นเปอร์เซ็นต[ด์]*้?านล่าง/g,'เป็นเปอร์เซ็นต์ด้านล่าง'],
-  [/พววิวรปกกซอน่ตามทฑีตังค้่าไว้|พววิวรปกกซอน่ตามท\S{1,4}ตังค้?่าไว้/g,'พรีวิวรูปถูกซ่อนตามที่ตั้งค่าไว้'],
+  [/พววิวรปกกซอน่ตามทฑีตังค้่าไว้/g,'พรีวิวรูปถูกซ่อนตามที่ตั้งค่าไว้'],
   [/ตั้งค้่าไว้/g,'ตั้งค่าไว้'],
   [/ซ่องว่าง/g,'ช่องว่าง'],
   [/ช่อ\s*งว่าง/g,'ช่องว่าง'],
@@ -134,7 +134,7 @@ const OCR_WRONG_WORD_RULES=[
   [/Lease\s+Expires(?!:)/gi,'Lease Expires:']
 ];
 
-const THAI_DIGIT_MAP={'๐':'0','๑':'1','๒':'2','๓':'3','๔':'4','๕':'5','๖':'6','๗':'7','๘':'8','๙':'9','ฟ':'9','ๅ':'1','ข':'2','ฃ':'3','น':'0','ม':'3'};
+const THAI_DIGIT_MAP={'๐':'0','๑':'1','๒':'2','๓':'3','๔':'4','๕':'5','๖':'6','๗':'7','๘':'8','๙':'9'};
 
 function escapeReviewRegExp(value){
   return String(value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
@@ -198,7 +198,7 @@ function normalizeDocumentEmailAndDomains(text){
     .replace(/^\s*(Subject|Subj|เรื่อง|เรือง)\s*[:：]?\s*/gim,'เรื่อง: ')
     .replace(/Ticket\s*(Mo|N0|No|N๐)\s*[.:]?/gi,'Ticket No.');
 
-  out=out.replace(/Ticket No\.\s*([ฟ๐-๙0-9\-]+)/g,(match,id)=>'Ticket No. '+thaiDigitsToArabic(id));
+  out=out.replace(/Ticket No\.\s*([๐-๙0-9\-]+)/g,(match,id)=>'Ticket No. '+thaiDigitsToArabic(id));
   out=out.replace(/([A-Za-z0-9_-]+)\s*[,，]\s*([A-Za-z]{2,})(?=\b|>)/g,'$1.$2');
   out=out.replace(/([A-Za-z0-9_-]+)\s*\.\s*([A-Za-z]{2,})(?=\b|>)/g,'$1.$2');
   out=out.replace(/([A-Za-z0-9._%+-]+)\s*@\s*([A-Za-z0-9.-]+)\s*\.\s*([A-Za-z]{2,})/g,'$1@$2.$3');
@@ -213,7 +213,7 @@ function normalizeDocumentEmailAndDomains(text){
 }
 
 function thaiDigitsToArabic(value){
-  return String(value||'').replace(/[ฟ๐-๙ๅขฃนม]/g,ch=>THAI_DIGIT_MAP[ch]??ch);
+  return String(value||'').replace(/[๐-๙]/g,ch=>THAI_DIGIT_MAP[ch]??ch);
 }
 
 function repairThaiVowelOrder(text){

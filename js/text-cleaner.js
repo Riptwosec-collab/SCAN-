@@ -9,18 +9,34 @@ function expandReplacement(replacement,args){
   });
 }
 
+function shouldSkipSyntheticFix(match,fixed){
+  const from=String(match||'').trim();
+  const to=String(fixed||'').trim();
+  if(!from||!to)return false;
+  const compactFrom=from.replace(/\s/g,'');
+  const compactTo=to.replace(/\s/g,'');
+  const fromLen=Array.from(compactFrom).length;
+  const toLen=Array.from(compactTo).length;
+  if(fromLen<=3&&toLen>fromLen+1)return true;
+  if(fromLen<16&&toLen>fromLen+8)return true;
+  if(/^[๐-๙0-9.,:;\-_=+\s]+$/.test(from)&&/[ก-ฮA-Za-z]/.test(to))return true;
+  return false;
+}
+
 function replaceTrack(text,pattern,replacement){
   let out=text;
   if(pattern instanceof RegExp){
     out=out.replace(pattern,(...args)=>{
       const match=args[0];
       const fixed=typeof replacement==='function'?replacement(...args):expandReplacement(replacement,args);
+      if(shouldSkipSyntheticFix(match,fixed))return match;
       if(match!==fixed)AppState.fixedWords.push({from:match,to:fixed});
       return fixed;
     });
   }else{
     const from=String(pattern);
     if(!from)return out;
+    if(shouldSkipSyntheticFix(from,replacement))return out;
     const parts=out.split(from);
     if(parts.length>1){
       for(let i=1;i<parts.length;i++)AppState.fixedWords.push({from,to:replacement});
@@ -97,9 +113,9 @@ function fixNoise(text){
   const rules=[
     [/[○●◦▪▫◆◇□■�💀]/g,''],
     [/[ÊÉÈË]/g,''],[/[Ɵθϴ]/g,'ti'],[/[ƩΣ]/g,'tt'],[/ํ(?=า)/g,''],
-    [/ที\s*[ÉEÊ]/g,'ที่'],[/เกี\s*[ÉEÊ]\s*ยว/g,'เกี่ยว'],[/เพื\s*[ÉEÊ]?/g,'เพื่อ'],
+    [/ที\s*[ÉEÊ]/g,'ที่'],[/เกี\s*[ÉEÊ]\s*ยว/g,'เกี่ยว'],[/เพื\s*อ/g,'เพื่อ'],
     [/ขึ\s*น/g,'ขึ้น'],[/ขั\s*น/g,'ขั้น'],[/ป\s*ด/g,'ปิด'],[/ว่\s*า/g,'ว่า'],
-    [/ประ\s*เมิ\s*น/g,'ประเมิน'],[/อุ\s*ปกร\s*ณ์/g,'อุปกรณ์'],[/ง\s*3\s*ระบบ/g,'ทั้ง 3 ระบบ']
+    [/ประ\s*เมิ\s*น/g,'ประเมิน'],[/อุ\s*ปกร\s*ณ์/g,'อุปกรณ์']
   ];
   for(const [pattern,replacement] of rules)out=replaceTrack(out,pattern,replacement);
   return out;
@@ -197,9 +213,6 @@ function fixUiOcrWords(text){
     [/เป็นเปอร์เซ็นต[ด์]*้?านล่าง/g,'เป็นเปอร์เซ็นต์ด้านล่าง'],
     [/พวววรปกกซ่อนตามที่ตั้งคาไว้/g,'พรีวิวรูปถูกซ่อนตามที่ตั้งค่าไว้'],
     [/พววิวรปกกซอน่ตามทฑีตังค้่าไว้/g,'พรีวิวรูปถูกซ่อนตามที่ตั้งค่าไว้'],
-    [/พววิวรปกกซอน่ตามท\S{1,4}ตังค้?่าไว้/g,'พรีวิวรูปถูกซ่อนตามที่ตั้งค่าไว้'],
-    [/พ\S{0,3}วิวร\S{0,3}ป\S{0,3}ซอ\S{0,2}น่?ตามท\S{0,4}ตั\S{0,2}งค้?่าไว้/g,'พรีวิวรูปถูกซ่อนตามที่ตั้งค่าไว้'],
-    [/พ\S{0,5}ร\S{0,4}ป\S{0,4}ซ่อนตามที่ตั้งคาไว้/g,'พรีวิวรูปถูกซ่อนตามที่ตั้งค่าไว้'],
     [/พรีวิวรูปถูกซ่อนตามที่ตั้งคาไว้/g,'พรีวิวรูปถูกซ่อนตามที่ตั้งค่าไว้'],
     [/ตั้งคาไว้/g,'ตั้งค่าไว้'],
     [/ตั้งค้่าไว้/g,'ตั้งค่าไว้'],
@@ -248,7 +261,7 @@ function fixThaiWords(text){
   const replacements=[
     ['เป้ําหมําย','เป้าหมาย'],['เป้าหมําย','เป้าหมาย'],['เป้ า หมาย','เป้าหมาย'],['เป้า หมาย','เป้าหมาย'],['เป้ าหมาย','เป้าหมาย'],
     ['ชื่อส่วนงําน','ชื่อส่วนงาน'],['ชื่อส่วน งาน','ชื่อส่วนงาน'],['ชื่อ ส่วนงาน','ชื่อส่วนงาน'],['ชื่อ ส่วน งาน','ชื่อส่วนงาน'],['ส่วนงําน','ส่วนงาน'],['ส่วน งาน','ส่วนงาน'],
-    ['เพื่อ่ออ','เพื่อ'],['เพื่อ่อ','เพื่อ'],['เพื่่อ','เพื่อ'],['เพื อ','เพื่อ'],['เพื','เพื่อ'],
+    ['เพื่อ่ออ','เพื่อ'],['เพื่อ่อ','เพื่อ'],['เพื่่อ','เพื่อ'],['เพื อ','เพื่อ'],
     ['เปลี ยน','เปลี่ยน'],['เปลี ่ยน','เปลี่ยน'],['เปลี่ ยน','เปลี่ยน'],
     ['ที เกี ยวข้อง','ที่เกี่ยวข้อง'],['ที เกี ยว','ที่เกี่ยว'],['ที่ เกี่ยวข้อง','ที่เกี่ยวข้อง'],['ที่ เกี่ยว','ที่เกี่ยว'],
     ['เกี ยวข้อง','เกี่ยวข้อง'],['เกี ยว','เกี่ยว'],['เกี่ย วข้อง','เกี่ยวข้อง'],
@@ -258,11 +271,11 @@ function fixThaiWords(text){
     ['ข้ อมูล','ข้อมูล'],['ตั วอักษร','ตัวอักษร'],['ช่ องว่าง','ช่องว่าง'],['ช่องว่า','ช่องว่าง'],
     ['ขั นตอน','ขั้นตอน'],['ขั น','ขั้น'],['เอก สาร','เอกสาร'],['หเอกสาร','เอกสาร'],
     ['เจอ บ่อย','เจอบ่อย'],['อาการที่ เจอบ่อย','อาการที่เจอบ่อย'],['เข้ใจ','เข้าใจ'],['เข้ ใจ','เข้าใจ'],
-    ['ลค ทดสอบ','ลิงก์ทดสอบ'],['ลค','ลูกค้า'],['ฟังก์ ชัน','ฟังก์ชัน'],['บรร ทัด','บรรทัด'],['หัว ข้อ','หัวข้อ'],
+    ['ลค ทดสอบ','ลิงก์ทดสอบ'],['ฟังก์ ชัน','ฟังก์ชัน'],['บรร ทัด','บรรทัด'],['หัว ข้อ','หัวข้อ'],
     ['ปิด Case','ปิด Case'],['ป ด Case','ปิด Case'],['แจ้ ง','แจ้ง'],['แจ้ง PM','แจ้ง PM'],['แจ้ง NOC','แจ้ง NOC'],
     ['ยื น ยั น','ยืนยัน'],['ได้รับการ ยืนยัน','ได้รับการยืนยัน'],['จัด ส่ง','จัดส่ง'],['ทดแทน','ทดแทน'],['Close Ticket','Close Ticket'],
     ['ระ บุ','ระบุ'],['อาการ เช่น','อาการ เช่น'],['ใช้งาน','ใช้งาน'],['ประเมิน','ประเมิน'],['Hardware เสีย','Hardware เสีย'],
-    ['ง 3 ระบบ','ทั้ง 3 ระบบ'],['ทั ง 3 ระบบ','ทั้ง 3 ระบบ'],['ทั้ง 3 ระบบ','ทั้ง 3 ระบบ']
+    ['ทั ง 3 ระบบ','ทั้ง 3 ระบบ'],['ทั้ง 3 ระบบ','ทั้ง 3 ระบบ']
   ];
   for(const [from,to] of replacements)out=replaceTrack(out,from,to);
   out=applyKnownThaiWordJoin(out);
@@ -290,10 +303,8 @@ function postCleanThai(text){
     .replace(/เป้าหม\s*าย/g,'เป้าหมาย')
     .replace(/ชื่อ\s*ส่วน\s*ง?าน/g,'ชื่อส่วนงาน')
     .replace(/ส่วน\s*ง?าน/g,'ส่วนงาน')
-    .replace(/\bง\s*3\s*ระบบ\b/g,'ทั้ง 3 ระบบ')
     .replace(/ทั\s*ง\s*3\s*ระบบ/g,'ทั้ง 3 ระบบ')
     .replace(/เพื\s*อ/g,'เพื่อ')
-    .replace(/เพื\s*$/gm,'เพื่อ')
     .replace(/เพื่อ[่้๊๋์]*อ+/g,'เพื่อ')
     .replace(/เพื่ออ+/g,'เพื่อ')
     .replace(/เปลี\s*ยน/g,'เปลี่ยน')
