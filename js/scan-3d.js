@@ -11,9 +11,33 @@ function initScan3d(){
   const group=new THREE.Group();
   scene.add(group);
 
+  const THEME_SCAN_PALETTES={
+    carbon:{paper:0xe7c370,line:0xf6d88b,alt:0xfff1bf,cube:0xd8b36a,paperOpacity:.13,lineOpacity:.70,altOpacity:.58},
+    ivory:{paper:0x9b6f25,line:0x8c641e,alt:0x6f8aa7,cube:0xa67426,paperOpacity:.12,lineOpacity:.58,altOpacity:.46},
+    pearl:{paper:0x397087,line:0x2f6478,alt:0x7ba9b8,cube:0x397087,paperOpacity:.12,lineOpacity:.58,altOpacity:.48},
+    sage:{paper:0xdcb656,line:0xf0ca67,alt:0x64c6a3,cube:0xdcb656,paperOpacity:.13,lineOpacity:.68,altOpacity:.52},
+    midnight:{paper:0xe6c36a,line:0xf0d27a,alt:0x78b8ff,cube:0xe6c36a,paperOpacity:.13,lineOpacity:.68,altOpacity:.52}
+  };
+  let activeTheme='';
   const paperMaterial=new THREE.MeshBasicMaterial({color:0xbbf7d0,transparent:true,opacity:.16,side:THREE.DoubleSide});
   const lineMaterial=new THREE.LineBasicMaterial({color:0x86efac,transparent:true,opacity:.68});
   const blueLine=new THREE.LineBasicMaterial({color:0x93c5fd,transparent:true,opacity:.54});
+  const cubeMaterial=new THREE.MeshBasicMaterial({color:0x93c5fd,transparent:true,opacity:.14,wireframe:true});
+
+  function applyThemePalette(){
+    const theme=document.body?.dataset?.theme||'carbon';
+    if(theme===activeTheme)return;
+    activeTheme=theme;
+    const palette=THEME_SCAN_PALETTES[theme]||THEME_SCAN_PALETTES.carbon;
+    paperMaterial.color.setHex(palette.paper);
+    paperMaterial.opacity=palette.paperOpacity;
+    lineMaterial.color.setHex(palette.line);
+    lineMaterial.opacity=palette.lineOpacity;
+    blueLine.color.setHex(palette.alt);
+    blueLine.opacity=palette.altOpacity;
+    cubeMaterial.color.setHex(palette.cube);
+    cubeMaterial.opacity=Math.max(.16,palette.paperOpacity+.05);
+  }
 
   for(let i=0;i<4;i++){
     const plane=new THREE.Mesh(new THREE.PlaneGeometry(1.35,1.78),paperMaterial);
@@ -42,7 +66,7 @@ function initScan3d(){
 
   const cube=new THREE.Mesh(
     new THREE.BoxGeometry(.5,.5,.5),
-    new THREE.MeshBasicMaterial({color:0x93c5fd,transparent:true,opacity:.14,wireframe:true})
+    cubeMaterial
   );
   cube.position.set(2.2,.35,-.2);
   group.add(cube);
@@ -57,6 +81,7 @@ function initScan3d(){
   }
 
   function animate(time){
+    applyThemePalette();
     resize();
     group.rotation.y=Math.sin(time*.00055)*.22;
     group.rotation.x=Math.sin(time*.00038)*.06;
@@ -72,13 +97,21 @@ function initScan3dFallback(){
   const canvas=document.getElementById('scan3dCanvas');
   if(!canvas||window.THREE)return;
   const ctx=canvas.getContext('2d');
+  const fallbackColors={
+    carbon:'rgba(246,216,139,.62)',
+    ivory:'rgba(140,100,30,.58)',
+    pearl:'rgba(47,100,120,.58)',
+    sage:'rgba(240,202,103,.62)',
+    midnight:'rgba(240,210,122,.62)'
+  };
   function draw(time){
     const rect=canvas.getBoundingClientRect();
     canvas.width=Math.max(1,Math.floor(rect.width*(window.devicePixelRatio||1)));
     canvas.height=Math.max(1,Math.floor(rect.height*(window.devicePixelRatio||1)));
     ctx.setTransform(window.devicePixelRatio||1,0,0,window.devicePixelRatio||1,0,0);
     ctx.clearRect(0,0,rect.width,rect.height);
-    ctx.strokeStyle='rgba(187,247,208,.52)';
+    const theme=document.body?.dataset?.theme||'carbon';
+    ctx.strokeStyle=fallbackColors[theme]||fallbackColors.carbon;
     ctx.lineWidth=1;
     for(let i=0;i<5;i++){
       const x=rect.width*.38+i*42+Math.sin(time*.001+i)*12;
