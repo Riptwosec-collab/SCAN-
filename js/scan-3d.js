@@ -1,6 +1,9 @@
 function initScan3d(){
   const canvas=document.getElementById('scan3dCanvas');
   if(!canvas||!window.THREE)return;
+  const nextFrame=window.requestAnimationFrame
+    ? window.requestAnimationFrame.bind(window)
+    : callback=>window.setTimeout(()=>callback(Date.now()),33);
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(45,1,.1,100);
   camera.position.set(0,1.1,5.2);
@@ -12,11 +15,11 @@ function initScan3d(){
   scene.add(group);
 
   const THEME_SCAN_PALETTES={
-    carbon:{paper:0xe7c370,line:0xf6d88b,alt:0xfff1bf,cube:0xd8b36a,paperOpacity:.13,lineOpacity:.70,altOpacity:.58},
-    ivory:{paper:0x9b6f25,line:0x8c641e,alt:0x6f8aa7,cube:0xa67426,paperOpacity:.12,lineOpacity:.58,altOpacity:.46},
-    pearl:{paper:0x397087,line:0x2f6478,alt:0x7ba9b8,cube:0x397087,paperOpacity:.12,lineOpacity:.58,altOpacity:.48},
-    sage:{paper:0xdcb656,line:0xf0ca67,alt:0x64c6a3,cube:0xdcb656,paperOpacity:.13,lineOpacity:.68,altOpacity:.52},
-    midnight:{paper:0xe6c36a,line:0xf0d27a,alt:0x78b8ff,cube:0xe6c36a,paperOpacity:.13,lineOpacity:.68,altOpacity:.52}
+    carbon:{paper:0xe7c370,line:0xffe6a3,alt:0xfff4c7,cube:0xf0ca67,paperOpacity:.18,lineOpacity:.94,altOpacity:.78},
+    ivory:{paper:0x81520f,line:0x6f460b,alt:0x496d78,cube:0x8b5d16,paperOpacity:.16,lineOpacity:.92,altOpacity:.78},
+    pearl:{paper:0x1f5b70,line:0x164f65,alt:0x346f82,cube:0x1f5b70,paperOpacity:.16,lineOpacity:.92,altOpacity:.80},
+    sage:{paper:0xdcb656,line:0xffd873,alt:0x7ee0ac,cube:0xf0ca67,paperOpacity:.18,lineOpacity:.92,altOpacity:.78},
+    midnight:{paper:0xe6c36a,line:0xffde7a,alt:0x9dccff,cube:0xf0d27a,paperOpacity:.18,lineOpacity:.92,altOpacity:.78}
   };
   let activeTheme='';
   const paperMaterial=new THREE.MeshBasicMaterial({color:0xbbf7d0,transparent:true,opacity:.16,side:THREE.DoubleSide});
@@ -36,7 +39,7 @@ function initScan3d(){
     blueLine.color.setHex(palette.alt);
     blueLine.opacity=palette.altOpacity;
     cubeMaterial.color.setHex(palette.cube);
-    cubeMaterial.opacity=Math.max(.16,palette.paperOpacity+.05);
+    cubeMaterial.opacity=Math.max(.26,palette.paperOpacity+.10);
   }
 
   for(let i=0;i<4;i++){
@@ -80,6 +83,10 @@ function initScan3d(){
     camera.updateProjectionMatrix();
   }
 
+  resize();
+  window.addEventListener('resize',resize,{passive:true});
+  document.addEventListener('riptwosec:themechange',resize);
+
   function animate(time){
     applyThemePalette();
     resize();
@@ -88,21 +95,25 @@ function initScan3d(){
     cube.rotation.x=time*.0012;
     cube.rotation.y=time*.001;
     renderer.render(scene,camera);
-    requestAnimationFrame(animate);
+    nextFrame(animate);
   }
-  requestAnimationFrame(animate);
+  nextFrame(animate);
 }
 
 function initScan3dFallback(){
   const canvas=document.getElementById('scan3dCanvas');
   if(!canvas||window.THREE)return;
   const ctx=canvas.getContext('2d');
+  if(!ctx)return;
+  const nextFrame=window.requestAnimationFrame
+    ? window.requestAnimationFrame.bind(window)
+    : callback=>window.setTimeout(()=>callback(Date.now()),33);
   const fallbackColors={
-    carbon:'rgba(246,216,139,.62)',
-    ivory:'rgba(140,100,30,.58)',
-    pearl:'rgba(47,100,120,.58)',
-    sage:'rgba(240,202,103,.62)',
-    midnight:'rgba(240,210,122,.62)'
+    carbon:'rgba(255,230,163,.86)',
+    ivory:'rgba(111,70,11,.88)',
+    pearl:'rgba(22,79,101,.88)',
+    sage:'rgba(255,216,115,.86)',
+    midnight:'rgba(255,222,122,.86)'
   };
   function draw(time){
     const rect=canvas.getBoundingClientRect();
@@ -112,7 +123,7 @@ function initScan3dFallback(){
     ctx.clearRect(0,0,rect.width,rect.height);
     const theme=document.body?.dataset?.theme||'carbon';
     ctx.strokeStyle=fallbackColors[theme]||fallbackColors.carbon;
-    ctx.lineWidth=1;
+    ctx.lineWidth=1.35;
     for(let i=0;i<5;i++){
       const x=rect.width*.38+i*42+Math.sin(time*.001+i)*12;
       const y=32+i*10;
@@ -124,12 +135,18 @@ function initScan3dFallback(){
       ctx.lineTo(x+62,y+31);
       ctx.stroke();
     }
-    requestAnimationFrame(draw);
+    nextFrame(draw);
   }
-  requestAnimationFrame(draw);
+  nextFrame(draw);
 }
 
-document.addEventListener('DOMContentLoaded',()=>{
+function bootScan3d(){
   initScan3d();
   initScan3dFallback();
-});
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',bootScan3d,{once:true});
+}else{
+  bootScan3d();
+}

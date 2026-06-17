@@ -923,6 +923,86 @@ body[data-theme] .scan-3d-stage::after{
 body[data-theme] .scan-3d-stage canvas{
   position:relative;
   z-index:1;
+  opacity:1!important;
+  filter:contrast(1.28) saturate(1.12)!important;
+}
+
+body[data-theme] .scan-wire-stack{
+  --scan-line:color-mix(in srgb,var(--accent) 68%,var(--text));
+  --scan-row:color-mix(in srgb,var(--blue) 46%,var(--text));
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:260px;
+  height:116px;
+  pointer-events:none;
+  transform:translate(-38%,-50%) perspective(760px) rotateX(8deg) rotateY(-18deg);
+  transform-style:preserve-3d;
+  z-index:2;
+  animation:scanWireFloat 5.8s ease-in-out infinite alternate;
+}
+
+body[data-theme] .scan-wire-stack i{
+  position:absolute;
+  width:86px;
+  height:56px;
+  border:1.7px solid var(--scan-line);
+  border-radius:2px;
+  background:
+    linear-gradient(var(--scan-row),var(--scan-row)) 14px 17px/58px 1.5px no-repeat,
+    linear-gradient(var(--scan-row),var(--scan-row)) 14px 31px/48px 1.5px no-repeat,
+    linear-gradient(90deg,color-mix(in srgb,var(--scan-line) 10%,transparent),transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb,var(--scan-line) 12%,transparent),
+    0 12px 26px color-mix(in srgb,#000 13%,transparent);
+  opacity:.86;
+}
+
+body[data-theme] .scan-wire-stack i:nth-child(1){left:0;top:8px;transform:translateZ(34px)}
+body[data-theme] .scan-wire-stack i:nth-child(2){left:46px;top:18px;transform:translateZ(22px)}
+body[data-theme] .scan-wire-stack i:nth-child(3){left:92px;top:28px;transform:translateZ(10px)}
+body[data-theme] .scan-wire-stack i:nth-child(4){left:138px;top:38px;transform:translateZ(-2px)}
+body[data-theme] .scan-wire-stack i:nth-child(5){left:184px;top:48px;transform:translateZ(-14px)}
+
+body[data-theme="ivory"] .scan-wire-stack{
+  --scan-line:#6f460b;
+  --scan-row:#496d78;
+}
+
+body[data-theme="pearl"] .scan-wire-stack{
+  --scan-line:#164f65;
+  --scan-row:#346f82;
+}
+
+body[data-theme="carbon"] .scan-wire-stack{
+  --scan-line:#ffe6a3;
+  --scan-row:#fff4c7;
+}
+
+body[data-theme="sage"] .scan-wire-stack{
+  --scan-line:#ffd873;
+  --scan-row:#7ee0ac;
+}
+
+body[data-theme="midnight"] .scan-wire-stack{
+  --scan-line:#ffde7a;
+  --scan-row:#9dccff;
+}
+
+@keyframes scanWireFloat{
+  from{transform:translate(-38%,-50%) perspective(760px) rotateX(8deg) rotateY(-18deg) translateY(0)}
+  to{transform:translate(-38%,-50%) perspective(760px) rotateX(10deg) rotateY(-13deg) translateY(-4px)}
+}
+
+body[data-theme="ivory"] .scan-3d-stage canvas,
+body[data-theme="pearl"] .scan-3d-stage canvas{
+  filter:contrast(1.62) saturate(1.18) brightness(.88)!important;
+}
+
+body[data-theme="carbon"] .scan-3d-stage canvas,
+body[data-theme="sage"] .scan-3d-stage canvas,
+body[data-theme="midnight"] .scan-3d-stage canvas{
+  filter:contrast(1.36) saturate(1.18) brightness(1.08)!important;
 }
 
 body[data-theme] .scan-3d-label{

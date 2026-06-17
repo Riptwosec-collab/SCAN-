@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v14';
+const CACHE_NAME='riptwosec-scan-v18';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -13,9 +13,9 @@ const CORE_ASSETS=[
   './css/output-rim.css',
   './css/pro-tool.css',
   './css/themes.css',
-  './css/theme-contrast.css?v=13',
+  './css/theme-contrast.css?v=15',
   './js/state.js',
-  './js/theme.js?v=11',
+  './js/theme.js?v=12',
   './js/utils.js',
   './js/dictionary-it.js',
   './js/custom-rules.js',
@@ -29,7 +29,7 @@ const CORE_ASSETS=[
   './js/exporter.js',
   './js/history.js',
   './js/app.js',
-  './js/scan-3d.js?v=2'
+  './js/scan-3d.js?v=5'
 ];
 
 self.addEventListener('install',event=>{

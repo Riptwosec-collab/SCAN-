@@ -17,6 +17,7 @@ function applyTheme(theme){
   if(meta)meta.setAttribute('content',THEME_META_COLORS[selected]);
   const select=document.getElementById('themeSelect');
   if(select)select.value=selected;
+  document.dispatchEvent(new CustomEvent('riptwosec:themechange',{detail:{theme:selected}}));
 }
 
 function applyThemeControlContrast(theme){
