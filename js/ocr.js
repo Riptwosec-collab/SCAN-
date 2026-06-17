@@ -49,6 +49,7 @@ function getSmartScale(source,mode='default'){
   const maxSide=Math.max(source.width,source.height);
   let scale=$('upscale')?.checked?3:1;
   if(mode==='pdf-like'||mode==='doc-clean'||mode==='receipt')scale=Math.max(scale,3.4);
+  if(mode==='thai-soft'||mode==='thai-sharp'||mode==='thai-adaptive'||mode==='thai-line')scale=Math.max(scale,4.4);
   if(mode==='ui-detail'||mode==='ui-crisp'||mode==='ui-binary'||mode==='ui-sharp'||mode==='ui-adaptive')scale=Math.max(scale,4.8);
   if(mode==='doc-adaptive')scale=Math.max(scale,3.8);
   if(minSide<900)scale=Math.max(scale,4.2);
@@ -141,6 +142,20 @@ function preprocessCanvas(source,mode='default'){
       d[i]=d[i+1]=d[i+2]=v;
     }else if(mode==='gray'){
       d[i]=d[i+1]=d[i+2]=v;
+    }else if(mode==='thai-soft'){
+      v=(v-136)*1.48+136;
+      d[i]=d[i+1]=d[i+2]=clampByte(v);
+    }else if(mode==='thai-sharp'){
+      v=(v-128)*1.72+128;
+      d[i]=d[i+1]=d[i+2]=clampByte(v);
+    }else if(mode==='thai-line'){
+      v=(v-126)*1.88+126;
+      const threshold=Math.max(122,Math.min(178,avg*.9));
+      v=v>threshold?255:0;
+      d[i]=d[i+1]=d[i+2]=v;
+    }else if(mode==='thai-adaptive'){
+      v=(v-132)*1.36+132;
+      d[i]=d[i+1]=d[i+2]=clampByte(v);
     }else if(mode==='ui-detail'){
       v=(v-150)*1.75+150;
       d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v));
@@ -169,11 +184,30 @@ function preprocessCanvas(source,mode='default'){
       d[i]=d[i+1]=d[i+2]=v;
     }
   }
-  if(mode==='ui-sharp')sharpenImageData(d,canvas.width,canvas.height,.42);
+  if(mode==='ui-sharp'||mode==='thai-sharp')sharpenImageData(d,canvas.width,canvas.height,.42);
   if(mode==='ui-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,16,7);
+  if(mode==='thai-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,20,6);
   if(mode==='doc-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,18,9);
   ctx.putImageData(img,0,0);
   return canvas;
+}
+
+function thaiReadabilityScore(text){
+  const value=text||'';
+  const thai=(value.match(/[ก-ฮะาำิีึืุูั็่้๊๋์]/g)||[]).length;
+  if(!thai)return 0;
+  const knownWords=typeof OCR_CORRECT_WORDS!=='undefined'?OCR_CORRECT_WORDS:[
+    'ข้อมูล','ตรวจสอบ','เอกสาร','จำนวนเงิน','ใบกำกับภาษี','บริษัท','จำกัด','วันที่','เรื่อง','รบกวน','อีเมล','โทรศัพท์'
+  ];
+  const knownCount=knownWords.reduce((sum,word)=>{
+    if(!/[ก-ฮ]/.test(word))return sum;
+    return sum+((value.match(new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'))||[]).length);
+  },0);
+  const floatingMarks=(value.match(/(^|\s)[ะาำิีึืุูั็่้๊๋์]/g)||[]).length;
+  const splitThai=(value.match(/[เแโใไ]\s+[ก-ฮ]|[ก-ฮ]\s+[ะาำิีึืุูั็่้๊๋์]/g)||[]).length;
+  const badTone=(value.match(/[่้๊๋์]{2,}|[่้๊๋์][ะาำิีึืุูั็]/g)||[]).length;
+  const thaiWordLike=(value.match(/[ก-ฮ][ะาำิีึืุูั็่้๊๋์ก-ฮ]{2,}/g)||[]).length;
+  return Math.min(110,knownCount*12)+Math.min(55,thaiWordLike*2.4)+Math.min(35,thai*.18)-floatingMarks*12-splitThai*8-badTone*10;
 }
 
 function scoreOcrText(text,confidence){
@@ -194,6 +228,7 @@ function scoreOcrText(text,confidence){
   const suspiciousIp=(value.match(/\b(?:0\.0\.\d{1,3}\.\d{1,3}|0\.100\.\d{1,3}\.\d{1,3}|0\.0\.100\.100)\b/g)||[]).length;
   let score=0;
   score+=Math.min(90,thai*1.65);
+  score+=thaiReadabilityScore(value);
   score+=Math.min(25,eng*.55);
   score+=Math.min(18,nums*.35);
   score+=Math.min(35,lineCount*3);
@@ -218,7 +253,7 @@ function ocrRiskScore(text){
   const len=Math.max(1,value.replace(/\s/g,'').length);
   const weird=(value.match(/[�ƟθϴƩΣÉÊÈË|{}<>~`_^«»]/g)||[]).length;
   const floatingMarks=(value.match(/\s+[ะาำิีึืุูั็่้๊๋์]/g)||[]).length;
-  const splitThai=(value.match(/[เแโใไก-ฮ]\s+[ะาำิีึืุูั็่้๊๋์ก-ฮ]/g)||[]).length;
+  const splitThai=(value.match(/[เแโใไ]\s+[ก-ฮ]|[ก-ฮ]\s+[ะาำิีึืุูั็่้๊๋์]/g)||[]).length;
   const repeated=(value.match(/(.)\1{5,}/g)||[]).length;
   const junkLines=value.split('\n').filter(line=>{
     const compact=line.replace(/\s/g,'');
@@ -285,7 +320,9 @@ async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6',extr
       if(m.status)setStatus(label+' · '+m.status+' '+Math.round((m.progress||0)*100)+'%');
     },
     tessedit_pageseg_mode:psm,
-    preserve_interword_spaces:'1',
+    preserve_interword_spaces:extra.preserveSpaces===false?'0':'1',
+    user_defined_dpi:extra.dpi||'300',
+    tessedit_do_invert:'0',
     tessedit_char_whitelist:extra.whitelist||undefined
   });
   const confidence=extractAverageConfidence(result);
@@ -296,6 +333,8 @@ function createImageOcrPasses(){
   const preset=$('ocrPreset')?.value||AppState.ocrPreset||'auto';
   const sets={
     invoice:[
+      {name:'Invoice Thai Sharp',mode:'thai-sharp',psm:'6'},
+      {name:'Invoice Thai Adaptive',mode:'thai-adaptive',psm:'6'},
       {name:'Invoice Document',mode:'pdf-like',psm:'6'},
       {name:'Invoice Table Lines',mode:'gray',psm:'6'},
       {name:'Invoice Clean Binary',mode:'doc-clean',psm:'6'},
@@ -303,6 +342,7 @@ function createImageOcrPasses(){
       {name:'Invoice Sparse Detail',mode:'ui-detail',psm:'11'}
     ],
     ticket:[
+      {name:'Ticket Thai Sharp',mode:'thai-sharp',psm:'6'},
       {name:'Ticket IT Screenshot',mode:'ui-sharp',psm:'6'},
       {name:'Ticket Adaptive UI',mode:'ui-adaptive',psm:'6'},
       {name:'Ticket Dense Details',mode:'pdf-like',psm:'4'},
@@ -310,6 +350,7 @@ function createImageOcrPasses(){
       {name:'Ticket Clean Binary',mode:'doc-clean',psm:'6'}
     ],
     'email-alert':[
+      {name:'Email Thai Text',mode:'thai-soft',psm:'6'},
       {name:'Email Header Read',mode:'pdf-like',psm:'6'},
       {name:'Email Body Dense',mode:'pdf-like',psm:'4'},
       {name:'Email Screenshot Sharp',mode:'ui-sharp',psm:'6'},
@@ -317,6 +358,8 @@ function createImageOcrPasses(){
       {name:'Email Clean Text',mode:'doc-clean',psm:'6'}
     ],
     government:[
+      {name:'Government Thai Sharp',mode:'thai-sharp',psm:'6'},
+      {name:'Government Thai Adaptive',mode:'thai-adaptive',psm:'4'},
       {name:'Government Form',mode:'pdf-like',psm:'6'},
       {name:'Government Dense Thai',mode:'pdf-like',psm:'4'},
       {name:'Government Clean Scan',mode:'doc-clean',psm:'6'},
@@ -324,6 +367,7 @@ function createImageOcrPasses(){
       {name:'Government Sparse Stamp',mode:'gray',psm:'11'}
     ],
     document:[
+      {name:'Document Thai Sharp',mode:'thai-sharp',psm:'6'},
       {name:'Document Balanced',mode:'pdf-like',psm:'6'},
       {name:'Document Binary',mode:'doc-clean',psm:'6'},
       {name:'Dense Paragraph',mode:'pdf-like',psm:'4'},
@@ -340,12 +384,15 @@ function createImageOcrPasses(){
       {name:'Network Document',mode:'pdf-like',psm:'6'}
     ],
     mobile:[
+      {name:'Mobile Thai Soft',mode:'thai-soft',psm:'6'},
+      {name:'Mobile Thai Sharp',mode:'thai-sharp',psm:'6'},
       {name:'Mobile Soft',mode:'soft',psm:'6'},
       {name:'Mobile Receipt',mode:'receipt',psm:'4'},
       {name:'Mobile Gray',mode:'gray',psm:'11'},
       {name:'Mobile Binary',mode:'doc-clean',psm:'6'}
     ],
     table:[
+      {name:'Table Thai Line',mode:'thai-line',psm:'6'},
       {name:'Table Dense',mode:'gray',psm:'6'},
       {name:'Table Sparse',mode:'ui-detail',psm:'11'},
       {name:'Table Clean',mode:'doc-clean',psm:'6'},
@@ -354,6 +401,9 @@ function createImageOcrPasses(){
   };
   if(sets[preset])return sets[preset];
   return [
+    {name:'Auto Thai Sharp',mode:'thai-sharp',psm:'6'},
+    {name:'Auto Thai Adaptive',mode:'thai-adaptive',psm:'6'},
+    {name:'Auto Thai Dense',mode:'thai-soft',psm:'4'},
     {name:'Auto UI Sharp',mode:'ui-sharp',psm:'6'},
     {name:'Auto UI Adaptive',mode:'ui-adaptive',psm:'6'},
     {name:'Auto UI Crisp',mode:'ui-crisp',psm:'6'},
@@ -395,7 +445,8 @@ async function runOcr(canvas,start=0,end=100,profile='image'){
     const extracted=extractNetworkConnectionDetails(normalized);
     const candidateText=extracted||normalized||result.text;
     const risk=ocrRiskScore(candidateText);
-    const score=scoreOcrText(candidateText,result.confidence)+(extracted?120:0);
+    const reviewedForScore=typeof normalizeDocumentEmailAndDomains==='function'?normalizeDocumentEmailAndDomains(candidateText):candidateText;
+    const score=scoreOcrText(reviewedForScore,result.confidence)+(extracted?120:0);
     candidates.push({text:candidateText,confidence:result.confidence,score,mode:pass.name,risk,canvas:processed});
     if(score>best.score){
       best={text:candidateText,confidence:result.confidence,score,mode:pass.name,risk,canvas:processed};
