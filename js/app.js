@@ -70,6 +70,7 @@ function bindAppEvents(){
   });
   $('ocrPreset')?.addEventListener('change',()=>{
     AppState.ocrPreset=$('ocrPreset').value;
+    applyProfessionalPreset(AppState.ocrPreset);
     updateProcessedPreview();
   });
   $('cleanupLevel')?.addEventListener('change',()=>{
@@ -80,6 +81,28 @@ function bindAppEvents(){
     AppState.pdfOrientation=$('pdfOrientation').value;
     setStatus('ตั้งค่า PDF เป็น '+($('pdfOrientation').value==='landscape'?'แนวนอน':'แนวตั้ง'),'ok');
   });
+}
+
+function applyProfessionalPreset(preset){
+  const map={
+    invoice:{mode:'document',cleanup:'strict',orientation:'portrait'},
+    ticket:{mode:'ticket',cleanup:'strict',orientation:'portrait'},
+    'email-alert':{mode:'email',cleanup:'strict',orientation:'portrait'},
+    government:{mode:'document',cleanup:'strict',orientation:'portrait'},
+    table:{mode:'table',cleanup:'normal',orientation:'landscape'},
+    document:{mode:'document',cleanup:'normal',orientation:'portrait'},
+    screenshot:{mode:'clean',cleanup:'normal',orientation:'portrait'},
+    mobile:{mode:'clean',cleanup:'normal',orientation:'portrait'}
+  };
+  const config=map[preset];
+  if(!config)return;
+  if($('modeSelect'))$('modeSelect').value=config.mode;
+  if($('cleanupLevel'))$('cleanupLevel').value=config.cleanup;
+  if($('pdfOrientation'))$('pdfOrientation').value=config.orientation;
+  AppState.cleanupLevel=config.cleanup;
+  AppState.pdfOrientation=config.orientation;
+  renderReadyChecklist();
+  setStatus('ตั้งค่า Preset: '+($('ocrPreset')?.selectedOptions?.[0]?.textContent||preset),'ok');
 }
 
 function getActiveFileInput(){

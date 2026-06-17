@@ -295,6 +295,34 @@ async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6',extr
 function createImageOcrPasses(){
   const preset=$('ocrPreset')?.value||AppState.ocrPreset||'auto';
   const sets={
+    invoice:[
+      {name:'Invoice Document',mode:'pdf-like',psm:'6'},
+      {name:'Invoice Table Lines',mode:'gray',psm:'6'},
+      {name:'Invoice Clean Binary',mode:'doc-clean',psm:'6'},
+      {name:'Invoice Dense Amounts',mode:'pdf-like',psm:'4'},
+      {name:'Invoice Sparse Detail',mode:'ui-detail',psm:'11'}
+    ],
+    ticket:[
+      {name:'Ticket IT Screenshot',mode:'ui-sharp',psm:'6'},
+      {name:'Ticket Adaptive UI',mode:'ui-adaptive',psm:'6'},
+      {name:'Ticket Dense Details',mode:'pdf-like',psm:'4'},
+      {name:'Ticket Sparse Fields',mode:'ui-detail',psm:'11'},
+      {name:'Ticket Clean Binary',mode:'doc-clean',psm:'6'}
+    ],
+    'email-alert':[
+      {name:'Email Header Read',mode:'pdf-like',psm:'6'},
+      {name:'Email Body Dense',mode:'pdf-like',psm:'4'},
+      {name:'Email Screenshot Sharp',mode:'ui-sharp',psm:'6'},
+      {name:'Email Sparse Links',mode:'gray',psm:'11'},
+      {name:'Email Clean Text',mode:'doc-clean',psm:'6'}
+    ],
+    government:[
+      {name:'Government Form',mode:'pdf-like',psm:'6'},
+      {name:'Government Dense Thai',mode:'pdf-like',psm:'4'},
+      {name:'Government Clean Scan',mode:'doc-clean',psm:'6'},
+      {name:'Government Adaptive',mode:'doc-adaptive',psm:'6'},
+      {name:'Government Sparse Stamp',mode:'gray',psm:'11'}
+    ],
     document:[
       {name:'Document Balanced',mode:'pdf-like',psm:'6'},
       {name:'Document Binary',mode:'doc-clean',psm:'6'},

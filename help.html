@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Help / Demo | RIPTWOSEC.SCAN</title>
+<meta name="description" content="คู่มือใช้งาน RIPTWOSEC.SCAN พร้อมตัวอย่าง workflow และชุดทดสอบ OCR ก่อน/หลังสำหรับงานจริง">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/background.css">
+<link rel="stylesheet" href="css/pro-tool.css">
+</head>
+<body>
+<div class="wrap legal-wrap">
+  <header class="site-header">
+    <a class="brand-block" href="index.html">
+      <span class="brand">RIPTWOSEC.SCAN</span>
+      <span class="sub">Help / Demo</span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html#tool">Tool</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+    </nav>
+  </header>
+
+  <main class="panel legal-page help-page">
+    <div class="label">Help / Demo</div>
+    <h1>วิธีใช้งานแบบพร้อมส่งงาน</h1>
+    <p>ทำตาม workflow นี้เพื่อให้ผล OCR ผิดน้อยลงและได้ไฟล์พร้อมใช้ต่อใน Ticket, Email, Report หรือเอกสารงาน</p>
+
+    <section class="help-flow">
+      <article><b>1. อัปโหลด</b><span>เลือก รูปภาพ, PDF หรือ Batch แล้วใช้ Crop เฉพาะพื้นที่ข้อความถ้าภาพมีเมนู/พื้นหลังรบกวน</span></article>
+      <article><b>2. เลือก Preset</b><span>เลือก ใบกำกับภาษี, Ticket IT, Email แจ้งเตือน, เอกสารราชการ หรือ ตาราง/ฟอร์ม ให้ตรงกับต้นฉบับ</span></article>
+      <article><b>3. แปลง</b><span>กดแปลง ระบบจะลอง OCR หลายโหมดและเลือก candidate ที่มีคะแนนดีที่สุด</span></article>
+      <article><b>4. ตรวจ Quality Gate</b><span>ดูเปอร์เซ็นต์, fixed words, คำเตือน และ OCR Candidates ก่อนนำผลไปใช้จริง</span></article>
+      <article><b>5. Export</b><span>ส่งออก TXT, DOC, CSV, JSON หรือ PDF พร้อมหัวรายงาน วันที่ ชื่อไฟล์ และ confidence</span></article>
+    </section>
+
+    <section class="demo-block">
+      <div class="function-guide-head">
+        <div>
+          <div class="label">OCR Benchmark Pack</div>
+          <h2>ชุดตัวอย่างก่อน/หลังสำหรับเทียบคุณภาพ</h2>
+        </div>
+        <p>ใช้เป็น checklist เวลาทดสอบไฟล์จริงหลายชุด เก็บ raw OCR เทียบกับ cleaned output เพื่อวัดว่าระบบอ่านดีขึ้นหรือยัง</p>
+      </div>
+      <div class="benchmark-grid">
+        <article class="benchmark-card">
+          <b>รูปมือถือเบลอ</b>
+          <dl>
+            <dt>ก่อนแก้</dt><dd>ข้ อมูลเพิ มเติม / รบกรนตรวจสขบ / ซั้วโมง</dd>
+            <dt>หลังแก้</dt><dd>ข้อมูลเพิ่มเติม / รบกวนตรวจสอบ / ชั่วโมง</dd>
+            <dt>Preset</dt><dd>Mobile Photo + Cleanup Strict + Contrast</dd>
+          </dl>
+        </article>
+        <article class="benchmark-card">
+          <b>PDF Scan</b>
+          <dl>
+            <dt>ก่อนแก้</dt><dd>ใบกาํ กับภาษี / เลขประจาํ ตัว / จานวนเงิน</dd>
+            <dt>หลังแก้</dt><dd>ใบกำกับภาษี / เลขประจำตัว / จำนวนเงิน</dd>
+            <dt>Preset</dt><dd>ใบกำกับภาษี หรือ Document / PDF</dd>
+          </dl>
+        </article>
+        <article class="benchmark-card">
+          <b>ตาราง / ฟอร์ม</b>
+          <dl>
+            <dt>ก่อนแก้</dt><dd>| l I หลุดจากเส้นตาราง, ช่องเว้นวรรคผิด, ค่าเป็นแถวปนกัน</dd>
+            <dt>หลังแก้</dt><dd>ลบเส้นหลุด, รวมคำไทย, export CSV แยกบรรทัดพร้อมชื่อไฟล์</dd>
+            <dt>Preset</dt><dd>Table / Form + PDF แนวนอน</dd>
+          </dl>
+        </article>
+        <article class="benchmark-card">
+          <b>Ticket / Email IT</b>
+          <dl>
+            <dt>ก่อนแก้</dt><dd>Ticket Mo. / workd, go th / ตรวจสรบ / ธีเมล</dd>
+            <dt>หลังแก้</dt><dd>Ticket No. / workd.go.th / ตรวจสอบ / อีเมล</dd>
+            <dt>Preset</dt><dd>Ticket IT หรือ Email แจ้งเตือน</dd>
+          </dl>
+        </article>
+        <article class="benchmark-card">
+          <b>เอกสารราชการ</b>
+          <dl>
+            <dt>ก่อนแก้</dt><dd>หนังสือมอมอำนาจ / สาคัญ / อนุมต / ที่อยู</dd>
+            <dt>หลังแก้</dt><dd>หนังสือมอบอำนาจ / สำคัญ / อนุมัติ / ที่อยู่</dd>
+            <dt>Preset</dt><dd>เอกสารราชการ + Dictionary หลายสาย</dd>
+          </dl>
+        </article>
+      </div>
+    </section>
+
+    <section class="demo-block">
+      <h2>เกณฑ์ก่อนส่งงานจริง</h2>
+      <ul>
+        <li>Quality Gate ควรมากกว่า 85% สำหรับงานที่มีตัวเลข/URL/ชื่อเฉพาะสำคัญ</li>
+        <li>ถ้าคะแนนต่ำกว่า 70% ให้ Crop ใหม่ เปิด Contrast หรือเลือก OCR Candidate อื่นก่อน Export</li>
+        <li>ตรวจเลขเอกสาร วันที่ ยอดเงิน URL อีเมล และชื่อระบบด้วยตาอีกครั้งเสมอ</li>
+        <li>เก็บ raw output และ cleaned output เป็น JSON เมื่อต้องการ audit ภายหลัง</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="footer-links"><span>© RIPTWOSEC.SCAN</span><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Use</a></footer>
+</div>
+</body>
+</html>
