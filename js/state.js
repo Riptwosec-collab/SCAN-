@@ -21,5 +21,6 @@ window.AppState={
   confidence:null,
   sourceName:'',
   uploadSource:'local',
-  pdfOrientation:'portrait'
+  pdfOrientation:'portrait',
+  theme:'carbon'
 };
