@@ -99,6 +99,7 @@ function cleanText(text){
   if(mode==='email')return toEmail(result);
   if(mode==='ticket')return toTicket(result);
   if(mode==='keyvalue')return toKeyValue(result);
+  if(mode==='capture-list')return preserveScreenshotLayout(result);
   if(mode==='bullets')return toBullets(result);
   if(mode==='checklist')return toChecklist(result);
   if(mode==='compact')return toCompact(result);
@@ -416,6 +417,35 @@ function toBullets(text){
   return getCleanLines(text)
     .map(line=>'- '+line.replace(/^[-•*]\s*/,''))
     .join('\n');
+}
+
+function normalizeCaptureLine(line){
+  let out=String(line||'').trim();
+  out=out
+    .replace(/^[•●○◦▪▫]\s*/,'• ')
+    .replace(/^[\-–—*]\s*/,'• ')
+    .replace(/^o\s+(?=\S)/i,'• ')
+    .replace(/\s*:\s*$/,':')
+    .replace(/[ \t]{2,}/g,' ');
+  return out;
+}
+
+function preserveScreenshotLayout(text){
+  const source=String(text||'').replace(/\r/g,'');
+  const lines=source.split('\n').map(normalizeCaptureLine).filter(Boolean);
+  const output=[];
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    const next=lines[i+1]||'';
+    const prev=output[output.length-1]||'';
+    const isHeading=/^[^•]{1,80}:$/.test(line);
+    const prevIsBullet=/^•\s+/.test(prev);
+    const nextIsBullet=/^•\s+/.test(next);
+    if(isHeading&&prevIsBullet&&output[output.length-1]!=='')output.push('');
+    output.push(line);
+    if(isHeading&&nextIsBullet)output.push('');
+  }
+  return output.join('\n').replace(/\n{3,}/g,'\n\n').trim();
 }
 
 function toChecklist(text){
