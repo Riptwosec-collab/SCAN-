@@ -1,0 +1,269 @@
+/* Final theme contrast guard. Keep this loaded last. */
+body[data-theme]{
+  --surface-strong:color-mix(in srgb,var(--card2) 92%,#000 8%);
+  --surface-soft:color-mix(in srgb,var(--card) 92%,#fff 8%);
+  --border-strong:color-mix(in srgb,var(--accent) 34%,var(--line));
+}
+
+body[data-theme] h1,
+body[data-theme] h2,
+body[data-theme] h3,
+body[data-theme] b,
+body[data-theme] strong,
+body[data-theme] summary,
+body[data-theme] .brand,
+body[data-theme] .step-title b,
+body[data-theme] .tool-title-row h2,
+body[data-theme] .section-head h2,
+body[data-theme] .feature-card b,
+body[data-theme] .guide-card summary b,
+body[data-theme] .candidate-main b,
+body[data-theme] .next-action b{
+  color:var(--text)!important;
+  text-shadow:none!important;
+}
+
+body[data-theme] .hero-lead,
+body[data-theme] .workflow-list,
+body[data-theme] .feature-head p,
+body[data-theme] .feature-card p,
+body[data-theme] .guide-card summary p,
+body[data-theme] .guide-card dd,
+body[data-theme] .candidate-main small,
+body[data-theme] .candidate-main em,
+body[data-theme] .next-action i,
+body[data-theme] .hint,
+body[data-theme] .sub,
+body[data-theme] .file-info,
+body[data-theme] .status,
+body[data-theme] .confidence{
+  color:var(--muted)!important;
+  text-shadow:none!important;
+}
+
+body[data-theme] select,
+body[data-theme] input,
+body[data-theme] .precision-row select,
+body[data-theme] .wizard-grid select,
+body[data-theme] #themeSelect{
+  background:var(--surface-strong)!important;
+  border-color:var(--border-strong)!important;
+  color:var(--text)!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+
+body[data-theme] select option{
+  background:#ffffff!important;
+  color:#111827!important;
+}
+
+body[data-theme] .site-header,
+body[data-theme] .hero-copy,
+body[data-theme] .clean-card,
+body[data-theme] .privacy-note,
+body[data-theme] .tool-shell,
+body[data-theme] .panel,
+body[data-theme] .feature-showcase,
+body[data-theme] .feature-card,
+body[data-theme] .wizard-box,
+body[data-theme] .dictionary-box,
+body[data-theme] .history-box,
+body[data-theme] .fix-box,
+body[data-theme] .ready-card,
+body[data-theme] .quality-gate,
+body[data-theme] .next-actions{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--card) 96%,#fff 4%),var(--card))!important;
+  border-color:var(--line)!important;
+  color:var(--text)!important;
+}
+
+body[data-theme] .tabs.tool-tabs,
+body[data-theme] .drop,
+body[data-theme] .source-btn,
+body[data-theme] .sample-btn,
+body[data-theme] .btn,
+body[data-theme] .tab,
+body[data-theme] .checks label,
+body[data-theme] .inline-check,
+body[data-theme] .candidate-card,
+body[data-theme] .next-action{
+  background:color-mix(in srgb,var(--card2) 86%,transparent)!important;
+  border-color:var(--border-strong)!important;
+  color:var(--text)!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+
+body[data-theme] .tab.active,
+body[data-theme] .source-btn.active,
+body[data-theme] .source-btn:hover,
+body[data-theme] .sample-btn:hover,
+body[data-theme] .candidate-card.active{
+  background:color-mix(in srgb,var(--accent) 18%,var(--card2))!important;
+  border-color:color-mix(in srgb,var(--accent) 58%,var(--line))!important;
+  color:var(--text)!important;
+}
+
+body[data-theme] .source-btn span,
+body[data-theme] .step-title span,
+body[data-theme] .guide-icon,
+body[data-theme] .candidate-rank,
+body[data-theme] .feature-tags span,
+body[data-theme] .rule-chip,
+body[data-theme] .fix-item{
+  color:var(--accent)!important;
+}
+
+body[data-theme] .out,
+body[data-theme] .fix-report,
+body[data-theme] .status,
+body[data-theme] .confidence{
+  background:var(--surface-strong)!important;
+  border-color:var(--border-strong)!important;
+  color:var(--text)!important;
+  text-shadow:none!important;
+}
+
+body[data-theme="ivory"]{
+  --text:#241d13;
+  --muted:#51483b;
+  --surface-strong:#fffaf0;
+  --surface-soft:rgba(255,252,246,.96);
+  --border-strong:rgba(184,135,53,.36);
+}
+
+body[data-theme="ivory"] .site-header,
+body[data-theme="ivory"] .hero-copy,
+body[data-theme="ivory"] .clean-card,
+body[data-theme="ivory"] .privacy-note,
+body[data-theme="ivory"] .tool-shell,
+body[data-theme="ivory"] .panel,
+body[data-theme="ivory"] .feature-showcase,
+body[data-theme="ivory"] .feature-card,
+body[data-theme="ivory"] .wizard-box,
+body[data-theme="ivory"] .dictionary-box,
+body[data-theme="ivory"] .history-box,
+body[data-theme="ivory"] .fix-box,
+body[data-theme="ivory"] .ready-card,
+body[data-theme="ivory"] .quality-gate,
+body[data-theme="ivory"] .next-actions{
+  background:linear-gradient(180deg,rgba(255,252,246,.98),rgba(250,241,225,.92))!important;
+  border-color:rgba(184,135,53,.26)!important;
+  color:#241d13!important;
+}
+
+body[data-theme="ivory"] select,
+body[data-theme="ivory"] input,
+body[data-theme="ivory"] .precision-row select,
+body[data-theme="ivory"] .wizard-grid select,
+body[data-theme="ivory"] #themeSelect,
+body[data-theme="ivory"] .tabs.tool-tabs,
+body[data-theme="ivory"] .drop,
+body[data-theme="ivory"] .source-btn,
+body[data-theme="ivory"] .sample-btn,
+body[data-theme="ivory"] .btn,
+body[data-theme="ivory"] .tab,
+body[data-theme="ivory"] .checks label,
+body[data-theme="ivory"] .inline-check,
+body[data-theme="ivory"] .candidate-card,
+body[data-theme="ivory"] .next-action,
+body[data-theme="ivory"] .out,
+body[data-theme="ivory"] .fix-report,
+body[data-theme="ivory"] .status,
+body[data-theme="ivory"] .confidence{
+  background:#fffaf0!important;
+  border-color:rgba(184,135,53,.34)!important;
+  color:#241d13!important;
+}
+
+body[data-theme="ivory"] .tab.active,
+body[data-theme="ivory"] .source-btn.active,
+body[data-theme="ivory"] .source-btn:hover,
+body[data-theme="ivory"] .sample-btn:hover,
+body[data-theme="ivory"] .candidate-card.active{
+  background:linear-gradient(180deg,rgba(232,207,154,.46),rgba(255,248,232,.98))!important;
+  color:#241d13!important;
+}
+
+body[data-theme="ivory"] .hero-lead,
+body[data-theme="ivory"] .workflow-list,
+body[data-theme="ivory"] .feature-head p,
+body[data-theme="ivory"] .feature-card p,
+body[data-theme="ivory"] .guide-card summary p,
+body[data-theme="ivory"] .guide-card dd,
+body[data-theme="ivory"] .candidate-main small,
+body[data-theme="ivory"] .candidate-main em,
+body[data-theme="ivory"] .next-action i,
+body[data-theme="ivory"] .hint,
+body[data-theme="ivory"] .sub{
+  color:#51483b!important;
+}
+
+body[data-theme="ivory"] .eyebrow,
+body[data-theme="ivory"] .label,
+body[data-theme="ivory"] .mini-label,
+body[data-theme="ivory"] .theme-picker span{
+  color:#75644b!important;
+}
+
+body[data-theme="ivory"] #themeSelect,
+body[data-theme="ivory"] #langSelect,
+body[data-theme="ivory"] #modeSelect,
+body[data-theme="ivory"] #ocrPreset,
+body[data-theme="ivory"] #cleanupLevel,
+body[data-theme="ivory"] #ocrEngine,
+body[data-theme="ivory"] #pdfOrientation,
+body[data-theme="ivory"] #wizardDocType,
+body[data-theme="ivory"] #wizardQuality,
+body[data-theme="ivory"] #wizardLayout{
+  appearance:auto!important;
+  -webkit-appearance:auto!important;
+  color-scheme:light!important;
+  background:#fffaf0!important;
+  background-color:#fffaf0!important;
+  background-image:none!important;
+  border-color:rgba(184,135,53,.48)!important;
+  color:#241d13!important;
+  -webkit-text-fill-color:#241d13!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 0 0 1px rgba(184,135,53,.10)!important;
+}
+
+body[data-theme="carbon"] #themeSelect,
+body[data-theme="carbon"] #langSelect,
+body[data-theme="carbon"] #modeSelect,
+body[data-theme="carbon"] #ocrPreset,
+body[data-theme="carbon"] #cleanupLevel,
+body[data-theme="carbon"] #ocrEngine,
+body[data-theme="carbon"] #pdfOrientation,
+body[data-theme="carbon"] #wizardDocType,
+body[data-theme="carbon"] #wizardQuality,
+body[data-theme="carbon"] #wizardLayout,
+body[data-theme="sage"] #themeSelect,
+body[data-theme="sage"] #langSelect,
+body[data-theme="sage"] #modeSelect,
+body[data-theme="sage"] #ocrPreset,
+body[data-theme="sage"] #cleanupLevel,
+body[data-theme="sage"] #ocrEngine,
+body[data-theme="sage"] #pdfOrientation,
+body[data-theme="sage"] #wizardDocType,
+body[data-theme="sage"] #wizardQuality,
+body[data-theme="sage"] #wizardLayout,
+body[data-theme="midnight"] #themeSelect,
+body[data-theme="midnight"] #langSelect,
+body[data-theme="midnight"] #modeSelect,
+body[data-theme="midnight"] #ocrPreset,
+body[data-theme="midnight"] #cleanupLevel,
+body[data-theme="midnight"] #ocrEngine,
+body[data-theme="midnight"] #pdfOrientation,
+body[data-theme="midnight"] #wizardDocType,
+body[data-theme="midnight"] #wizardQuality,
+body[data-theme="midnight"] #wizardLayout{
+  color-scheme:dark!important;
+  background:color-mix(in srgb,var(--card2) 92%,#000 8%)!important;
+  background-color:color-mix(in srgb,var(--card2) 92%,#000 8%)!important;
+  background-image:none!important;
+  border-color:color-mix(in srgb,var(--accent) 42%,var(--line))!important;
+  color:var(--text)!important;
+  -webkit-text-fill-color:var(--text)!important;
+}

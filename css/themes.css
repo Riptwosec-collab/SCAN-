@@ -349,6 +349,216 @@ body[data-theme="midnight"] .btn.primary{
   color:#07101d;
 }
 
+body[data-theme] .site-header,
+body[data-theme] .hero-copy,
+body[data-theme] .clean-card,
+body[data-theme] .privacy-note,
+body[data-theme] .tool-shell,
+body[data-theme] .panel,
+body[data-theme] .feature-showcase,
+body[data-theme] .feature-card,
+body[data-theme] .wizard-box,
+body[data-theme] .dictionary-box,
+body[data-theme] .history-box,
+body[data-theme] .fix-box,
+body[data-theme] .ready-card,
+body[data-theme] .quality-gate,
+body[data-theme] .next-actions{
+  color:var(--text)!important;
+}
+
+body[data-theme] h1,
+body[data-theme] h2,
+body[data-theme] h3,
+body[data-theme] b,
+body[data-theme] strong,
+body[data-theme] summary,
+body[data-theme] .step-title b,
+body[data-theme] .tool-title-row h2,
+body[data-theme] .section-head h2,
+body[data-theme] .candidate-main b,
+body[data-theme] .next-action b{
+  color:var(--text)!important;
+}
+
+body[data-theme] .hero-lead,
+body[data-theme] .workflow-list,
+body[data-theme] .feature-head p,
+body[data-theme] .feature-card p,
+body[data-theme] .guide-card summary p,
+body[data-theme] .guide-card dd,
+body[data-theme] .candidate-main small,
+body[data-theme] .candidate-main em,
+body[data-theme] .next-action i,
+body[data-theme] .hint,
+body[data-theme] .sub{
+  color:var(--muted)!important;
+}
+
+body[data-theme] select,
+body[data-theme] input,
+body[data-theme] .precision-row select,
+body[data-theme] .wizard-grid select,
+body[data-theme] #langSelect,
+body[data-theme] #modeSelect,
+body[data-theme] #ocrPreset,
+body[data-theme] #cleanupLevel,
+body[data-theme] #ocrEngine,
+body[data-theme] #pdfOrientation,
+body[data-theme] #wizardDocType,
+body[data-theme] #wizardQuality,
+body[data-theme] #wizardLayout{
+  background:color-mix(in srgb,var(--card2) 94%,#000 6%)!important;
+  border-color:color-mix(in srgb,var(--accent) 28%,var(--line))!important;
+  color:var(--text)!important;
+  text-shadow:none!important;
+}
+
+body[data-theme] select option{
+  background:#ffffff!important;
+  color:#111827!important;
+}
+
+body[data-theme] .tabs.tool-tabs,
+body[data-theme] .drop,
+body[data-theme] .source-btn,
+body[data-theme] .sample-btn,
+body[data-theme] .btn,
+body[data-theme] .tab,
+body[data-theme] .checks label,
+body[data-theme] .inline-check,
+body[data-theme] .candidate-card,
+body[data-theme] .next-action{
+  border-color:color-mix(in srgb,var(--accent) 22%,var(--line))!important;
+  color:var(--text)!important;
+}
+
+body[data-theme] .source-btn span,
+body[data-theme] .step-title span,
+body[data-theme] .guide-icon,
+body[data-theme] .candidate-rank,
+body[data-theme] .feature-tags span,
+body[data-theme] .rule-chip,
+body[data-theme] .fix-item{
+  color:var(--accent)!important;
+}
+
+body[data-theme] .tab.active,
+body[data-theme] .source-btn.active,
+body[data-theme] .source-btn:hover,
+body[data-theme] .sample-btn:hover,
+body[data-theme] .candidate-card.active{
+  background:color-mix(in srgb,var(--accent) 16%,var(--card2))!important;
+  border-color:color-mix(in srgb,var(--accent) 52%,var(--line))!important;
+  color:var(--text)!important;
+}
+
+body[data-theme] .out,
+body[data-theme] .fix-report,
+body[data-theme] .status,
+body[data-theme] .confidence{
+  background:color-mix(in srgb,var(--card2) 88%,#000 12%)!important;
+  border-color:color-mix(in srgb,var(--accent) 20%,var(--line))!important;
+  color:var(--text)!important;
+  text-shadow:none!important;
+}
+
+body[data-theme="ivory"]{
+  --text:#241d13;
+  --muted:#51483b;
+  --card:rgba(255,252,246,.93);
+  --card2:rgba(255,249,238,.98);
+}
+
+body[data-theme="ivory"] .site-header,
+body[data-theme="ivory"] .hero-copy,
+body[data-theme="ivory"] .clean-card,
+body[data-theme="ivory"] .privacy-note,
+body[data-theme="ivory"] .tool-shell,
+body[data-theme="ivory"] .panel,
+body[data-theme="ivory"] .feature-showcase,
+body[data-theme="ivory"] .feature-card,
+body[data-theme="ivory"] .wizard-box,
+body[data-theme="ivory"] .dictionary-box,
+body[data-theme="ivory"] .history-box,
+body[data-theme="ivory"] .fix-box,
+body[data-theme="ivory"] .ready-card,
+body[data-theme="ivory"] .quality-gate,
+body[data-theme="ivory"] .next-actions{
+  background:linear-gradient(180deg,rgba(255,252,246,.96),rgba(250,241,225,.88))!important;
+  border-color:rgba(184,135,53,.24)!important;
+  color:#241d13!important;
+}
+
+body[data-theme="ivory"] select,
+body[data-theme="ivory"] input,
+body[data-theme="ivory"] .precision-row select,
+body[data-theme="ivory"] .wizard-grid select,
+body[data-theme="ivory"] #themeSelect{
+  background:#fffaf0!important;
+  border-color:#c29342!important;
+  color:#241d13!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.78),0 0 0 1px rgba(184,135,53,.08)!important;
+}
+
+body[data-theme="ivory"] .tabs.tool-tabs,
+body[data-theme="ivory"] .drop,
+body[data-theme="ivory"] .source-btn,
+body[data-theme="ivory"] .sample-btn,
+body[data-theme="ivory"] .btn,
+body[data-theme="ivory"] .tab,
+body[data-theme="ivory"] .checks label,
+body[data-theme="ivory"] .inline-check,
+body[data-theme="ivory"] .candidate-card,
+body[data-theme="ivory"] .next-action{
+  background:rgba(255,249,238,.82)!important;
+  border-color:rgba(184,135,53,.24)!important;
+  color:#241d13!important;
+}
+
+body[data-theme="ivory"] .source-btn.active,
+body[data-theme="ivory"] .source-btn:hover,
+body[data-theme="ivory"] .tab.active,
+body[data-theme="ivory"] .sample-btn:hover,
+body[data-theme="ivory"] .candidate-card.active{
+  background:linear-gradient(180deg,rgba(232,207,154,.42),rgba(255,248,232,.94))!important;
+  color:#241d13!important;
+  border-color:rgba(184,135,53,.56)!important;
+}
+
+body[data-theme="ivory"] .hero-lead,
+body[data-theme="ivory"] .workflow-list,
+body[data-theme="ivory"] .feature-head p,
+body[data-theme="ivory"] .feature-card p,
+body[data-theme="ivory"] .guide-card summary p,
+body[data-theme="ivory"] .guide-card dd,
+body[data-theme="ivory"] .candidate-main small,
+body[data-theme="ivory"] .candidate-main em,
+body[data-theme="ivory"] .next-action i,
+body[data-theme="ivory"] .hint,
+body[data-theme="ivory"] .sub{
+  color:#51483b!important;
+}
+
+body[data-theme="ivory"] .out,
+body[data-theme="ivory"] .fix-report,
+body[data-theme="ivory"] .status,
+body[data-theme="ivory"] .confidence{
+  background:#fffaf0!important;
+  border-color:rgba(184,135,53,.24)!important;
+  color:#241d13!important;
+}
+
+body[data-theme="carbon"] .feature-card,
+body[data-theme="sage"] .feature-card,
+body[data-theme="midnight"] .feature-card,
+body[data-theme="carbon"] .guide-card,
+body[data-theme="sage"] .guide-card,
+body[data-theme="midnight"] .guide-card{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--card) 96%,#ffffff 4%),color-mix(in srgb,var(--card2) 92%,#000 8%))!important;
+  color:var(--text)!important;
+}
+
 .site-header,
 .hero-copy,
 .clean-card,
