@@ -850,3 +850,132 @@ body[data-theme="midnight"] select option{
   background:#111827!important;
   color:#f8fafc!important;
 }
+
+/* Theme-matched fixes for the guide banner and 3D preview strip. */
+body[data-theme] .function-guide{
+  background:
+    linear-gradient(180deg,color-mix(in srgb,var(--readable-surface-alt) 94%,var(--accent) 6%),color-mix(in srgb,var(--readable-surface) 92%,var(--bg) 8%))!important;
+  border-color:var(--section-border)!important;
+  color:var(--readable-text)!important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb,var(--accent) 10%,transparent),
+    0 16px 38px color-mix(in srgb,#000 18%,transparent),
+    inset 0 1px 0 color-mix(in srgb,#fff 10%,transparent)!important;
+}
+
+body[data-theme] .function-guide::after{
+  background:
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 38%,transparent),transparent 38%,color-mix(in srgb,var(--blue) 24%,transparent))!important;
+  opacity:.55!important;
+}
+
+body[data-theme] .function-guide-head{
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 8%,transparent),transparent 72%)!important;
+  border-bottom-color:var(--inner-border)!important;
+}
+
+body[data-theme] .function-guide-head h3{
+  color:var(--readable-text)!important;
+}
+
+body[data-theme] .function-guide-head p{
+  color:var(--readable-muted)!important;
+}
+
+body[data-theme] .function-guide .label{
+  color:var(--readable-focus)!important;
+}
+
+body[data-theme] .guide-toggle{
+  background:color-mix(in srgb,var(--accent) 13%,var(--readable-surface))!important;
+  border-color:color-mix(in srgb,var(--accent) 40%,var(--line))!important;
+  color:var(--readable-text)!important;
+}
+
+body[data-theme] .collapsed-guide[open] .guide-toggle{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 70%,#fff 30%),color-mix(in srgb,var(--accent) 82%,#000 18%))!important;
+  color:var(--primary-text,#10140c)!important;
+  -webkit-text-fill-color:currentColor!important;
+}
+
+body[data-theme] .scan-3d-stage{
+  background:
+    radial-gradient(circle at 24% 10%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 34%),
+    radial-gradient(circle at 74% 70%,color-mix(in srgb,var(--blue) 12%,transparent),transparent 38%),
+    linear-gradient(180deg,color-mix(in srgb,var(--readable-surface-alt) 92%,var(--bg) 8%),color-mix(in srgb,var(--readable-surface) 86%,var(--bg) 14%))!important;
+  border-color:var(--section-border)!important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb,#fff 12%,transparent),
+    0 14px 30px color-mix(in srgb,#000 14%,transparent)!important;
+}
+
+body[data-theme] .scan-3d-stage::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,color-mix(in srgb,var(--accent) 10%,transparent),transparent 28%,color-mix(in srgb,var(--blue) 8%,transparent) 78%,transparent),
+    linear-gradient(180deg,color-mix(in srgb,#fff 6%,transparent),transparent 42%);
+  opacity:.7;
+}
+
+body[data-theme] .scan-3d-stage canvas{
+  position:relative;
+  z-index:1;
+}
+
+body[data-theme] .scan-3d-label{
+  z-index:2;
+  min-width:170px;
+  background:
+    linear-gradient(90deg,color-mix(in srgb,var(--readable-surface-alt) 92%,transparent),color-mix(in srgb,var(--readable-surface-alt) 45%,transparent))!important;
+  border-color:color-mix(in srgb,var(--accent) 28%,var(--line))!important;
+  box-shadow:0 10px 24px color-mix(in srgb,#000 12%,transparent)!important;
+}
+
+body[data-theme] .scan-3d-label b{
+  color:var(--readable-text)!important;
+}
+
+body[data-theme] .scan-3d-label span{
+  color:var(--readable-muted)!important;
+  opacity:1!important;
+}
+
+body[data-theme="ivory"] .function-guide,
+body[data-theme="ivory"] .scan-3d-stage{
+  background:
+    radial-gradient(circle at 22% 8%,rgba(166,116,38,.13),transparent 32%),
+    linear-gradient(180deg,#f6ead5,#ead8b7)!important;
+  border-color:rgba(158,111,34,.46)!important;
+}
+
+body[data-theme="pearl"] .function-guide,
+body[data-theme="pearl"] .scan-3d-stage{
+  background:
+    radial-gradient(circle at 22% 8%,rgba(57,112,135,.13),transparent 32%),
+    linear-gradient(180deg,#f5fbfb,#dcecf0)!important;
+  border-color:rgba(57,112,135,.42)!important;
+}
+
+body[data-theme="carbon"] .function-guide,
+body[data-theme="carbon"] .scan-3d-stage{
+  background:
+    radial-gradient(circle at 22% 8%,rgba(231,195,112,.13),transparent 34%),
+    linear-gradient(180deg,#181510,#0d0b08)!important;
+}
+
+body[data-theme="sage"] .function-guide,
+body[data-theme="sage"] .scan-3d-stage{
+  background:
+    radial-gradient(circle at 22% 8%,rgba(220,182,86,.13),transparent 34%),
+    linear-gradient(180deg,#0f3328,#081f17)!important;
+}
+
+body[data-theme="midnight"] .function-guide,
+body[data-theme="midnight"] .scan-3d-stage{
+  background:
+    radial-gradient(circle at 22% 8%,rgba(230,195,106,.13),transparent 34%),
+    linear-gradient(180deg,#12253a,#0a1725)!important;
+}
