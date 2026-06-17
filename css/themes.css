@@ -244,10 +244,66 @@ body[data-theme="ivory"] .dictionary-box,
 body[data-theme="ivory"] .history-box,
 body[data-theme="ivory"] .fix-box,
 body[data-theme="ivory"] .fix-report,
-body[data-theme="ivory"] .file-info,
 body[data-theme="ivory"] .file-info{
   background:rgba(255,255,255,.56)!important;
   border-color:var(--line)!important;
+}
+
+body[data-theme="ivory"] .hero-lead,
+body[data-theme="ivory"] .workflow-list,
+body[data-theme="ivory"] .feature-grid p,
+body[data-theme="ivory"] .privacy-note p,
+body[data-theme="ivory"] .guide-card dd,
+body[data-theme="ivory"] .hint,
+body[data-theme="ivory"] .sub{
+  color:#5f5547!important;
+}
+
+body[data-theme="ivory"] .eyebrow,
+body[data-theme="ivory"] .label,
+body[data-theme="ivory"] .mini-label,
+body[data-theme="ivory"] .theme-picker span{
+  color:#75644b!important;
+}
+
+body[data-theme="ivory"] .workflow-list li::marker{
+  color:#9d762f;
+  font-weight:800;
+}
+
+body[data-theme="ivory"] .brand,
+body[data-theme="ivory"] .feature-grid b,
+body[data-theme="ivory"] .section-head h2,
+body[data-theme="ivory"] .privacy-note h2,
+body[data-theme="ivory"] .tool-title-row h2{
+  color:#8a651f!important;
+}
+
+body[data-theme="ivory"] .hero h1,
+body[data-theme="ivory"] .step-title b,
+body[data-theme="ivory"] .wizard-box summary,
+body[data-theme="ivory"] .workflow-list,
+body[data-theme="ivory"] .clean-card,
+body[data-theme="ivory"] .panel,
+body[data-theme="ivory"] .tool-shell{
+  color:var(--text)!important;
+}
+
+body[data-theme="ivory"] .nav-links a,
+body[data-theme="ivory"] .btn,
+body[data-theme="ivory"] .tab,
+body[data-theme="ivory"] .sample-btn{
+  color:#2b251c!important;
+}
+
+body[data-theme="ivory"] .btn.primary{
+  color:#1f1608!important;
+  font-weight:900;
+}
+
+body[data-theme="ivory"] .out{
+  color:#261f16!important;
+  text-shadow:none!important;
 }
 
 body[data-theme="ivory"] select,
@@ -255,6 +311,14 @@ body[data-theme="ivory"] input{
   color:var(--text)!important;
   background-color:rgba(255,255,255,.76)!important;
   color-scheme:light;
+}
+
+body[data-theme="ivory"] .theme-picker select,
+body[data-theme="ivory"] #themeSelect{
+  color:#201912!important;
+  background:#fffaf0!important;
+  border-color:#b88735!important;
+  box-shadow:0 0 0 1px rgba(184,135,53,.18),inset 0 1px 0 rgba(255,255,255,.82)!important;
 }
 
 body[data-theme="ivory"] select option{
