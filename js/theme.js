@@ -1,8 +1,8 @@
 const THEME_KEY='riptwosec-scan-theme';
 const THEME_META_COLORS={
-  carbon:'#0b0e11',
-  ivory:'#f7f3ea',
-  sage:'#eef7f0',
+  carbon:'#080706',
+  ivory:'#f8f4eb',
+  sage:'#071b14',
   midnight:'#08111f'
 };
 
