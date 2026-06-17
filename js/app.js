@@ -249,7 +249,7 @@ function applyProfessionalPreset(preset){
     government:{mode:'document',cleanup:'strict',orientation:'portrait'},
     table:{mode:'table',cleanup:'normal',orientation:'landscape'},
     document:{mode:'document',cleanup:'normal',orientation:'portrait'},
-    screenshot:{mode:'clean',cleanup:'normal',orientation:'portrait'},
+    screenshot:{mode:'capture-list',cleanup:'normal',orientation:'portrait'},
     mobile:{mode:'clean',cleanup:'normal',orientation:'portrait'}
   };
   const config=map[preset];

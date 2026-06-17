@@ -366,7 +366,19 @@ async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6',extr
     tessedit_char_whitelist:extra.whitelist||undefined
   });
   const confidence=extractAverageConfidence(result);
-  return {text:result.data.text||'',confidence};
+  return {text:getTesseractLineText(result)||result.data.text||'',confidence};
+}
+
+function getTesseractLineText(result){
+  const lines=(result?.data?.lines||[])
+    .map(line=>String(line.text||'').trim())
+    .filter(Boolean);
+  if(lines.length<2)return '';
+  const joined=lines.join('\n');
+  const raw=String(result?.data?.text||'').trim();
+  if(!raw)return joined;
+  const rawLineCount=raw.split('\n').filter(line=>line.trim()).length;
+  return lines.length>rawLineCount?joined:raw;
 }
 
 async function recognizeNativeText(canvas,start=0,end=100){

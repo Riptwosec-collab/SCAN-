@@ -443,17 +443,28 @@ function fixCaptureTechTerms(line){
     .replace(/scan-3d\s+js/g,'scan-3d.js')
     .replace(/requestAnimationFrame/gi,'requestAnimationFrame')
     .replace(/resizefrecolor/g,'resize/recolor')
+    .replace(/อ(?:\u0e52|2)(?:\u0e50|0)(?:\u0e53|3)6/g,'event')
     .replace(/เปลี่ยนอ็ม/g,'เปลี่ยนธีม')
     .replace(/เส้น\s*30/g,'เส้น 3D')
     .replace(/\b30\b/g,'3D')
     .replace(/คาต้องห้าม/g,'คำต้องห้าม')
     .replace(/ชื้นแสดง/g,'ชิ้นแสดง')
-    .replace(/v\s*is\b/i,'v18')
-    .replace(/theme-contrast\.css\?v(?!\=)/,'theme-contrast.css?v=');
+    .replace(/v\s*is\b|vis\b/i,'v18')
+    .replace(/theme-contrast\.css\?v(?:และ)?/,'theme-contrast.css?v=15');
+}
+
+function prepareCaptureSource(text){
+  return String(text||'')
+    .replace(/\r/g,'')
+    .replace(/\s+(ตรวจแล้ว\s*:)/g,'\n$1')
+    .replace(/\s+(ทำเพิ่ม\s*:)/g,'\n$1')
+    .replace(/\s+([*]\s+)/g,'\n$1')
+    .replace(/\s+([\u2022\u25cf\u25cb\u25e6\u25aa\u25ab]\s+)/g,'\n$1')
+    .replace(/\s+((?:\u0e51|1)\s+(?=\S))/g,'\n$1');
 }
 
 function preserveScreenshotLayout(text){
-  const source=String(text||'').replace(/\r/g,'');
+  const source=prepareCaptureSource(text);
   const lines=source.split('\n').map(normalizeCaptureLine).filter(Boolean);
   const output=[];
   for(let i=0;i<lines.length;i++){

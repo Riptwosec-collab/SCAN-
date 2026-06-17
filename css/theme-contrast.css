@@ -401,6 +401,7 @@ body[data-theme] .panel{
 body[data-theme] .feature-card,
 body[data-theme] .guide-card,
 body[data-theme] .wizard-box,
+body[data-theme] .advanced-options,
 body[data-theme] .dictionary-box,
 body[data-theme] .history-box,
 body[data-theme] .fix-box,
@@ -444,6 +445,7 @@ body[data-theme] .step-title span{
 
 body[data-theme] .input-mode,
 body[data-theme] .wizard-box,
+body[data-theme] .advanced-options,
 body[data-theme] .precision-row,
 body[data-theme] .checks,
 body[data-theme] .dictionary-box,
@@ -459,6 +461,7 @@ body[data-theme] .input-mode{
 }
 
 body[data-theme] .wizard-box summary,
+body[data-theme] .advanced-options summary,
 body[data-theme] .dictionary-box summary,
 body[data-theme] .history-box summary,
 body[data-theme] .fix-box summary{
@@ -471,6 +474,7 @@ body[data-theme] .fix-box summary{
 }
 
 body[data-theme] .wizard-box summary::before,
+body[data-theme] .advanced-options summary::before,
 body[data-theme] .dictionary-box summary::before,
 body[data-theme] .history-box summary::before,
 body[data-theme] .fix-box summary::before{
@@ -485,6 +489,8 @@ body[data-theme] .fix-box summary::before{
 body[data-theme] .upload-source,
 body[data-theme] .wizard-grid,
 body[data-theme] .demo-samples,
+body[data-theme] .advanced-options .precision-row,
+body[data-theme] .advanced-options .checks,
 body[data-theme] .precision-row,
 body[data-theme] .checks,
 body[data-theme] .search-row,
@@ -1058,4 +1064,38 @@ body[data-theme="midnight"] .scan-3d-stage{
   background:
     radial-gradient(circle at 22% 8%,rgba(230,195,106,.13),transparent 34%),
     linear-gradient(180deg,#12253a,#0a1725)!important;
+}
+
+body[data-theme] .wizard-box summary::before,
+body[data-theme] .advanced-options summary::before{
+  content:'+'!important;
+  display:inline-grid!important;
+  place-items:center;
+  flex:0 0 18px;
+  width:18px!important;
+  height:18px!important;
+  border-radius:6px!important;
+  border:1px solid color-mix(in srgb,var(--accent) 42%,transparent);
+  background:color-mix(in srgb,var(--accent) 12%,transparent)!important;
+  color:var(--accent)!important;
+  font-family:'Space Mono',monospace;
+  font-size:12px;
+  line-height:1;
+  box-shadow:0 0 10px color-mix(in srgb,var(--accent) 18%,transparent)!important;
+}
+
+body[data-theme] .wizard-box[open] summary::before,
+body[data-theme] .advanced-options[open] summary::before{
+  content:'-'!important;
+}
+
+body[data-theme] .advanced-options{
+  border-color:var(--inner-border)!important;
+  background:color-mix(in srgb,var(--card2) 52%,transparent)!important;
+}
+
+body[data-theme] .btn.subtle{
+  background:color-mix(in srgb,var(--card2) 55%,transparent)!important;
+  color:var(--muted)!important;
+  border-color:var(--inner-border)!important;
 }

@@ -717,7 +717,7 @@ input:hover{
   margin-top:10px;
   border:1px solid rgba(255,255,255,.10);
   background:rgba(4,8,12,.62);
-  padding:10px;
+  padding:8px 10px;
 }
 
 .ready-card.ready-good{
@@ -738,7 +738,7 @@ input:hover{
   align-items:center;
   justify-content:space-between;
   gap:8px;
-  margin-bottom:8px;
+  margin-bottom:0;
 }
 
 .ready-head b{
@@ -754,9 +754,15 @@ input:hover{
 }
 
 .ready-list{
-  display:grid;
+  display:none;
   grid-template-columns:1fr 1fr;
   gap:6px;
+  margin-top:8px;
+}
+
+.ready-card:hover .ready-list,
+.ready-card:focus-within .ready-list{
+  display:grid;
 }
 
 .ready-item{
@@ -889,13 +895,40 @@ input:hover{
   border:1px solid var(--line);
   border-radius:8px;
   background:color-mix(in srgb,var(--card2) 68%,transparent);
-  padding:10px;
+  padding:8px 10px;
 }
 
-.wizard-box summary{
+.wizard-box summary,
+.advanced-options summary{
   cursor:pointer;
   color:var(--text);
   font-weight:800;
+  list-style:none;
+}
+
+.wizard-box summary::-webkit-details-marker,
+.advanced-options summary::-webkit-details-marker{
+  display:none;
+}
+
+.wizard-box summary:before,
+.advanced-options summary:before{
+  content:'+';
+  display:inline-grid;
+  place-items:center;
+  width:18px;
+  height:18px;
+  margin-right:6px;
+  border-radius:6px;
+  border:1px solid color-mix(in srgb,var(--accent) 32%,transparent);
+  color:var(--accent);
+  font-family:'Space Mono',monospace;
+  font-size:12px;
+}
+
+.wizard-box[open] summary:before,
+.advanced-options[open] summary:before{
+  content:'-';
 }
 
 .wizard-grid{
@@ -910,6 +943,30 @@ input:hover{
   grid-template-columns:repeat(auto-fit,minmax(112px,1fr));
   gap:8px;
   margin-top:8px;
+}
+
+.advanced-options{
+  margin-top:8px;
+  border:1px solid color-mix(in srgb,var(--accent) 24%,var(--line));
+  border-radius:8px;
+  background:color-mix(in srgb,var(--card2) 58%,transparent);
+  padding:8px 10px;
+}
+
+.advanced-options .precision-row,
+.advanced-options .compact-checks{
+  margin-top:8px;
+}
+
+.btn.subtle{
+  flex:0 0 auto;
+  border-color:rgba(255,255,255,.10);
+  background:rgba(255,255,255,.025);
+  color:color-mix(in srgb,var(--muted) 72%,var(--text));
+}
+
+.action-row .btn.primary{
+  flex:1 1 auto;
 }
 
 .sample-btn{

@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v21';
+const CACHE_NAME='riptwosec-scan-v22';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -11,24 +11,24 @@ const CORE_ASSETS=[
   './css/background.css',
   './css/tool-cleanup.css',
   './css/output-rim.css',
-  './css/pro-tool.css',
+  './css/pro-tool.css?v=2',
   './css/themes.css',
-  './css/theme-contrast.css?v=15',
+  './css/theme-contrast.css?v=16',
   './js/state.js',
   './js/theme.js?v=12',
   './js/utils.js',
   './js/dictionary-it.js',
   './js/custom-rules.js',
-  './js/text-cleaner.js?v=4',
+  './js/text-cleaner.js?v=5',
   './js/quality-review.js?v=2',
   './js/crop.js',
-  './js/ocr.js?v=2',
+  './js/ocr.js?v=3',
   './js/pdf-handler.js',
   './js/batch.js',
   './js/search.js',
   './js/exporter.js',
   './js/history.js',
-  './js/app.js',
+  './js/app.js?v=2',
   './js/scan-3d.js?v=5'
 ];
 
