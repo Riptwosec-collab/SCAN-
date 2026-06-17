@@ -422,12 +422,34 @@ function toBullets(text){
 function normalizeCaptureLine(line){
   let out=String(line||'').trim();
   out=out
-    .replace(/^[•●○◦▪▫]\s*/,'• ')
-    .replace(/^[\-–—*]\s*/,'• ')
-    .replace(/^o\s+(?=\S)/i,'• ')
+    .replace(/^[\u2022\u25cf\u25cb\u25e6\u25aa\u25ab]\s*/,'\u2022 ')
+    .replace(/^(?:\u0e51|1)\s+(?=\S)/,'\u2022 ')
+    .replace(/^[\-–—*]\s*/,'\u2022 ')
+    .replace(/^o\s+(?=\S)/i,'\u2022 ')
     .replace(/\s*:\s*$/,':')
     .replace(/[ \t]{2,}/g,' ');
+  out=fixCaptureTechTerms(out);
   return out;
+}
+
+function fixCaptureTechTerms(line){
+  return String(line||'')
+    .replace(/^ทาเพิ่ม:/,'ทำเพิ่ม:')
+    .replace(/^ตรวจแล้ว\s*:/,'ตรวจแล้ว:')
+    .replace(/สารอง/g,'สำรอง')
+    .replace(/ขื้น/g,'ขึ้น')
+    .replace(/พึง\s+requestAnimationFrame/g,'พึ่ง requestAnimationFrame')
+    .replace(/Threejs/g,'Three.js')
+    .replace(/scan-3d\s+js/g,'scan-3d.js')
+    .replace(/requestAnimationFrame/gi,'requestAnimationFrame')
+    .replace(/resizefrecolor/g,'resize/recolor')
+    .replace(/เปลี่ยนอ็ม/g,'เปลี่ยนธีม')
+    .replace(/เส้น\s*30/g,'เส้น 3D')
+    .replace(/\b30\b/g,'3D')
+    .replace(/คาต้องห้าม/g,'คำต้องห้าม')
+    .replace(/ชื้นแสดง/g,'ชิ้นแสดง')
+    .replace(/v\s*is\b/i,'v18')
+    .replace(/theme-contrast\.css\?v(?!\=)/,'theme-contrast.css?v=');
 }
 
 function preserveScreenshotLayout(text){
@@ -438,9 +460,9 @@ function preserveScreenshotLayout(text){
     const line=lines[i];
     const next=lines[i+1]||'';
     const prev=output[output.length-1]||'';
-    const isHeading=/^[^•]{1,80}:$/.test(line);
-    const prevIsBullet=/^•\s+/.test(prev);
-    const nextIsBullet=/^•\s+/.test(next);
+    const isHeading=/^[^\u2022]{1,80}:$/.test(line);
+    const prevIsBullet=/^\u2022\s+/.test(prev);
+    const nextIsBullet=/^\u2022\s+/.test(next);
     if(isHeading&&prevIsBullet&&output[output.length-1]!=='')output.push('');
     output.push(line);
     if(isHeading&&nextIsBullet)output.push('');

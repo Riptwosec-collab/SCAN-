@@ -51,11 +51,37 @@ function getSmartScale(source,mode='default'){
   if(mode==='pdf-like'||mode==='doc-clean'||mode==='receipt')scale=Math.max(scale,3.4);
   if(mode==='thai-soft'||mode==='thai-sharp'||mode==='thai-adaptive'||mode==='thai-line')scale=Math.max(scale,4.4);
   if(mode==='ui-detail'||mode==='ui-crisp'||mode==='ui-binary'||mode==='ui-sharp'||mode==='ui-adaptive')scale=Math.max(scale,4.8);
+  if(mode==='dark-ui'||mode==='dark-ui-binary'||mode==='dark-ui-adaptive')scale=Math.max(scale,5);
   if(mode==='doc-adaptive')scale=Math.max(scale,3.8);
   if(minSide<900)scale=Math.max(scale,4.2);
   if(minSide<520)scale=Math.max(scale,5);
   if(maxSide>2600)scale=Math.min(scale,2.4);
   return Math.max(1,Math.min(5,scale));
+}
+
+function getCanvasBrightness(source){
+  const probe=document.createElement('canvas');
+  const maxSide=Math.max(source.width,source.height);
+  const scale=maxSide>420?420/maxSide:1;
+  probe.width=Math.max(1,Math.round(source.width*scale));
+  probe.height=Math.max(1,Math.round(source.height*scale));
+  const ctx=probe.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(source,0,0,probe.width,probe.height);
+  const data=ctx.getImageData(0,0,probe.width,probe.height).data;
+  let sum=0,dark=0,light=0;
+  for(let i=0;i<data.length;i+=4){
+    const gray=.299*data[i]+.587*data[i+1]+.114*data[i+2];
+    sum+=gray;
+    if(gray<72)dark++;
+    if(gray>178)light++;
+  }
+  const pixels=data.length/4;
+  return {avg:sum/pixels,darkRatio:dark/pixels,lightRatio:light/pixels};
+}
+
+function isDarkScreenshot(source){
+  const stats=getCanvasBrightness(source);
+  return stats.avg<105&&stats.darkRatio>.45&&stats.lightRatio>.015;
 }
 
 function clampByte(value){
@@ -124,13 +150,25 @@ function preprocessCanvas(source,mode='default'){
     sum+=gray;
   }
   const avg=sum/(d.length/4);
+  const darkMode=mode==='dark-ui'||mode==='dark-ui-binary'||mode==='dark-ui-adaptive';
 
   for(let i=0;i<d.length;i+=4){
     let v=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+    if(darkMode)v=255-v;
 
     if(mode==='soft'||mode==='auto-preview'){
       v=(v-128)*1.35+128;
       d[i]=d[i+1]=d[i+2]=Math.max(0,Math.min(255,v));
+    }else if(mode==='dark-ui'){
+      v=(v-128)*2.15+128;
+      d[i]=d[i+1]=d[i+2]=clampByte(v);
+    }else if(mode==='dark-ui-binary'){
+      v=(v-128)*2.3+128;
+      v=v>138?255:0;
+      d[i]=d[i+1]=d[i+2]=v;
+    }else if(mode==='dark-ui-adaptive'){
+      v=(v-128)*1.75+128;
+      d[i]=d[i+1]=d[i+2]=clampByte(v);
     }else if(mode==='binary'||mode==='default'){
       v=(v-128)*1.55+128;
       v=v>Math.max(135,Math.min(175,avg*.95))?255:0;
@@ -185,7 +223,9 @@ function preprocessCanvas(source,mode='default'){
     }
   }
   if(mode==='ui-sharp'||mode==='thai-sharp')sharpenImageData(d,canvas.width,canvas.height,.42);
+  if(mode==='dark-ui'||mode==='dark-ui-binary')sharpenImageData(d,canvas.width,canvas.height,.5);
   if(mode==='ui-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,16,7);
+  if(mode==='dark-ui-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,18,9);
   if(mode==='thai-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,20,6);
   if(mode==='doc-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,18,9);
   ctx.putImageData(img,0,0);
@@ -347,9 +387,16 @@ async function recognizeNativeText(canvas,start=0,end=100){
   return {text:lines.join('\n'),confidence:86,mode:'Browser Native'};
 }
 
-function createImageOcrPasses(){
+function createImageOcrPasses(canvas){
   const preset=$('ocrPreset')?.value||AppState.ocrPreset||'auto';
   const engine=$('ocrEngine')?.value||AppState.ocrEngine||'auto';
+  const darkScreenshot=canvas?isDarkScreenshot(canvas):false;
+  const darkPasses=[
+    {name:'Dark Screenshot Line OCR',mode:'dark-ui',psm:'6',dpi:'420'},
+    {name:'Dark Screenshot Binary',mode:'dark-ui-binary',psm:'6',dpi:'420'},
+    {name:'Dark Screenshot Sparse',mode:'dark-ui-adaptive',psm:'11',dpi:'420'},
+    {name:'Dark Screenshot Single Block',mode:'dark-ui',psm:'4',dpi:'420'}
+  ];
   const sets={
     invoice:[
       {name:'Invoice Thai Sharp',mode:'thai-sharp',psm:'6'},
@@ -393,6 +440,7 @@ function createImageOcrPasses(){
       {name:'Gray Document',mode:'gray',psm:'6'}
     ],
     screenshot:[
+      ...darkPasses,
       {name:'UI Sharp Read',mode:'ui-sharp',psm:'6'},
       {name:'UI Adaptive Read',mode:'ui-adaptive',psm:'6'},
       {name:'UI Crisp Text',mode:'ui-crisp',psm:'6'},
@@ -419,6 +467,7 @@ function createImageOcrPasses(){
     ]
   };
   const selected=sets[preset]||[
+    ...(darkScreenshot?darkPasses:[]),
     {name:'Auto Thai Sharp',mode:'thai-sharp',psm:'6'},
     {name:'Auto Thai Adaptive',mode:'thai-adaptive',psm:'6'},
     {name:'Auto Thai Dense',mode:'thai-soft',psm:'4'},
@@ -464,7 +513,7 @@ async function runOcr(canvas,start=0,end=100,profile='image'){
 
   if(!window.Tesseract)throw new Error('โหลด Tesseract.js ไม่สำเร็จ กรุณาต่ออินเทอร์เน็ต');
 
-  const passes=profile==='pdf'?createPdfOcrPasses():createImageOcrPasses();
+  const passes=profile==='pdf'?createPdfOcrPasses():createImageOcrPasses(canvas);
   let best={text:'',confidence:0,score:-Infinity,mode:''};
   const candidates=[];
   if(engine==='auto'){
