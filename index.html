@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="css/pro-tool.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -64,52 +65,45 @@
           <p>จัดมาให้ตรงกับงาน NOC / Helpdesk / Engineer: แปลงไว อ่านง่าย ลดเวลาพิมพ์ซ้ำ และเก็บผลลัพธ์ไปใช้งานต่อได้ทันที</p>
         </div>
       </div>
-      <div class="feature-grid real-grid">
-        <article class="feature-card main-feature">
-          <span class="feature-icon">🧠</span>
-          <b>แก้ข้อความไทยจาก OCR ให้อ่านรู้เรื่อง</b>
-          <p>ช่วยรวมคำที่โดนเว้นวรรคผิด แก้สระหาย และลบอักษรแปลก เช่น <code>เครื อง</code> → <code>เครื่อง</code>, <code>ขั นตอน</code> → <code>ขั้นตอน</code></p>
-          <div class="feature-tags"><span>Thai Cleanup</span><span>Noise Fix</span></div>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon">📄</span>
-          <b>อ่าน PDF ได้ทั้ง Text และ Scan</b>
-          <p>ถ้า PDF มี Text Layer จะดึงข้อความโดยตรง ถ้าเป็นไฟล์สแกนจะ fallback ไป OCR จากภาพหน้าเอกสาร</p>
-          <div class="feature-tags"><span>PDF</span><span>OCR Fallback</span></div>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon">📦</span>
-          <b>Batch OCR หลายไฟล์</b>
-          <p>เหมาะกับรูปจาก LINE/Teams, คู่มือหลายหน้า หรือเอกสารงาน Support ที่ต้องแปลงต่อเนื่องหลายไฟล์</p>
-          <div class="feature-tags"><span>Batch</span><span>Multi-file</span></div>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon">🛠</span>
-          <b>Dictionary หลายสายงาน</b>
-          <p>มีตัวอย่างคำเฉพาะหลายหมวด เช่น IT/NOC, Network, Email/Ticket, บัญชี/ภาษี, เอกสารบริษัท และราชการ</p>
-          <div class="feature-tags"><span>IT/NOC</span><span>บัญชี/ภาษี</span><span>ราชการ</span></div>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon">✂️</span>
-          <b>Crop เฉพาะจุดที่ต้องการ</b>
-          <p>ลากเลือกเฉพาะพื้นที่ข้อความในรูป เพื่อลดสิ่งรบกวนจากเมนู ไอคอน หรือพื้นหลังที่ทำให้ OCR อ่านมั่ว</p>
-          <div class="feature-tags"><span>Crop</span><span>Cleaner Output</span></div>
-        </article>
-        <article class="feature-card">
-          <span class="feature-icon">📤</span>
-          <b>Export พร้อมใช้งานต่อ</b>
-          <p>คัดลอกหรือส่งออกเป็น TXT, DOC, CSV, JSON และไฟล์สำหรับ Print เป็น PDF เพื่อใช้ต่อใน Ticket, Report หรือเอกสารงาน</p>
-          <div class="feature-tags"><span>Export</span><span>Report Ready</span></div>
-        </article>
+      <div class="scan-3d-stage" aria-hidden="true">
+        <canvas id="scan3dCanvas"></canvas>
+        <div class="scan-3d-label"><b>SCAN FLOW</b><span>Image · OCR · Clean · Export</span></div>
       </div>
-      <div class="function-guide">
-        <div class="function-guide-head">
+      <div class="feature-grid real-grid">
+        <details class="feature-card feature-accordion main-feature">
+          <summary><span class="feature-icon">🧠</span><b>แก้ข้อความไทยจาก OCR</b><p>รวมคำไทยผิดช่องว่าง แก้สระหาย และลบอักษรแปลก</p><span class="feature-open">เปิดดู</span></summary>
+          <div class="feature-detail"><p>ช่วยรวมคำที่โดนเว้นวรรคผิด แก้สระหาย และลบอักษรแปลก เช่น <code>เครื อง</code> → <code>เครื่อง</code>, <code>ขั นตอน</code> → <code>ขั้นตอน</code></p><div class="feature-tags"><span>Thai Cleanup</span><span>Noise Fix</span></div></div>
+        </details>
+        <details class="feature-card feature-accordion">
+          <summary><span class="feature-icon">📄</span><b>อ่าน PDF Text / Scan</b><p>ดึง text layer ก่อน แล้ว fallback OCR สำหรับหน้า scan</p><span class="feature-open">เปิดดู</span></summary>
+          <div class="feature-detail"><p>ถ้า PDF มี Text Layer จะดึงข้อความโดยตรง ถ้าเป็นไฟล์สแกนจะ fallback ไป OCR จากภาพหน้าเอกสาร</p><div class="feature-tags"><span>PDF</span><span>OCR Fallback</span></div></div>
+        </details>
+        <details class="feature-card feature-accordion">
+          <summary><span class="feature-icon">📦</span><b>Batch OCR หลายไฟล์</b><p>แปลงรูปภาพและ PDF หลายไฟล์ต่อเนื่อง</p><span class="feature-open">เปิดดู</span></summary>
+          <div class="feature-detail"><p>เหมาะกับรูปจาก LINE/Teams, คู่มือหลายหน้า หรือเอกสารงาน Support ที่ต้องแปลงต่อเนื่องหลายไฟล์</p><div class="feature-tags"><span>Batch</span><span>Multi-file</span></div></div>
+        </details>
+        <details class="feature-card feature-accordion">
+          <summary><span class="feature-icon">🛠</span><b>Dictionary หลายสายงาน</b><p>คำเฉพาะ IT/NOC, Email/Ticket, บัญชี/ภาษี และราชการ</p><span class="feature-open">เปิดดู</span></summary>
+          <div class="feature-detail"><p>มีตัวอย่างคำเฉพาะหลายหมวด เช่น IT/NOC, Network, Email/Ticket, บัญชี/ภาษี, เอกสารบริษัท และราชการ</p><div class="feature-tags"><span>IT/NOC</span><span>บัญชี/ภาษี</span><span>ราชการ</span></div></div>
+        </details>
+        <details class="feature-card feature-accordion">
+          <summary><span class="feature-icon">✂️</span><b>Crop เฉพาะจุด</b><p>ลดพื้นหลัง เมนู ไอคอน และเส้นรบกวนก่อน OCR</p><span class="feature-open">เปิดดู</span></summary>
+          <div class="feature-detail"><p>ลากเลือกเฉพาะพื้นที่ข้อความในรูป เพื่อลดสิ่งรบกวนจากเมนู ไอคอน หรือพื้นหลังที่ทำให้ OCR อ่านมั่ว</p><div class="feature-tags"><span>Crop</span><span>Cleaner Output</span></div></div>
+        </details>
+        <details class="feature-card feature-accordion">
+          <summary><span class="feature-icon">📤</span><b>Export พร้อมใช้งานต่อ</b><p>ส่งออก TXT, DOC, CSV, JSON และไฟล์สำหรับ Print เป็น PDF</p><span class="feature-open">เปิดดู</span></summary>
+          <div class="feature-detail"><p>คัดลอกหรือส่งออกเป็น TXT, DOC, CSV, JSON และไฟล์สำหรับ Print เป็น PDF เพื่อใช้ต่อใน Ticket, Report หรือเอกสารงาน</p><div class="feature-tags"><span>Export</span><span>Report Ready</span></div></div>
+        </details>
+      </div>
+      <details class="function-guide collapsed-guide">
+        <summary class="function-guide-head">
           <div>
             <div class="label">Function Guide</div>
             <h3>คำอธิบายปุ่มและตัวเลือกทั้งหมด</h3>
           </div>
           <p>แยกตามลำดับใช้งานจริง ตั้งแต่เลือกไฟล์ ปรับ OCR ตรวจผล ไปจนถึงส่งออกไฟล์หลังแปลงเสร็จ</p>
-        </div>
+          <span class="guide-toggle">เปิดคู่มือ</span>
+        </summary>
         <div class="guide-grid">
           <details class="guide-card">
             <summary>
@@ -179,7 +173,7 @@
             </div>
           </details>
         </div>
-      </div>
+      </details>
     </section>
 
     <section class="privacy-note clean-section">
@@ -434,5 +428,6 @@
   </div>
 
   <script src="js/state.js"></script><script src="js/utils.js"></script><script src="js/dictionary-it.js"></script><script src="js/custom-rules.js"></script><script src="js/text-cleaner.js"></script><script src="js/quality-review.js"></script><script src="js/crop.js"></script><script src="js/ocr.js"></script><script src="js/pdf-handler.js"></script><script src="js/batch.js"></script><script src="js/search.js"></script><script src="js/exporter.js"></script><script src="js/history.js"></script><script src="js/app.js"></script>
+  <script src="js/scan-3d.js"></script>
 </body>
 </html>

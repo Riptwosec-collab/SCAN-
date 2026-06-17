@@ -25,7 +25,8 @@ const CORE_ASSETS=[
   './js/search.js',
   './js/exporter.js',
   './js/history.js',
-  './js/app.js'
+  './js/app.js',
+  './js/scan-3d.js'
 ];
 
 self.addEventListener('install',event=>{
