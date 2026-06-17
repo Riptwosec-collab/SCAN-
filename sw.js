@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v8';
+const CACHE_NAME='riptwosec-scan-v9';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -13,7 +13,7 @@ const CORE_ASSETS=[
   './css/output-rim.css',
   './css/pro-tool.css',
   './css/themes.css',
-  './css/theme-contrast.css?v=7',
+  './css/theme-contrast.css?v=9',
   './js/state.js',
   './js/theme.js?v=8',
   './js/utils.js',
