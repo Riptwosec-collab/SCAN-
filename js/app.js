@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   bindCropCanvas();
   renderHistory();
   renderCustomRules();
+  renderReadyChecklist();
   setStatus('พร้อมใช้งาน','ok');
 });
 
@@ -64,6 +65,9 @@ function bindAppEvents(){
   bindNextActions();
 
   ['upscale','threshold'].forEach(id=>$(id).addEventListener('change',updateProcessedPreview));
+  ['langSelect','modeSelect','ocrPreset','cleanupLevel','pdfOrientation','removeNoise','cleanThai','itDictionary','highlightFixes','upscale','threshold'].forEach(id=>{
+    $(id)?.addEventListener('change',renderReadyChecklist);
+  });
   $('ocrPreset')?.addEventListener('change',()=>{
     AppState.ocrPreset=$('ocrPreset').value;
     updateProcessedPreview();
@@ -226,6 +230,7 @@ async function showCleanedResult(raw,animate=false){
   const finalScore=AppState.confidence??calculateConfidence(raw,cleaned);
   AppState.confidence=finalScore;
   renderConfidence(finalScore);
+  renderQualityGate(raw,cleaned,finalScore);
 }
 
 function renderOcrCandidates(){

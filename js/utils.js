@@ -8,6 +8,33 @@ function setStatus(message,type=''){
   el.className='status '+type;
 }
 
+function getReadyItems(){
+  const hasInput=AppState.tab==='img'?!!AppState.imageFile:AppState.tab==='pdf'?!!AppState.pdfDoc:(AppState.batchFiles||[]).length>0;
+  const preset=$('ocrPreset')?.value||AppState.ocrPreset||'auto';
+  const cleanup=$('cleanupLevel')?.value||AppState.cleanupLevel||'normal';
+  const dictionary=$('itDictionary')?.checked;
+  const contrast=$('threshold')?.checked;
+  const upscale=$('upscale')?.checked;
+  return [
+    {ok:hasInput,label:'เลือกไฟล์แล้ว',hint:hasInput?'พร้อมอ่านจาก '+(AppState.tab==='batch'?(AppState.batchFiles.length+' ไฟล์'):AppState.tab.toUpperCase()):'เลือกไฟล์ก่อนเริ่มแปลง'},
+    {ok:preset!=='auto'||contrast||upscale,label:'ภาพพร้อม OCR',hint:preset==='auto'?'Auto + '+(contrast?'Contrast':'ไม่เปิด Contrast'):'Preset '+preset},
+    {ok:cleanup!=='raw',label:'เปิด Cleanup',hint:cleanup==='raw'?'Raw OCR ไม่ช่วยแก้คำ':'ระดับ '+cleanup},
+    {ok:dictionary,label:'Dictionary เฉพาะทาง',hint:dictionary?'IT/NOC + บัญชี/ภาษี/ราชการ':'ปิดคลังคำเฉพาะทาง'}
+  ];
+}
+
+function renderReadyChecklist(){
+  const box=$('readyChecklist');
+  if(!box)return;
+  const items=getReadyItems();
+  const score=items.filter(item=>item.ok).length;
+  box.className='ready-card '+(score>=4?'ready-good':score>=2?'ready-warn':'ready-bad');
+  box.innerHTML='<div class="ready-head"><b>Ready Check</b><span>'+score+'/'+items.length+'</span></div>'+
+    '<div class="ready-list">'+items.map(item=>
+      '<div class="ready-item '+(item.ok?'ok':'wait')+'"><i>'+(item.ok?'✓':'!')+'</i><span><b>'+escapeHtml(item.label)+'</b><small>'+escapeHtml(item.hint)+'</small></span></div>'
+    ).join('')+'</div>';
+}
+
 function setProgress(value){
   const el=$('progressBar');
   if(!el)return;
@@ -66,6 +93,38 @@ function hideNextActions(){
   if(panel)panel.classList.add('hide');
 }
 
+function getQualityTips(raw,cleaned,score){
+  const tips=[];
+  const suspicious=typeof findSuspiciousOcrTokens==='function'?findSuspiciousOcrTokens(cleaned||''):[];
+  const weird=((raw||'').match(/[�ƟθϴƩΣÉÊÈË○●$ํ]/g)||[]).length;
+  if(score<70)tips.push('ลอง Crop ให้เหลือเฉพาะช่องข้อความ แล้วแปลงใหม่');
+  if(score<80&&(!$('threshold')?.checked||!$('upscale')?.checked))tips.push('เปิด ขยายภาพ และ Contrast เพื่อเพิ่มความคมก่อน OCR');
+  if((AppState.ocrCandidates||[]).length>1)tips.push('ตรวจ OCR Candidates ถ้าผลหลักอ่านเพี้ยน ให้เลือก candidate ที่ใกล้กว่า');
+  if(suspicious.length)tips.push('ตรวจจุดต้องสงสัย: '+suspicious.slice(0,4).map(item=>item.name).join(', '));
+  if(weird>2)tips.push('ภาพต้นฉบับมีสัญลักษณ์/รอยขยะเยอะ ควรตัดพื้นหลังหรือเส้นตารางออก');
+  if(AppState.fixedWords.length>30)tips.push('มีการแก้คำหลายจุด ควรอ่านทวนก่อนส่งออกเป็น DOC/PDF');
+  if(!tips.length)tips.push('คุณภาพอยู่ในเกณฑ์พร้อมใช้งานต่อ ตรวจชื่อเฉพาะ/ตัวเลขสำคัญอีกครั้งก่อนส่งออก');
+  return tips.slice(0,5);
+}
+
+function renderQualityGate(raw,cleaned,score){
+  const box=$('qualityGate');
+  if(!box)return;
+  if(!cleaned){
+    box.classList.add('hide');
+    box.innerHTML='';
+    return;
+  }
+  const level=score>=85?'good':score>=70?'warn':'bad';
+  const label=score>=85?'พร้อมใช้งาน':score>=70?'ควรตรวจทวน':'ต้องปรับภาพ/ตัวเลือก';
+  const rawLen=(raw||'').replace(/\s/g,'').length;
+  const cleanLen=(cleaned||'').replace(/\s/g,'').length;
+  const tips=getQualityTips(raw,cleaned,score);
+  box.className='quality-gate '+level;
+  box.innerHTML='<div class="quality-main"><span class="quality-score">'+score+'%</span><span><b>'+label+'</b><small>Fixed '+AppState.fixedWords.length+' จุด · Raw '+rawLen+' ตัว · Clean '+cleanLen+' ตัว</small></span></div>'+
+    '<div class="quality-tips">'+tips.map(tip=>'<span>'+escapeHtml(tip)+'</span>').join('')+'</div>';
+}
+
 function setFileSuccess(infoId,nameId,fileOrText,mode='single'){
   const info=$(infoId);
   const name=$(nameId);
@@ -75,6 +134,7 @@ function setFileSuccess(infoId,nameId,fileOrText,mode='single'){
   info.classList.add('file-success');
   name.innerHTML='<span class="file-check">✓</span><span class="file-main">อัปโหลดสำเร็จ</span><span class="file-name">'+escapeHtml(label)+'</span>';
   if(mode==='batch')name.innerHTML='<span class="file-check">✓</span><span class="file-main">อัปโหลดสำเร็จ</span><span class="file-name">'+escapeHtml(label)+'</span>';
+  renderReadyChecklist();
 }
 
 function clearFileSuccess(infoId,nameId,defaultText){
@@ -115,9 +175,15 @@ function clearOutput(){
     candidates.classList.add('hide');
     candidates.innerHTML='';
   }
+  const quality=$('qualityGate');
+  if(quality){
+    quality.classList.add('hide');
+    quality.innerHTML='';
+  }
 
   setProgress(0);
   setStatus('ล้างผลลัพธ์แล้ว','ok');
+  renderReadyChecklist();
 }
 
 function clearCanvas(id){
@@ -148,6 +214,7 @@ function removeImageFile(){
   const cropBtn=$('enableCropBtn');
   if(cropBtn)cropBtn.textContent='เปิด Crop';
   setStatus('ยกเลิกไฟล์รูปภาพแล้ว สามารถอัปโหลดใหม่ได้','ok');
+  renderReadyChecklist();
 }
 
 function removePdfFile(){
@@ -167,6 +234,7 @@ function removePdfFile(){
   $('pageFrom').value=1;
   $('pageTo').value=1;
   setStatus('ยกเลิกไฟล์ PDF แล้ว สามารถอัปโหลดใหม่ได้','ok');
+  renderReadyChecklist();
 }
 
 function removeBatchFiles(){
@@ -182,6 +250,7 @@ function removeBatchFiles(){
   if(info){info.classList.remove('file-success','file-pending','file-error');info.classList.add('hide');}
   clearFileSuccess('batchFileInfo','batchFileName','ยังไม่ได้เลือกไฟล์');
   setStatus('ยกเลิกไฟล์ Batch แล้ว สามารถอัปโหลดใหม่ได้','ok');
+  renderReadyChecklist();
 }
 
 function resetAll(){
