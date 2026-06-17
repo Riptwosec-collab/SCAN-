@@ -3,11 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b0e11">
   <title>RIPTWOSEC.SCAN | OCR สำหรับเอกสาร IT ภาษาไทย</title>
   <meta name="description" content="OCR สำหรับเอกสาร IT, PDF, รูปภาพ และข้อความภาษาไทย แก้คำไทยเพี้ยน รองรับ Batch OCR และ Export หลายรูปแบบ">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/features.css">
   <link rel="stylesheet" href="css/background.css">
@@ -283,6 +285,37 @@
             <div id="batchList" class="batch-list"></div>
           </div>
 
+          <details class="wizard-box" open>
+            <summary>Preset Wizard / Demo</summary>
+            <div class="wizard-grid">
+              <select id="wizardDocType">
+                <option value="ticket">งาน IT Ticket</option>
+                <option value="invoice">ใบกำกับภาษี</option>
+                <option value="email-alert">Email แจ้งเตือน</option>
+                <option value="government">เอกสารราชการ</option>
+                <option value="table">ตาราง / ฟอร์ม</option>
+              </select>
+              <select id="wizardQuality">
+                <option value="clean">ภาพชัด</option>
+                <option value="blur">ภาพเบลอ / มือถือ</option>
+                <option value="scan">PDF Scan</option>
+              </select>
+              <select id="wizardLayout">
+                <option value="normal">ข้อความทั่วไป</option>
+                <option value="table">มีตาราง</option>
+                <option value="email">มีหัวอีเมล</option>
+              </select>
+              <button class="btn small" id="applyWizardBtn" type="button">ตั้งค่าให้เหมาะสุด</button>
+            </div>
+            <div class="demo-samples" aria-label="โหลดตัวอย่างเดโม">
+              <button class="sample-btn" data-sample="invoice" type="button">ใบกำกับภาษี</button>
+              <button class="sample-btn" data-sample="ticket" type="button">Ticket IT</button>
+              <button class="sample-btn" data-sample="email" type="button">Email</button>
+              <button class="sample-btn" data-sample="government" type="button">ราชการ</button>
+              <button class="sample-btn" data-image-sample="invoice" type="button">ภาพ Mock</button>
+            </div>
+          </details>
+
           <div class="step-title space-top"><span>02</span><b>Options</b></div>
           <div class="row compact-row">
             <select id="langSelect"><option value="tha+eng">ไทย + อังกฤษ</option><option value="tha">ไทย</option><option value="eng">อังกฤษ</option></select>
@@ -360,9 +393,12 @@
             <input id="searchInput" placeholder="ค้นหา เช่น CUCM, SD-WAN, NOC">
             <button class="btn small" id="searchBtn">Search</button>
             <button class="btn small" id="clearSearchBtn">Clear</button>
+            <button class="btn small" id="compareBtn" type="button">Compare</button>
+            <button class="btn small" id="undoCleanBtn" type="button">Raw OCR</button>
           </div>
           <div id="candidateBox" class="candidate-box hide"></div>
           <div id="qualityGate" class="quality-gate hide" aria-live="polite"></div>
+          <div id="comparePanel" class="compare-panel hide" aria-live="polite"></div>
           <div id="output" class="out output-only">ผลลัพธ์จะแสดงที่นี่</div>
           <details class="fix-box">
             <summary>Fixed Words</summary>
@@ -372,6 +408,14 @@
             <div class="next-head">
               <b>ดำเนินการต่อเพื่อ...</b>
               <span>เลือกงานต่อหลังแปลงเสร็จ</span>
+            </div>
+            <div id="exportReview" class="export-review">
+              <b>Review Checklist ก่อน DOC/PDF</b>
+              <label><input type="checkbox" data-review-check> ตรวจเลขเอกสาร / Ticket No.</label>
+              <label><input type="checkbox" data-review-check> ตรวจวันที่ / เวลา</label>
+              <label><input type="checkbox" data-review-check> ตรวจยอดเงิน / จำนวน</label>
+              <label><input type="checkbox" data-review-check> ตรวจ URL / Email / ชื่อระบบ</label>
+              <label><input type="checkbox" data-review-check> ตรวจชื่อเฉพาะและคำที่ระบบแก้</label>
             </div>
             <div class="next-grid">
               <button class="next-action" data-next-action="copy" type="button"><span class="next-icon green">⧉</span><b>คัดลอก</b><i>Copy</i></button>

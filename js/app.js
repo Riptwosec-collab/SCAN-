@@ -61,6 +61,15 @@ function bindAppEvents(){
   $('addRuleBtn').onclick=addCustomRule;
   $('searchBtn').onclick=searchOutput;
   $('clearSearchBtn').onclick=clearSearch;
+  $('compareBtn').onclick=toggleComparePanel;
+  $('undoCleanBtn').onclick=restoreRawOcr;
+  $('applyWizardBtn').onclick=applyPresetWizard;
+  document.querySelectorAll('[data-sample]').forEach(button=>{
+    button.onclick=()=>loadDemoSample(button.dataset.sample);
+  });
+  document.querySelectorAll('[data-image-sample]').forEach(button=>{
+    button.onclick=()=>loadDemoImageSample(button.dataset.imageSample);
+  });
   bindUploadSourceButtons();
   bindNextActions();
 
@@ -81,6 +90,151 @@ function bindAppEvents(){
     AppState.pdfOrientation=$('pdfOrientation').value;
     setStatus('ตั้งค่า PDF เป็น '+($('pdfOrientation').value==='landscape'?'แนวนอน':'แนวตั้ง'),'ok');
   });
+  registerPwa();
+}
+
+const DEMO_SAMPLES={
+  invoice:{
+    preset:'invoice',
+    name:'demo-invoice-scan.txt',
+    raw:'ใบกาํ กับภาษี\nบริษท ตัวอย่าง จากัด\nเลขประจาํ ตัวผู้เสียภาษี 0105559999999\nจานวนเงิน 12,500.00 บาท\nโทรศัพท 02-123-4567',
+  },
+  ticket:{
+    preset:'ticket',
+    name:'demo-ticket-it.txt',
+    raw:'Ticket Mo. ฟี-2114909\nรบกรนตรวจสรบ SD WAN link down\nผู้แจ้ง: noc@workd, go th\nเวลาที่พบปัญหา 10:35 น.\nขัตมูลเพ็มเติม: ping gateway ไม่ผ่าน',
+  },
+  email:{
+    preset:'email-alert',
+    name:'demo-email-alert.txt',
+    raw:'Audi: 17/06/2026 08:44\nจาก: monitor@networkdrd, oo.th\nเรื่อง: ธีเมล Alert CPU High\nรบกรนทตสอบอีกครัง ในโหมด Incognito',
+  },
+  government:{
+    preset:'government',
+    name:'demo-government-doc.txt',
+    raw:'หนังสือมอมอำนาจ\nเรื่อง สาคัญ ขออนุมตเข้าตรวจสอบระบบ\nที่อยู 120 หมู่ 3\nขอแสดงตวามนับถืต\nคสุณ เจ้าหน้าที่',
+  }
+};
+
+function loadDemoSample(key){
+  const sample=DEMO_SAMPLES[key];
+  if(!sample)return;
+  clearOutput();
+  AppState.sourceName=sample.name;
+  AppState.rawText=sample.raw;
+  AppState.ocrCandidates=[];
+  if($('ocrPreset')){
+    $('ocrPreset').value=sample.preset;
+    AppState.ocrPreset=sample.preset;
+    applyProfessionalPreset(sample.preset);
+  }
+  showCleanedResult(sample.raw,true);
+  setProgress(100);
+  setStatus('โหลด Demo sample แล้ว · ทดลอง Compare หรือ Export ได้ทันที','ok');
+  scrollToOutputBox();
+}
+
+function loadDemoImageSample(key){
+  const sample=DEMO_SAMPLES[key]||DEMO_SAMPLES.invoice;
+  clearOutput();
+  switchTab('img');
+  const canvas=document.createElement('canvas');
+  canvas.width=1100;
+  canvas.height=720;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#f8fafc';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#111827';
+  ctx.font='700 38px Sarabun, Arial';
+  ctx.fillText('ใบกาํ กับภาษี / TAX INVOICE',70,90);
+  ctx.font='28px Sarabun, Arial';
+  sample.raw.split('\n').forEach((line,index)=>ctx.fillText(line,80,165+(index*62)));
+  ctx.strokeStyle='#94a3b8';
+  ctx.lineWidth=2;
+  for(let y=130;y<650;y+=62){
+    ctx.beginPath();
+    ctx.moveTo(60,y);
+    ctx.lineTo(1040,y);
+    ctx.stroke();
+  }
+  AppState.imageCanvas=canvas;
+  AppState.processedCanvas=null;
+  AppState.imageFile={name:'demo-invoice-image-mock.png',type:'image/png'};
+  AppState.sourceName='demo-invoice-image-mock.png';
+  AppState.crop=null;
+  if($('ocrPreset')){
+    $('ocrPreset').value='invoice';
+    AppState.ocrPreset='invoice';
+    applyProfessionalPreset('invoice');
+  }
+  setFileSuccess('imgFileInfo','imgFileName',AppState.imageFile);
+  drawImagePreview();
+  updateProcessedPreview();
+  setStatus('สร้างภาพ Mock แล้ว · กดแปลงเพื่อทดสอบ OCR จากภาพ','ok');
+  renderReadyChecklist();
+}
+
+function applyPresetWizard(){
+  const docType=$('wizardDocType')?.value||'ticket';
+  const quality=$('wizardQuality')?.value||'clean';
+  const layout=$('wizardLayout')?.value||'normal';
+  let preset=docType;
+  if(quality==='blur')preset='mobile';
+  if(layout==='table')preset='table';
+  if(layout==='email')preset='email-alert';
+  if($('ocrPreset')){
+    $('ocrPreset').value=preset;
+    AppState.ocrPreset=preset;
+    applyProfessionalPreset(preset);
+  }
+  if(quality==='blur'||quality==='scan'){
+    if($('upscale'))$('upscale').checked=true;
+    if($('threshold'))$('threshold').checked=true;
+  }
+  if(layout==='table'&&$('pdfOrientation')){
+    $('pdfOrientation').value='landscape';
+    AppState.pdfOrientation='landscape';
+  }
+  updateProcessedPreview();
+  renderReadyChecklist();
+  setStatus('Wizard ตั้งค่าให้แล้ว: '+($('ocrPreset')?.selectedOptions?.[0]?.textContent||preset),'ok');
+}
+
+function toggleComparePanel(){
+  const panel=$('comparePanel');
+  if(!panel)return;
+  if(panel.classList.contains('hide')){
+    renderComparePanel();
+    panel.classList.remove('hide');
+  }else{
+    panel.classList.add('hide');
+  }
+}
+
+function renderComparePanel(){
+  const panel=$('comparePanel');
+  if(!panel)return;
+  const raw=AppState.rawText||'ยังไม่มี Raw OCR';
+  const clean=AppState.lastText||$('output')?.innerText||'ยังไม่มี Cleaned Output';
+  panel.innerHTML='<div class="compare-col"><b>Raw OCR</b><pre>'+escapeHtml(raw)+'</pre></div>'+
+    '<div class="compare-col"><b>Cleaned Output</b><pre>'+escapeHtml(clean)+'</pre></div>';
+}
+
+function restoreRawOcr(){
+  if(!AppState.rawText){
+    setStatus('ยังไม่มี Raw OCR ให้ย้อนกลับ','err');
+    return;
+  }
+  AppState.lastText=AppState.rawText;
+  showOutput(AppState.rawText);
+  renderComparePanel();
+  setStatus('แสดง Raw OCR แล้ว · กดจัดข้อความใหม่เพื่อกลับไป Cleaned Output','ok');
+}
+
+function registerPwa(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
 }
 
 function applyProfessionalPreset(preset){
@@ -254,6 +408,7 @@ async function showCleanedResult(raw,animate=false){
   AppState.confidence=finalScore;
   renderConfidence(finalScore);
   renderQualityGate(raw,cleaned,finalScore);
+  if(!$('comparePanel')?.classList.contains('hide'))renderComparePanel();
 }
 
 function renderOcrCandidates(){

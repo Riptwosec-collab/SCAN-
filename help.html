@@ -40,6 +40,16 @@
     </section>
 
     <section class="demo-block">
+      <h2>Demo Sample ในหน้า Tool</h2>
+      <ul>
+        <li>กดปุ่ม ใบกำกับภาษี, Ticket IT, Email หรือ ราชการ เพื่อโหลด raw OCR จำลองแล้วดูผลก่อน/หลังทันที</li>
+        <li>กดปุ่ม ภาพ Mock เพื่อสร้างภาพตัวอย่างบน canvas แล้วทดสอบ OCR จากรูปจริงใน browser</li>
+        <li>ใช้ปุ่ม Compare เพื่อเทียบ Raw OCR กับ Cleaned Output แบบสองคอลัมน์ก่อน export</li>
+        <li>เมื่อต้องใช้บ่อย สามารถติดตั้งเป็นแอปจาก browser ได้หาก browser รองรับ PWA</li>
+      </ul>
+    </section>
+
+    <section class="demo-block">
       <div class="function-guide-head">
         <div>
           <div class="label">OCR Benchmark Pack</div>
@@ -99,6 +109,26 @@
         <li>ตรวจเลขเอกสาร วันที่ ยอดเงิน URL อีเมล และชื่อระบบด้วยตาอีกครั้งเสมอ</li>
         <li>เก็บ raw output และ cleaned output เป็น JSON เมื่อต้องการ audit ภายหลัง</li>
       </ul>
+    </section>
+
+    <section class="demo-block">
+      <div class="function-guide-head">
+        <div>
+          <div class="label">Benchmark Scoreboard</div>
+          <h2>ตารางคะแนนตัวอย่างก่อน/หลัง</h2>
+        </div>
+        <p>ใช้เป็น baseline สำหรับโชว์คุณภาพกับผู้ใช้หรือลูกค้าเมื่อทดสอบไฟล์จริงของแต่ละองค์กร</p>
+      </div>
+      <table class="scoreboard">
+        <thead><tr><th>ชุดทดสอบ</th><th>Raw OCR Quality</th><th>Fixed Words</th><th>Confidence หลัง Cleanup</th><th>จุดที่ต้องตรวจด้วยตา</th></tr></thead>
+        <tbody>
+          <tr><td>รูปมือถือเบลอ</td><td>62%</td><td>8-15 จุด</td><td>78-88%</td><td>ชื่อเฉพาะ, ตัวเลข, เวลา</td></tr>
+          <tr><td>PDF Scan</td><td>70%</td><td>6-12 จุด</td><td>84-92%</td><td>เลขประจำตัว, จำนวนเงิน, วันที่</td></tr>
+          <tr><td>ตาราง / ฟอร์ม</td><td>58%</td><td>10-20 จุด</td><td>72-86%</td><td>ลำดับแถว, เส้นตาราง, ยอดรวม</td></tr>
+          <tr><td>Ticket / Email IT</td><td>68%</td><td>7-14 จุด</td><td>82-91%</td><td>Ticket No., URL, Email, Hostname</td></tr>
+          <tr><td>เอกสารราชการ</td><td>66%</td><td>8-16 จุด</td><td>80-90%</td><td>เลขหนังสือ, ชื่อหน่วยงาน, วันที่</td></tr>
+        </tbody>
+      </table>
     </section>
   </main>
 

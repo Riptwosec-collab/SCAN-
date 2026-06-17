@@ -57,6 +57,21 @@ function renderTextItems(items){
   return items.map(item=>'[ไฟล์ '+item.index+': '+item.filename+' · '+getOrientationLabel(item.orientation)+']\n'+(item.cleanedText||'')).join('\n\n');
 }
 
+function exportReviewReady(){
+  const checks=[...document.querySelectorAll('[data-review-check]')];
+  if(!checks.length)return true;
+  const missing=checks.filter(check=>!check.checked).length;
+  const panel=$('exportReview');
+  if(missing){
+    panel?.classList.add('review-required');
+    setStatus('กรุณาติ๊ก Review Checklist ก่อนส่งออก DOC/PDF · เหลือ '+missing+' รายการ','err');
+    panel?.scrollIntoView({block:'center'});
+    return false;
+  }
+  panel?.classList.remove('review-required');
+  return true;
+}
+
 function getExportReportMeta(layout,items){
   const exportedAt=new Date();
   const source=AppState.sourceName||items.map(item=>item.filename).join(', ')||'riptwosec-scan';
@@ -107,6 +122,7 @@ function exportTxt(){
 }
 
 function exportDoc(){
+  if(!exportReviewReady())return;
   const items=getExportItems();
   const layout=getOrientationLayout(items[0]?.orientation||getExportOrientation());
   const meta=getExportReportMeta(layout,items);
@@ -162,6 +178,7 @@ function exportJson(){
 }
 
 function exportPrintPdf(){
+  if(!exportReviewReady())return;
   const items=getExportItems();
   const layout=getOrientationLayout(items[0]?.orientation||getExportOrientation());
   const meta=getExportReportMeta(layout,items);
