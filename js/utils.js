@@ -1,5 +1,6 @@
 const $=id=>document.getElementById(id);
 let outputSuccessTimer=null;
+let autoDeleteTimer=null;
 
 function setStatus(message,type=''){
   const el=$('status');
@@ -81,7 +82,8 @@ function clearOutputState(){
 function showOutput(text){
   AppState.lastText=(text||'').trim();
   $('output').textContent=AppState.lastText||'ไม่พบข้อความ';
-  if(AppState.lastText)saveHistory(AppState.lastText);
+  AppState.privacyMode=!!$('privacyMode')?.checked;
+  if(AppState.lastText&&!AppState.privacyMode)saveHistory(AppState.lastText);
   showNextActions();
 }
 
@@ -154,6 +156,9 @@ function clearOutput(){
   AppState.fixedWords=[];
   AppState.confidence=null;
   AppState.batchResults=[];
+  AppState.pdfPageInfo=[];
+  AppState.pdfCompareResult=null;
+  if(typeof renderPdfPageResults==='function')renderPdfPageResults();
 
   const output=$('output');
   if(output)output.textContent='ผลลัพธ์จะแสดงที่นี่';
@@ -186,6 +191,19 @@ function clearOutput(){
   setProgress(0);
   setStatus('ล้างผลลัพธ์แล้ว','ok');
   renderReadyChecklist();
+}
+
+function scheduleAutoDelete(){
+  if(autoDeleteTimer){clearTimeout(autoDeleteTimer);autoDeleteTimer=null;}
+  const minutes=Number($('autoDeleteMinutes')?.value||AppState.autoDeleteMinutes||0);
+  AppState.autoDeleteMinutes=minutes;
+  if(!minutes)return;
+  autoDeleteTimer=setTimeout(()=>{
+    autoDeleteTimer=null;
+    resetAll();
+    setStatus('ลบไฟล์และผลลัพธ์อัตโนมัติแล้วตาม Privacy setting','ok');
+  },minutes*60*1000);
+  setStatus('ตั้ง auto-delete ใน '+minutes+' นาที','ok');
 }
 
 function clearCanvas(id){
@@ -224,12 +242,18 @@ function removePdfFile(){
   AppState.pdfDoc=null;
   AppState.pdfPages=0;
   AppState.pdfPageInfo=[];
+  AppState.pdfCompareFile=null;
+  AppState.pdfCompareResult=null;
   AppState.sourceName='';
   const input=$('pdfInput');
   if(input)input.value='';
   clearCanvas('pdfPreview');
   const thumbs=$('pdfThumbs');
   if(thumbs)thumbs.innerHTML='';
+  const compareInput=$('pdfCompareInput');
+  if(compareInput)compareInput.value='';
+  const compareResult=$('pdfCompareResult');
+  if(compareResult)compareResult.innerHTML='';
   const info=$('pdfFileInfo');
   if(info){info.classList.remove('file-success','file-pending','file-error');info.classList.add('hide');}
   clearFileSuccess('pdfFileInfo','pdfFileName','ยังไม่ได้เลือกไฟล์');

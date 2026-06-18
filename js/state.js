@@ -8,6 +8,9 @@ window.AppState={
   pdfDoc:null,
   pdfPages:0,
   pdfPageInfo:[],
+  pdfSkill:'auto-pdf',
+  pdfCompareFile:null,
+  pdfCompareResult:null,
   batchFiles:[],
   batchResults:[],
   lastText:'',
@@ -23,5 +26,7 @@ window.AppState={
   sourceName:'',
   uploadSource:'local',
   pdfOrientation:'portrait',
+  privacyMode:false,
+  autoDeleteMinutes:0,
   theme:'carbon'
 };

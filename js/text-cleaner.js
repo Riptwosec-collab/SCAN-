@@ -383,9 +383,9 @@ function toEmail(text){
   const {headers,body}=splitHeaderBody(getCleanLines(text));
   const preferred=['วันที่','จาก','ถึง','เรื่อง','Date','From','To','Subject','Ticket No.'];
   const sortedHeaders=[...headers].sort((a,b)=>{
-    const ai=preferred.findIndex(label=>a.toLowerCase().startsWith(label.toLowerCase()));
-    const bi=preferred.findIndex(label=>b.toLowerCase().startsWith(label.toLowerCase()));
-    return (ai<0?99:ai)-(bi<0?99:bi);
+    const orderA=preferred.findIndex(label=>a.toLowerCase().startsWith(label.toLowerCase()));
+    const orderB=preferred.findIndex(label=>b.toLowerCase().startsWith(label.toLowerCase()));
+    return (orderA<0?99:orderA)-(orderB<0?99:orderB);
   });
   return [...sortedHeaders,'',...body.map(line=>line.replace(/^[-•]\s*/,'- '))].join('\n').trim();
 }

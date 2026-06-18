@@ -71,12 +71,13 @@ function bindAppEvents(){
     button.onclick=()=>loadDemoImageSample(button.dataset.imageSample);
   });
   if(typeof bindOcrSkillSelector==='function')bindOcrSkillSelector();
+  if(typeof bindPdfSkillSelector==='function')bindPdfSkillSelector();
   bindQuickModeButtons();
   bindUploadSourceButtons();
   bindNextActions();
 
   ['upscale','threshold'].forEach(id=>$(id).addEventListener('change',updateProcessedPreview));
-  ['langSelect','modeSelect','ocrPreset','ocrEngine','cleanupLevel','pdfOrientation','removeNoise','cleanThai','itDictionary','highlightFixes','upscale','threshold','ocrSkillSelect'].forEach(id=>{
+  ['langSelect','modeSelect','ocrPreset','ocrEngine','cleanupLevel','pdfOrientation','removeNoise','cleanThai','itDictionary','highlightFixes','upscale','threshold','ocrSkillSelect','pdfSkillSelect','skipBlankPdfPages','privacyMode','autoDeleteMinutes'].forEach(id=>{
     $(id)?.addEventListener('change',()=>{
       renderReadyChecklist();
       if(id==='modeSelect')syncQuickModeButtons();
@@ -325,9 +326,13 @@ function bindNextActions(){
     copy:copyOutput,
     txt:exportTxt,
     doc:exportDoc,
+    docx:exportDocx,
     csv:exportCsv,
     json:exportJson,
-    pdf:exportPrintPdf
+    pdf:exportPrintPdf,
+    excel:exportExcel,
+    markdown:exportMarkdown,
+    searchpdf:exportSearchablePdf
   };
   document.querySelectorAll('[data-next-action]').forEach(button=>{
     button.onclick=()=>actions[button.dataset.nextAction]?.();
@@ -417,6 +422,7 @@ async function scanCurrent(){
     await showCleanedResult(raw,true);
     setProgress(100);
     setStatus('แปลงสำเร็จ · ตรวจละเอียดก่อนแสดงผลแล้ว','ok');
+    if(typeof scheduleAutoDelete==='function')scheduleAutoDelete();
     setTimeout(scrollToOutputBox,120);
   }catch(error){
     clearOutputState();
@@ -443,6 +449,8 @@ async function showCleanedResult(raw,animate=false){
   renderQualityGate(raw,cleaned,finalScore);
   if(!$('comparePanel')?.classList.contains('hide'))renderComparePanel();
   if(typeof renderOcrSkillResult==='function')renderOcrSkillResult();
+  if(typeof updatePdfCleanedPages==='function')updatePdfCleanedPages();
+  if(typeof renderPdfPageResults==='function')renderPdfPageResults();
 }
 
 function renderOcrCandidates(){

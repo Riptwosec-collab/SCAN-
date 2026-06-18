@@ -149,6 +149,86 @@ function exportDoc(){
   setStatus('ดาวน์โหลด DOC แล้ว · '+layout.label+' · '+items.length+' ไฟล์','ok');
 }
 
+function xmlEscape(text){
+  return String(text).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+}
+
+function crc32(bytes){
+  let crc=~0;
+  for(let i=0;i<bytes.length;i++){
+    crc^=bytes[i];
+    for(let j=0;j<8;j++)crc=(crc>>>1)^(0xedb88320&-(crc&1));
+  }
+  return ~crc>>>0;
+}
+
+function dosDateTime(date=new Date()){
+  const time=(date.getHours()<<11)|(date.getMinutes()<<5)|(date.getSeconds()/2);
+  const day=date.getDate();
+  const month=date.getMonth()+1;
+  const year=Math.max(0,date.getFullYear()-1980);
+  return {time:time&0xffff,date:((year<<9)|(month<<5)|day)&0xffff};
+}
+
+function makeZip(files){
+  const encoder=new TextEncoder();
+  const chunks=[];
+  const central=[];
+  let offset=0;
+  const stamp=dosDateTime();
+  const write16=(arr,value)=>{arr.push(value&255,(value>>>8)&255)};
+  const write32=(arr,value)=>{arr.push(value&255,(value>>>8)&255,(value>>>16)&255,(value>>>24)&255)};
+  files.forEach(file=>{
+    const name=encoder.encode(file.name);
+    const data=encoder.encode(file.content);
+    const crc=crc32(data);
+    const local=[];
+    write32(local,0x04034b50);write16(local,20);write16(local,0);write16(local,0);write16(local,stamp.time);write16(local,stamp.date);
+    write32(local,crc);write32(local,data.length);write32(local,data.length);write16(local,name.length);write16(local,0);
+    chunks.push(new Uint8Array(local),name,data);
+    const centralPart=[];
+    write32(centralPart,0x02014b50);write16(centralPart,20);write16(centralPart,20);write16(centralPart,0);write16(centralPart,0);write16(centralPart,stamp.time);write16(centralPart,stamp.date);
+    write32(centralPart,crc);write32(centralPart,data.length);write32(centralPart,data.length);write16(centralPart,name.length);write16(centralPart,0);write16(centralPart,0);write16(centralPart,0);write16(centralPart,0);write32(centralPart,0);write32(centralPart,offset);
+    central.push(new Uint8Array(centralPart),name);
+    offset+=local.length+name.length+data.length;
+  });
+  const centralOffset=offset;
+  const centralSize=central.reduce((sum,part)=>sum+part.length,0);
+  const end=[];
+  write32(end,0x06054b50);write16(end,0);write16(end,0);write16(end,files.length);write16(end,files.length);write32(end,centralSize);write32(end,centralOffset);write16(end,0);
+  return new Blob([...chunks,...central,new Uint8Array(end)],{type:'application/zip'});
+}
+
+function exportDocx(){
+  if(!exportReviewReady())return;
+  const items=getExportItems();
+  const paragraphs=[];
+  paragraphs.push('RIPTWOSEC.SCAN OCR REPORT');
+  paragraphs.push('Source: '+(AppState.sourceName||items.map(item=>item.filename).join(', ')));
+  paragraphs.push('Exported: '+new Date().toLocaleString('th-TH'));
+  if(typeof getActivePdfSkill==='function')paragraphs.push('PDF Skill: '+getActivePdfSkill().label+' / '+getActivePdfSkill().title);
+  if(typeof getActiveOcrSkill==='function')paragraphs.push('OCR Skill: '+getActiveOcrSkill().label+' / '+getActiveOcrSkill().title);
+  items.forEach(item=>{
+    paragraphs.push('');
+    paragraphs.push(item.filename||'OCR Output');
+    (item.cleanedText||'').split('\n').forEach(line=>paragraphs.push(line));
+  });
+  const body=paragraphs.map(line=>'<w:p><w:r><w:t xml:space="preserve">'+xmlEscape(line)+'</w:t></w:r></w:p>').join('');
+  const files=[
+    {name:'[Content_Types].xml',content:'<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'},
+    {name:'_rels/.rels',content:'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'},
+    {name:'word/document.xml',content:'<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+body+'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr></w:body></w:document>'}
+  ];
+  const blob=makeZip(files);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='riptwosec-scan.docx';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),800);
+  setStatus('ดาวน์โหลด DOCX แล้ว','ok');
+}
+
 function exportCsv(){
   const items=getExportItems();
   const rows=[['file','orientation','line','text']];
@@ -168,6 +248,7 @@ function exportJson(){
   const payload={
     app:'RIPTWOSEC.SCAN',
     ocrSkill:typeof getActiveOcrSkill==='function'?getActiveOcrSkill():null,
+    pdfSkill:typeof getActivePdfSkill==='function'?getActivePdfSkill():null,
     sourceName:AppState.sourceName||'',
     uploadSource:AppState.uploadSource||'local',
     language:$('langSelect')?.value||'',
@@ -179,11 +260,76 @@ function exportJson(){
     cleanedText:AppState.lastText||$('output').innerText,
     fixedWords:AppState.fixedWords||[],
     pdfPages:AppState.pdfPageInfo||[],
+    pdfCompare:AppState.pdfCompareResult||null,
+    privacyMode:!!AppState.privacyMode,
     files:items,
     batchResults:items,
     exportedAt:new Date().toISOString()
   };
   downloadFile('riptwosec-scan-'+(orientation==='landscape'?'landscape':'portrait')+'.json',JSON.stringify(payload,null,2),'application/json');
+}
+
+function exportMarkdown(){
+  const text=typeof buildPdfMarkdown==='function'?buildPdfMarkdown():('# RIPTWOSEC.SCAN OCR\n\n'+renderTextItems(getExportItems()));
+  downloadFile('riptwosec-scan.md',text,'text/markdown');
+  setStatus('ดาวน์โหลด Markdown แล้ว','ok');
+}
+
+function getPdfTableRows(){
+  const rows=[['file','page','method','confidence','language','layout','line','text']];
+  if(AppState.pdfPageInfo?.length){
+    AppState.pdfPageInfo.forEach(page=>{
+      const layout=Array.isArray(page.layout)?page.layout.join(', '):(page.layout||'');
+      (page.cleanedText||page.text||'').split('\n').forEach((line,index)=>{
+        if(line.trim())rows.push([AppState.sourceName||'',page.page,page.methodLabel||page.method||'',page.confidence??'',page.language||'',layout,index+1,line]);
+      });
+    });
+    return rows;
+  }
+  getExportItems().forEach(item=>{
+    (item.cleanedText||'').split('\n').forEach((line,index)=>{
+      if(line.trim())rows.push([item.filename,'',getOrientationLabel(item.orientation),item.confidence??'','','',index+1,line]);
+    });
+  });
+  return rows;
+}
+
+function exportExcel(){
+  const rows=getPdfTableRows();
+  const html='<!doctype html><html><head><meta charset="utf-8"></head><body><table>'+
+    rows.map((row,rowIndex)=>'<tr>'+row.map(cell=>(rowIndex?'<td>':'<th>')+escapeHtml(cell)+(rowIndex?'</td>':'</th>')).join('')+'</tr>').join('')+
+    '</table></body></html>';
+  downloadFile('riptwosec-scan-excel.xls',html,'application/vnd.ms-excel');
+  setStatus('ดาวน์โหลด Excel-compatible XLS แล้ว','ok');
+}
+
+async function ensurePdfPageImages(){
+  if(!AppState.pdfDoc||!AppState.pdfPageInfo?.length)return;
+  for(const page of AppState.pdfPageInfo){
+    if(page.skippedBlank||page.imageDataUrl)continue;
+    try{
+      page.imageDataUrl=await getPdfPageImageData(page.page,1.2);
+    }catch(error){}
+  }
+}
+
+async function exportSearchablePdf(){
+  if(AppState.pdfPageInfo?.length)await ensurePdfPageImages();
+  const pages=(AppState.pdfPageInfo||[]).filter(page=>!page.skippedBlank);
+  if(!pages.length){
+    exportPrintPdf();
+    return;
+  }
+  const pageHtml=pages.map(page=>{
+    const text=escapeHtml(page.cleanedText||page.text||'');
+    const image=page.imageDataUrl?'<img src="'+page.imageDataUrl+'" alt="หน้า '+page.page+'">':'';
+    return '<section class="search-page">'+image+'<pre>'+text+'</pre></section>';
+  }).join('');
+  const html='<!doctype html><html><head><meta charset="utf-8"><title>Searchable PDF</title><style>'+
+    '@page{size:A4;margin:0}body{margin:0;background:#fff;font-family:Sarabun,Arial;color:#111}.search-page{position:relative;box-sizing:border-box;width:210mm;min-height:297mm;page-break-after:always;overflow:hidden;background:#fff}.search-page:last-child{page-break-after:auto}.search-page img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.search-page pre{position:absolute;left:12mm;right:12mm;top:12mm;white-space:pre-wrap;overflow-wrap:anywhere;font:10px/1.45 Sarabun,Arial;color:rgba(0,0,0,.01)}@media screen{body{background:#222}.search-page{margin:16px auto;box-shadow:0 0 0 1px #ddd}}'+
+    '</style></head><body>'+pageHtml+'</body></html>';
+  downloadFile('riptwosec-searchable-pdf.html',html,'text/html');
+  setStatus('ดาวน์โหลด Searchable PDF HTML แล้ว · เปิดไฟล์แล้ว Print > Save as PDF','ok');
 }
 
 function exportPrintPdf(){

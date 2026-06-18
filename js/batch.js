@@ -40,21 +40,25 @@ async function scanBatch(){
       const data=new Uint8Array(await file.arrayBuffer());
       const previousDoc=AppState.pdfDoc;
       const previousPages=AppState.pdfPages;
+      const previousInfo=AppState.pdfPageInfo;
       AppState.pdfDoc=await pdfjsLib.getDocument({data}).promise;
       AppState.pdfPages=AppState.pdfDoc.numPages;
       const parts=[];
       for(let p=1;p<=AppState.pdfPages;p++){
         setStatus('Batch OCR '+file.name+' · หน้า '+p+'/'+AppState.pdfPages);
-        let text=await extractPdfText(p);
-        if(!text.trim()){
+        const meta=await extractPdfTextMeta(p);
+        let text=(meta.text||'').trim();
+        if(!isTextLayerUsable(text)){
           const canvas=await pdfPageToCanvas(p);
           text=await runOcr(preprocessCanvas(canvas));
         }
+        if($('skipBlankPdfPages')?.checked!==false&&typeof isPdfBlankText==='function'&&isPdfBlankText(text))continue;
         parts.push(formatPageBlock(p,text.trim()||'ไม่พบข้อความในหน้านี้'));
       }
       raw=fileLine+'\n\n'+parts.join('\n\n');
       AppState.pdfDoc=previousDoc;
       AppState.pdfPages=previousPages;
+      AppState.pdfPageInfo=previousInfo;
     }
     const cleaned=cleanText(raw);
     AppState.batchResults.push({filename:file.name,rawText:raw,cleanedText:cleaned,fixedWords:[...AppState.fixedWords],confidence:AppState.confidence});

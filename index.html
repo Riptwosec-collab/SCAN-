@@ -15,9 +15,9 @@
   <link rel="stylesheet" href="css/background.css">
   <link rel="stylesheet" href="css/tool-cleanup.css">
   <link rel="stylesheet" href="css/output-rim.css">
-  <link rel="stylesheet" href="css/pro-tool.css?v=6">
-  <link rel="stylesheet" href="css/themes.css?v=3">
-  <link rel="stylesheet" href="css/theme-contrast.css?v=19">
+  <link rel="stylesheet" href="css/pro-tool.css?v=7">
+  <link rel="stylesheet" href="css/themes.css?v=4">
+  <link rel="stylesheet" href="css/theme-contrast.css?v=20">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js"></script>
@@ -273,9 +273,33 @@
               <input id="pageTo" type="number" min="1" value="1" placeholder="หน้าสุดท้าย">
               <button class="btn small" id="allPagesBtn">ทุกหน้า</button>
             </div>
+            <div class="pdf-skill-panel">
+              <div class="skill-title"><b>PDF OCR Skill</b><span>ตรวจ PDF text / scan / mixed รายหน้า</span></div>
+              <select id="pdfSkillSelect" aria-label="PDF OCR Skill"></select>
+              <details class="ocr-skill-more">
+                <summary>ดู PDF Skills ทั้งหมด</summary>
+                <div id="pdfSkillCards" class="ocr-skill-cards"></div>
+              </details>
+              <div id="pdfSkillConfig" class="ocr-skill-config"></div>
+            </div>
             <div class="checks one-col compact-checks">
               <label><input id="ocrOnlyNoText" type="checkbox" checked> OCR เฉพาะหน้าที่ไม่มี Text Layer</label>
               <label><input id="separatePages" type="checkbox"> แยกผลลัพธ์ตามหน้า</label>
+              <label><input id="skipBlankPdfPages" type="checkbox" checked> ข้ามหน้าว่างอัตโนมัติ</label>
+              <label><input id="privacyMode" type="checkbox"> Privacy Mode ไม่บันทึก History</label>
+            </div>
+            <div class="row compact-row">
+              <select id="autoDeleteMinutes" aria-label="Auto delete">
+                <option value="0" selected>Auto-delete: ปิด</option>
+                <option value="5">ลบข้อมูลใน 5 นาที</option>
+                <option value="15">ลบข้อมูลใน 15 นาที</option>
+                <option value="30">ลบข้อมูลใน 30 นาที</option>
+              </select>
+            </div>
+            <div id="pdfCompareBox" class="pdf-compare-box hide">
+              <input id="pdfCompareInput" type="file" accept="application/pdf">
+              <button class="btn small" id="pdfCompareBtn" type="button">เปรียบเทียบ PDF 2 ไฟล์</button>
+              <div id="pdfCompareResult" class="pdf-compare-result"></div>
             </div>
             <div id="pdfThumbs" class="thumbs"></div>
             <canvas id="pdfPreview" class="preview-canvas wide"></canvas>
@@ -434,6 +458,7 @@
           </div>
           <div id="candidateBox" class="candidate-box hide"></div>
           <div id="qualityGate" class="quality-gate hide" aria-live="polite"></div>
+          <div id="pdfPageResults" class="pdf-page-results hide" aria-live="polite"></div>
           <div id="comparePanel" class="compare-panel hide" aria-live="polite"></div>
           <div id="output" class="out output-only">ผลลัพธ์จะแสดงที่นี่</div>
           <details class="fix-box">
@@ -457,9 +482,13 @@
               <button class="next-action" data-next-action="copy" type="button"><span class="next-icon green">⧉</span><b>คัดลอก</b><i>Copy</i></button>
               <button class="next-action" data-next-action="txt" type="button"><span class="next-icon mint">TXT</span><b>ส่งออก TXT</b><i>Text file</i></button>
               <button class="next-action" data-next-action="doc" type="button"><span class="next-icon blue">DOC</span><b>ส่งออก DOC</b><i>Word-ready</i></button>
+              <button class="next-action" data-next-action="docx" type="button"><span class="next-icon blue">DX</span><b>ส่งออก DOCX</b><i>Word document</i></button>
               <button class="next-action" data-next-action="csv" type="button"><span class="next-icon amber">CSV</span><b>ส่งออก CSV</b><i>ทีละบรรทัด</i></button>
               <button class="next-action" data-next-action="json" type="button"><span class="next-icon violet">{ }</span><b>ส่งออก JSON</b><i>พร้อม metadata</i></button>
               <button class="next-action" data-next-action="pdf" type="button"><span class="next-icon red">PDF</span><b>ทำไฟล์ PDF</b><i>ตามแนวที่เลือก</i></button>
+              <button class="next-action" data-next-action="excel" type="button"><span class="next-icon green">XLS</span><b>ส่งออก Excel</b><i>ตาราง/รายหน้า</i></button>
+              <button class="next-action" data-next-action="markdown" type="button"><span class="next-icon mint">MD</span><b>ส่งออก Markdown</b><i>อ่านต่อได้ง่าย</i></button>
+              <button class="next-action" data-next-action="searchpdf" type="button"><span class="next-icon blue">PDF+</span><b>Searchable PDF</b><i>Print text layer</i></button>
             </div>
           </div>
         </section>
@@ -469,7 +498,7 @@
     <footer class="footer-links"><span>© RIPTWOSEC.SCAN</span><a href="help.html">Help / Demo</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Use</a></footer>
   </div>
 
-  <script src="js/state.js"></script><script src="js/theme.js?v=14"></script><script src="js/utils.js"></script><script src="js/ocr-skills.js?v=2"></script><script src="js/dictionary-it.js"></script><script src="js/custom-rules.js"></script><script src="js/text-cleaner.js?v=8"></script><script src="js/quality-review.js?v=2"></script><script src="js/crop.js"></script><script src="js/ocr.js?v=7"></script><script src="js/pdf-handler.js"></script><script src="js/batch.js"></script><script src="js/search.js"></script><script src="js/exporter.js?v=5"></script><script src="js/history.js"></script><script src="js/app.js?v=5"></script>
+  <script src="js/state.js"></script><script src="js/theme.js?v=15"></script><script src="js/utils.js?v=2"></script><script src="js/ocr-skills.js?v=2"></script><script src="js/pdf-skills.js?v=1"></script><script src="js/dictionary-it.js"></script><script src="js/custom-rules.js"></script><script src="js/text-cleaner.js?v=9"></script><script src="js/quality-review.js?v=2"></script><script src="js/crop.js"></script><script src="js/ocr.js?v=7"></script><script src="js/pdf-handler.js?v=2"></script><script src="js/batch.js?v=2"></script><script src="js/search.js"></script><script src="js/exporter.js?v=6"></script><script src="js/history.js"></script><script src="js/app.js?v=6"></script>
   <script src="js/scan-3d.js?v=5"></script>
 </body>
 </html>
