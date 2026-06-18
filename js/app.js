@@ -70,12 +70,16 @@ function bindAppEvents(){
   document.querySelectorAll('[data-image-sample]').forEach(button=>{
     button.onclick=()=>loadDemoImageSample(button.dataset.imageSample);
   });
+  bindQuickModeButtons();
   bindUploadSourceButtons();
   bindNextActions();
 
   ['upscale','threshold'].forEach(id=>$(id).addEventListener('change',updateProcessedPreview));
   ['langSelect','modeSelect','ocrPreset','ocrEngine','cleanupLevel','pdfOrientation','removeNoise','cleanThai','itDictionary','highlightFixes','upscale','threshold'].forEach(id=>{
-    $(id)?.addEventListener('change',renderReadyChecklist);
+    $(id)?.addEventListener('change',()=>{
+      renderReadyChecklist();
+      if(id==='modeSelect')syncQuickModeButtons();
+    });
   });
   $('ocrPreset')?.addEventListener('change',()=>{
     AppState.ocrPreset=$('ocrPreset').value;
@@ -95,6 +99,27 @@ function bindAppEvents(){
     setStatus('ตั้งค่า PDF เป็น '+($('pdfOrientation').value==='landscape'?'แนวนอน':'แนวตั้ง'),'ok');
   });
   registerPwa();
+}
+
+function bindQuickModeButtons(){
+  document.querySelectorAll('[data-mode-pick]').forEach(button=>{
+    button.onclick=()=>{
+      const mode=button.dataset.modePick;
+      if($('modeSelect'))$('modeSelect').value=mode;
+      syncQuickModeButtons();
+      renderReadyChecklist();
+      if(AppState.rawText)showCleanedResult(AppState.rawText,true);
+      setStatus('ตั้งค่าโหมด: '+button.textContent.trim(),'ok');
+    };
+  });
+  syncQuickModeButtons();
+}
+
+function syncQuickModeButtons(){
+  const current=$('modeSelect')?.value||'clean';
+  document.querySelectorAll('[data-mode-pick]').forEach(button=>{
+    button.classList.toggle('active',button.dataset.modePick===current);
+  });
 }
 
 const DEMO_SAMPLES={
@@ -261,6 +286,7 @@ function applyProfessionalPreset(preset){
   AppState.cleanupLevel=config.cleanup;
   AppState.pdfOrientation=config.orientation;
   AppState.ocrEngine=$('ocrEngine')?.value||AppState.ocrEngine||'auto';
+  syncQuickModeButtons();
   renderReadyChecklist();
   setStatus('ตั้งค่า Preset: '+($('ocrPreset')?.selectedOptions?.[0]?.textContent||preset),'ok');
 }
