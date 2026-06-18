@@ -260,6 +260,8 @@ function scoreOcrText(text,confidence){
   const docTerms=(value.match(/ใบกำกับ|ภาษี|หนังสือ|บริษัท|จำกัด|จำนวนเงิน|ใบเสร็จ|สัญญา|เลขประจำตัว|วันที่|เรื่อง|จาก|ถึง|Ticket|อีเมล|โครงการ|ระบบ|ตรวจสอบ/gi)||[]).length;
   const uiTerms=(value.match(/Options|Preset|Cleanup|Contrast|Dictionary|OCR|Auto|Balanced|Raw|Light|Strict|Search|Clear|Copy|PDF|Batch|Output|แปลง|ภาษา|ไทย|อังกฤษ|ช่องว่าง|อักษร|รายการ|แก้|ขยายภาพ/gi)||[]).length;
   const uiControlTerms=(value.match(/ไทย\s*\+\s*อังกฤษ|ลบช่องว่าง\/อักษรแปลก|Preset:\s*Auto|Cleanup:\s*Balanced|PDF:\s*แนว(?:ตั้ง|นอน)|ลบอักษรแปลก|รวมคำไทยผิดช่องว่าง|Dictionary(?:\s+IT\/NOC|:\s*IT\/NOC|หลายสาย)|รายการคำที่แก้|ขยายภาพ|Contrast/gi)||[]).length;
+  const captureTerms=(value.match(/Ready\s*Check|cleanup\/dictionary\/contrast|เรียงตามภาพ|ล้างคำ|เอกสาร|bump\s+cache|v\d+|dropdown|wireframe|Three\.?js|scan-3d\.js|requestAnimationFrame|theme-contrast\.css/gi)||[]).length;
+  const captureNoise=(value.match(/เฮอฮา|ตาบม|ต่วน|ไมไ่|ซั้ง|โซช้งาน|อยี่|fcontrast|vz\d|LEA/g)||[]).length;
   const lineCount=value.split('\n').filter(x=>x.trim().length>2).length;
   const weird=(value.match(/[�ƟθϴƩΣÉÊÈË|{}<>~`_^«»]/g)||[]).length;
   const shortNoise=(value.match(/\b[a-zA-Z]{1,2}\b/g)||[]).length;
@@ -277,11 +279,13 @@ function scoreOcrText(text,confidence){
   score+=docTerms*22;
   score+=Math.min(70,uiTerms*10);
   score+=Math.min(80,uiControlTerms*16);
+  score+=Math.min(90,captureTerms*18);
   score+=confidence?confidence*.85:0;
   score-=weird*14;
   score-=shortNoise*1.15;
   score-=repeated*12;
   if(suspiciousIp&&networkTerms<2)score-=suspiciousIp*42;
+  score-=captureNoise*18;
   if(len<8)score-=40;
   if(thai===0&&eng>20&&networkTerms<2&&docTerms<2)score-=15;
   score-=ocrRiskScore(value)*2.2;

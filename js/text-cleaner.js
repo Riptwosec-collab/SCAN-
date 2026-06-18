@@ -433,7 +433,7 @@ function normalizeCaptureLine(line){
 }
 
 function fixCaptureTechTerms(line){
-  return String(line||'')
+  return applyCaptureGeneralFixes(String(line||''))
     .replace(/^เฮอฮา\s+Ready Check/g,'เอา Ready Check')
     .replace(/^ทาเพิ่ม:/,'ทำเพิ่ม:')
     .replace(/^ตรวจแล้ว\s*:/,'ตรวจแล้ว:')
@@ -462,6 +462,36 @@ function fixCaptureTechTerms(line){
     .replace(/v\s*is\b|vis\b/i,'v18')
     .replace(/v\s*z3\b|vz3\b/i,'v23')
     .replace(/theme-contrast\.css\?v(?:และ)?/,'theme-contrast.css?v=15');
+}
+
+function applyCaptureGeneralFixes(text){
+  let out=String(text||'');
+  const rules=[
+    [/(^|[\s\u2022])เฮอฮา(?=\s+Ready Check)/g,'$1เอา'],
+    [/ไมไ่/g,'ไม่'],
+    [/ไม\s*พร้อม/g,'ไม่พร้อม'],
+    [/ต่วน/g,'ด่วน'],
+    [/ตาบม/g,'ตาม'],
+    [/ล้างคา(?=\s|,|$)/g,'ล้างคำ'],
+    [/คา(?=\s|,|$)/g,'คำ'],
+    [/หาโน\s+dropdown/g,'หาใน dropdown'],
+    [/\bAA\s+(?=เรียงตามภาพ)/g,'กด '],
+    [/ซั้ง|ชั้ง/g,'ยัง'],
+    [/โซช้งาน|โชช้งาน|โซใช้งาน/g,'ใช้งาน'],
+    [/อยี่/g,'อยู่'],
+    [/\bLEA\b/g,'แต่ค่า'],
+    [/fcontrast/gi,'contrast'],
+    [/cleanup\/dictionary\/f?contrast/gi,'cleanup/dictionary/contrast'],
+    [/Ready\s*check/gi,'Ready Check'],
+    [/bump\s+cache\s+เป็น\s+v\s*z?(\d+)/gi,'bump cache เป็น v$1'],
+    [/v\s*z3\b|vz3\b/gi,'v23'],
+    [/Three\s*js/gi,'Three.js'],
+    [/scan-3d\s+js/gi,'scan-3d.js'],
+    [/resize\s*f\s*recolor/gi,'resize/recolor'],
+    [/theme-contrast\.css\?v(?:และ)?/gi,'theme-contrast.css?v=15']
+  ];
+  for(const [pattern,replacement] of rules)out=out.replace(pattern,replacement);
+  return out;
 }
 
 function prepareCaptureSource(text){
