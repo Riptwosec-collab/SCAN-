@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v23';
+const CACHE_NAME='riptwosec-scan-v24';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -19,14 +19,14 @@ const CORE_ASSETS=[
   './js/utils.js',
   './js/dictionary-it.js',
   './js/custom-rules.js',
-  './js/text-cleaner.js?v=5',
+  './js/text-cleaner.js?v=6',
   './js/quality-review.js?v=2',
   './js/crop.js',
   './js/ocr.js?v=3',
   './js/pdf-handler.js',
   './js/batch.js',
   './js/search.js',
-  './js/exporter.js',
+  './js/exporter.js?v=2',
   './js/history.js',
   './js/app.js?v=3',
   './js/scan-3d.js?v=5'

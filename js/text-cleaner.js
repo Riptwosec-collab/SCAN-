@@ -434,9 +434,19 @@ function normalizeCaptureLine(line){
 
 function fixCaptureTechTerms(line){
   return String(line||'')
+    .replace(/^เฮอฮา\s+Ready Check/g,'เอา Ready Check')
     .replace(/^ทาเพิ่ม:/,'ทำเพิ่ม:')
     .replace(/^ตรวจแล้ว\s*:/,'ตรวจแล้ว:')
     .replace(/สารอง/g,'สำรอง')
+    .replace(/fcontrast/gi,'contrast')
+    .replace(/\bLEA\b/g,'แต่ค่า')
+    .replace(/ซั้งเปิดโซช้งานอยี่/g,'ยังเปิดใช้งานอยู่')
+    .replace(/ซ่อน checkbox cleanup\/dictionary\/contrast ออกจากหน้า แต่ค่า default ยังเปิดใช้งานอยู่/g,'ซ่อน checkbox cleanup/dictionary/contrast ออกจากหน้า แต่ค่า default ยังเปิดใช้งานอยู่')
+    .replace(/โหมดต่วน/g,'โหมดด่วน')
+    .replace(/ล้างคา/g,'ล้างคำ')
+    .replace(/เรียงตาบมภาพ/g,'เรียงตามภาพ')
+    .replace(/(^|\u2022\s+)AA\s+เรียงตามภาพ/g,'$1กด เรียงตามภาพ')
+    .replace(/หาโน dropdown/g,'หาใน dropdown')
     .replace(/ขื้น/g,'ขึ้น')
     .replace(/พึง\s+requestAnimationFrame/g,'พึ่ง requestAnimationFrame')
     .replace(/Threejs/g,'Three.js')
@@ -450,6 +460,7 @@ function fixCaptureTechTerms(line){
     .replace(/คาต้องห้าม/g,'คำต้องห้าม')
     .replace(/ชื้นแสดง/g,'ชิ้นแสดง')
     .replace(/v\s*is\b|vis\b/i,'v18')
+    .replace(/v\s*z3\b|vz3\b/i,'v23')
     .replace(/theme-contrast\.css\?v(?:และ)?/,'theme-contrast.css?v=15');
 }
 
