@@ -84,6 +84,7 @@ function cleanText(text){
     if($('itDictionary')?.checked)result=applyItDictionary(result);
     result=applyCustomRules(result);
     if(typeof applySpellingCorrections==='function')result=applySpellingCorrections(result);
+    result=fixScreenshotLikeOcr(result);
     return result.split('\n').map(line=>line.trim()).filter(Boolean).join('\n');
   }
   if($('itDictionary')?.checked)result=applyItDictionary(result);
@@ -92,6 +93,7 @@ function cleanText(text){
   result=fixUiOcrWords(result);
   if(typeof applySpellingCorrections==='function')result=applySpellingCorrections(result);
   result=postCleanThai(result);
+  result=fixScreenshotLikeOcr(result);
 
   const mode=$('modeSelect')?.value||'clean';
   if(mode==='plain')return result;
@@ -462,6 +464,19 @@ function fixCaptureTechTerms(line){
     .replace(/v\s*is\b|vis\b/i,'v18')
     .replace(/v\s*z3\b|vz3\b/i,'v23')
     .replace(/theme-contrast\.css\?v(?:และ)?/,'theme-contrast.css?v=15');
+}
+
+function isScreenshotLikeOcr(text){
+  const value=String(text||'');
+  return /Ready\s*Check|checkbox|cleanup|dictionary|contrast|dropdown|bump\s+cache|เรียงตามภาพ|ล้างคำ|โหมด|PDF:\s*แนว|Preset:|Cleanup:|scan-3d|theme-contrast|requestAnimationFrame/i.test(value);
+}
+
+function fixScreenshotLikeOcr(text){
+  if(!isScreenshotLikeOcr(text))return text;
+  return String(text||'')
+    .split('\n')
+    .map(line=>fixCaptureTechTerms(line))
+    .join('\n');
 }
 
 function applyCaptureGeneralFixes(text){

@@ -556,7 +556,8 @@ async function runOcr(canvas,start=0,end=100,profile='image'){
     const candidateText=extracted||normalized||result.text;
     const risk=ocrRiskScore(candidateText);
     const reviewedForScore=typeof normalizeDocumentEmailAndDomains==='function'?normalizeDocumentEmailAndDomains(candidateText):candidateText;
-    const score=scoreOcrText(reviewedForScore,result.confidence)+(extracted?120:0);
+    const normalizedForScore=typeof fixScreenshotLikeOcr==='function'?fixScreenshotLikeOcr(reviewedForScore):reviewedForScore;
+    const score=scoreOcrText(normalizedForScore,result.confidence)+(extracted?120:0);
     candidates.push({text:candidateText,confidence:result.confidence,score,mode:pass.name,risk,canvas:processed});
     if(score>best.score){
       best={text:candidateText,confidence:result.confidence,score,mode:pass.name,risk,canvas:processed};
