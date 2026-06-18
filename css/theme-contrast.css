@@ -1099,3 +1099,24 @@ body[data-theme] .btn.subtle{
   color:var(--muted)!important;
   border-color:var(--inner-border)!important;
 }
+
+body[data-theme] .eyebrow,
+body[data-theme] .label,
+body[data-theme] .mini-label{
+  display:block!important;
+  line-height:1.55!important;
+  letter-spacing:1.2px!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+}
+
+body[data-theme] .hero h1,
+body[data-theme] .section-head h2,
+body[data-theme] .feature-head h2{
+  line-height:1.35!important;
+}
+
+body[data-theme] .feature-head p,
+body[data-theme] .hero-lead{
+  line-height:1.75!important;
+}

@@ -177,15 +177,26 @@ input:hover{
   padding:22px;
 }
 
+.eyebrow,
+.label,
+.mini-label{
+  display:block;
+  line-height:1.55!important;
+  letter-spacing:1.2px;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+
 .hero h1{
   font-size:clamp(28px,3.4vw,42px);
+  line-height:1.28;
   letter-spacing:0;
-  margin:8px 0 10px;
+  margin:12px 0 12px;
 }
 
 .hero-lead{
   font-size:16px;
-  line-height:1.6;
+  line-height:1.72;
   margin-bottom:14px;
 }
 
@@ -199,6 +210,24 @@ input:hover{
 
 .feature-showcase{
   padding:14px;
+}
+
+.section-head,
+.feature-head{
+  align-items:flex-start;
+  gap:12px;
+}
+
+.section-head h2,
+.feature-head h2{
+  line-height:1.35;
+  margin:8px 0 8px;
+}
+
+.feature-head p{
+  line-height:1.75!important;
+  margin-top:8px!important;
+  max-width:980px;
 }
 
 .scan-3d-stage{
