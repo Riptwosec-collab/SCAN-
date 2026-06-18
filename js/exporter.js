@@ -77,6 +77,7 @@ function exportReviewReady(){
 function getExportReportMeta(layout,items){
   const exportedAt=new Date();
   const source=AppState.sourceName||items.map(item=>item.filename).join(', ')||'riptwosec-scan';
+  const skill=typeof getActiveOcrSkill==='function'?getActiveOcrSkill():null;
   return {
     title:'RIPTWOSEC.SCAN OCR REPORT',
     source,
@@ -84,7 +85,9 @@ function getExportReportMeta(layout,items){
     orientation:layout.label,
     confidence:AppState.confidence??'-',
     fixedCount:AppState.fixedWords?.length||0,
-    fileCount:items.length
+    fileCount:items.length,
+    skillLabel:skill?.label||'General Text',
+    skillTitle:skill?.title||'General Text'
   };
 }
 
@@ -95,6 +98,7 @@ function renderReportHeader(meta,item,index,total){
       '<tr><th>Source</th><td>'+escapeHtml(item?.filename||meta.source)+'</td></tr>'+
       '<tr><th>Exported</th><td>'+escapeHtml(meta.exportedAt)+'</td></tr>'+
       '<tr><th>Quality</th><td>Confidence '+escapeHtml(meta.confidence)+'% · Fixed '+escapeHtml(meta.fixedCount)+' จุด</td></tr>'+
+      '<tr><th>OCR Skill</th><td>'+escapeHtml(meta.skillLabel)+' · '+escapeHtml(meta.skillTitle)+'</td></tr>'+
       '<tr><th>Page</th><td>'+index+' / '+total+' · '+escapeHtml(meta.orientation)+'</td></tr>'+
     '</tbody></table>'+
   '</header>';
@@ -163,6 +167,7 @@ function exportJson(){
   const orientation=items[0]?.orientation||getExportOrientation();
   const payload={
     app:'RIPTWOSEC.SCAN',
+    ocrSkill:typeof getActiveOcrSkill==='function'?getActiveOcrSkill():null,
     sourceName:AppState.sourceName||'',
     uploadSource:AppState.uploadSource||'local',
     language:$('langSelect')?.value||'',

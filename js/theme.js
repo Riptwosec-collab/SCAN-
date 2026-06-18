@@ -21,7 +21,7 @@ function applyTheme(theme){
 }
 
 function applyThemeControlContrast(theme){
-  const controlIds=['themeSelect','langSelect','modeSelect','ocrPreset','cleanupLevel','ocrEngine','pdfOrientation','wizardDocType','wizardQuality','wizardLayout'];
+  const controlIds=['themeSelect','ocrSkillSelect','langSelect','modeSelect','ocrPreset','cleanupLevel','ocrEngine','pdfOrientation','wizardDocType','wizardQuality','wizardLayout'];
   controlIds.forEach(id=>{
     const el=document.getElementById(id);
     if(!el)return;

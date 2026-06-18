@@ -15,9 +15,9 @@
   <link rel="stylesheet" href="css/background.css">
   <link rel="stylesheet" href="css/tool-cleanup.css">
   <link rel="stylesheet" href="css/output-rim.css">
-  <link rel="stylesheet" href="css/pro-tool.css?v=4">
-  <link rel="stylesheet" href="css/themes.css">
-  <link rel="stylesheet" href="css/theme-contrast.css?v=17">
+  <link rel="stylesheet" href="css/pro-tool.css?v=6">
+  <link rel="stylesheet" href="css/themes.css?v=3">
+  <link rel="stylesheet" href="css/theme-contrast.css?v=19">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js"></script>
@@ -327,6 +327,15 @@
           </details>
 
           <div class="step-title space-top"><span>02</span><b>Options</b></div>
+          <div class="ocr-skill-panel">
+            <div class="skill-title"><b>OCR Skill</b><span>เลือกก่อนสแกนเพื่อปรับวิธีอ่านภาพให้เหมาะกับงาน</span></div>
+            <select id="ocrSkillSelect" aria-label="OCR Skill"></select>
+            <details class="ocr-skill-more">
+              <summary>ดู OCR Skills ทั้งหมด</summary>
+              <div id="ocrSkillCards" class="ocr-skill-cards"></div>
+            </details>
+            <div id="ocrSkillConfig" class="ocr-skill-config"></div>
+          </div>
           <div class="row compact-row">
             <select id="langSelect"><option value="tha+eng">ไทย + อังกฤษ</option><option value="tha">ไทย</option><option value="eng">อังกฤษ</option></select>
             <select id="modeSelect"><option value="plain">ข้อความล้วน</option><option value="clean" selected>ลบช่องว่าง/อักษรแปลก</option><option value="capture-list">เรียงตามภาพ / Bullet</option><option value="document">จัดเป็นเอกสาร</option><option value="email">จัดเป็นอีเมล</option><option value="ticket">จัดเป็น Ticket</option><option value="keyvalue">Key-Value</option><option value="bullets">Bullet List</option><option value="checklist">Checklist</option><option value="compact">Compact</option><option value="table">จัดเป็นตาราง</option><option value="summary">สรุปพื้นฐาน</option></select>
@@ -415,6 +424,7 @@
           <div class="output-head">
             <div><div class="step-title"><span>03</span><b>Output</b></div><div class="hint">แสดงเฉพาะข้อความที่แปลงได้</div></div>
           </div>
+          <div id="skillResultBar" class="skill-result-bar hide"></div>
           <div class="search-row">
             <input id="searchInput" placeholder="ค้นหา เช่น CUCM, SD-WAN, NOC">
             <button class="btn small" id="searchBtn">Search</button>
@@ -459,7 +469,7 @@
     <footer class="footer-links"><span>© RIPTWOSEC.SCAN</span><a href="help.html">Help / Demo</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Use</a></footer>
   </div>
 
-  <script src="js/state.js"></script><script src="js/theme.js?v=12"></script><script src="js/utils.js"></script><script src="js/dictionary-it.js"></script><script src="js/custom-rules.js"></script><script src="js/text-cleaner.js?v=8"></script><script src="js/quality-review.js?v=2"></script><script src="js/crop.js"></script><script src="js/ocr.js?v=5"></script><script src="js/pdf-handler.js"></script><script src="js/batch.js"></script><script src="js/search.js"></script><script src="js/exporter.js?v=3"></script><script src="js/history.js"></script><script src="js/app.js?v=3"></script>
+  <script src="js/state.js"></script><script src="js/theme.js?v=14"></script><script src="js/utils.js"></script><script src="js/ocr-skills.js?v=2"></script><script src="js/dictionary-it.js"></script><script src="js/custom-rules.js"></script><script src="js/text-cleaner.js?v=8"></script><script src="js/quality-review.js?v=2"></script><script src="js/crop.js"></script><script src="js/ocr.js?v=7"></script><script src="js/pdf-handler.js"></script><script src="js/batch.js"></script><script src="js/search.js"></script><script src="js/exporter.js?v=5"></script><script src="js/history.js"></script><script src="js/app.js?v=5"></script>
   <script src="js/scan-3d.js?v=5"></script>
 </body>
 </html>

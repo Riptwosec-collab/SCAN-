@@ -500,8 +500,9 @@ function createImageOcrPasses(canvas){
     {name:'Receipt Detail',mode:'receipt',psm:'4'},
     {name:'Invert Check',mode:'invert',psm:'11'}
   ];
-  if(engine==='tesseract-fast')return selected.slice(0,Math.min(3,selected.length));
-  return selected;
+  const skillSorted=typeof applySkillPassPriority==='function'?applySkillPassPriority(selected,darkPasses):selected;
+  if(engine==='tesseract-fast')return skillSorted.slice(0,Math.min(3,skillSorted.length));
+  return skillSorted;
 }
 
 function createPdfOcrPasses(){
@@ -512,7 +513,8 @@ function createPdfOcrPasses(){
     {name:'PDF Sparse OCR',mode:'gray',psm:'11'}
   ];
   const engine=$('ocrEngine')?.value||AppState.ocrEngine||'auto';
-  return engine==='tesseract-fast'?passes.slice(0,2):passes;
+  const skillSorted=typeof applySkillPassPriority==='function'?applySkillPassPriority(passes,[]):passes;
+  return engine==='tesseract-fast'?skillSorted.slice(0,2):skillSorted;
 }
 
 async function runOcr(canvas,start=0,end=100,profile='image'){

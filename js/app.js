@@ -70,12 +70,13 @@ function bindAppEvents(){
   document.querySelectorAll('[data-image-sample]').forEach(button=>{
     button.onclick=()=>loadDemoImageSample(button.dataset.imageSample);
   });
+  if(typeof bindOcrSkillSelector==='function')bindOcrSkillSelector();
   bindQuickModeButtons();
   bindUploadSourceButtons();
   bindNextActions();
 
   ['upscale','threshold'].forEach(id=>$(id).addEventListener('change',updateProcessedPreview));
-  ['langSelect','modeSelect','ocrPreset','ocrEngine','cleanupLevel','pdfOrientation','removeNoise','cleanThai','itDictionary','highlightFixes','upscale','threshold'].forEach(id=>{
+  ['langSelect','modeSelect','ocrPreset','ocrEngine','cleanupLevel','pdfOrientation','removeNoise','cleanThai','itDictionary','highlightFixes','upscale','threshold','ocrSkillSelect'].forEach(id=>{
     $(id)?.addEventListener('change',()=>{
       renderReadyChecklist();
       if(id==='modeSelect')syncQuickModeButtons();
@@ -441,6 +442,7 @@ async function showCleanedResult(raw,animate=false){
   renderConfidence(finalScore);
   renderQualityGate(raw,cleaned,finalScore);
   if(!$('comparePanel')?.classList.contains('hide'))renderComparePanel();
+  if(typeof renderOcrSkillResult==='function')renderOcrSkillResult();
 }
 
 function renderOcrCandidates(){
