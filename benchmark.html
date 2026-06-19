@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Benchmark Lab | RIPTWOSEC.SCAN</title>
+  <meta name="description" content="Benchmark Lab สำหรับวัดคุณภาพ OCR ภาษาไทย อังกฤษ รูปภาพ และเอกสารสแกน">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/background.css">
+  <style>
+    .bench-wrap{max-width:1120px;margin:0 auto;padding:28px 18px}.bench-hero{border:1px solid rgba(255,255,255,.1);background:linear-gradient(135deg,rgba(10,27,44,.86),rgba(4,9,13,.86));border-radius:24px;padding:24px;margin:18px 0}.bench-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:16px}.bench-card{border:1px solid rgba(255,255,255,.1);background:rgba(4,8,12,.72);border-radius:20px;padding:18px}.bench-drop{border:1px dashed rgba(147,197,253,.45);border-radius:18px;padding:18px;background:rgba(147,197,253,.06)}textarea{width:100%;min-height:150px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.28);color:#e5f9ef;padding:12px;font:14px/1.6 Sarabun,system-ui}.bench-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.bench-progress{height:10px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:12px}.bench-progress span{display:block;width:0;height:100%;background:#86efac}.bench-status{margin-top:10px;color:#bbf7d0}.bench-status.err{color:#fecaca}.result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.metric{border:1px solid rgba(134,239,172,.25);background:rgba(134,239,172,.08);border-radius:16px;padding:14px}.metric b{display:block;font:700 28px/1 Space Mono,monospace;color:#bbf7d0}.metric span{color:#9fb2bf;font-size:12px}pre{white-space:pre-wrap;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;max-height:360px;overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid rgba(255,255,255,.08);padding:8px;text-align:left}.muted{color:#94a3b8}@media(max-width:820px){.bench-grid,.result-grid{grid-template-columns:1fr}}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+  <div class="bench-wrap">
+    <header class="site-header">
+      <a class="brand-block" href="index.html"><span class="brand">RIPTWOSEC.SCAN</span><span class="sub">Benchmark Lab</span></a>
+      <nav class="nav-links"><a href="index.html#tool">Tool</a><a href="AI_REVIEW_PRO_SETUP.md">AI Setup</a><a href="privacy.html">Privacy</a></nav>
+    </header>
+    <section class="bench-hero">
+      <div class="label">PHASE 14</div>
+      <h1>OCR Benchmark Lab</h1>
+      <p class="muted">ลากไฟล์ทดสอบ แล้วเทียบ Raw OCR กับ Enhanced OCR พร้อมวัด Quality, Text Score, CER และ WER ถ้ามี Ground Truth</p>
+    </section>
+    <main class="bench-grid">
+      <section class="bench-card">
+        <h2>Test Files</h2>
+        <div class="bench-drop">
+          <input id="benchInput" type="file" accept="image/*" multiple>
+          <p class="muted">รองรับรูปภาพก่อน: PNG, JPG, WEBP</p>
+        </div>
+        <h3>Ground Truth</h3>
+        <textarea id="groundTruth" placeholder="วางข้อความที่ถูกต้อง 100% ของเอกสารนี้ ถ้ามี เพื่อคำนวณ CER / WER"></textarea>
+        <div class="bench-actions">
+          <button class="btn primary" id="runBenchBtn">Run Benchmark</button>
+          <button class="btn" id="exportBenchBtn">Export JSON</button>
+          <button class="btn danger" id="clearBenchBtn">Clear</button>
+        </div>
+        <div class="bench-progress"><span id="benchProgressBar"></span></div>
+        <div id="benchStatus" class="bench-status">พร้อมทดสอบ</div>
+      </section>
+      <section class="bench-card">
+        <h2>Latest Result</h2>
+        <div id="benchResult"><p class="muted">ผลลัพธ์จะแสดงที่นี่</p></div>
+      </section>
+    </main>
+    <section class="bench-card" style="margin-top:16px">
+      <h2>Benchmark History</h2>
+      <div id="benchHistory"></div>
+    </section>
+  </div>
+  <script src="js/state.js"></script>
+  <script src="js/utils.js?v=3"></script>
+  <script src="js/dictionary-it.js"></script>
+  <script src="js/custom-rules.js"></script>
+  <script src="js/text-cleaner.js?v=9"></script>
+  <script src="js/ocr.js?v=9"></script>
+  <script src="js/image-quality.js?v=1"></script>
+  <script src="js/accuracy-upgrade.js?v=1"></script>
+  <script src="js/phase11-15.js?v=1"></script>
+  <script src="js/benchmark-lab.js?v=1"></script>
+</body>
+</html>
