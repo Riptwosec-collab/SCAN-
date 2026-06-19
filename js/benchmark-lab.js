@@ -71,8 +71,11 @@ async function runBenchmarkFile(file,groundTruth){
   const final=textQuality(enhancedClean)>=textQuality(rawClean)?enhancedClean:rawClean;
   const item={id:'bench_'+Date.now(),createdAt:new Date().toISOString(),name:file.name,engine:'tesseract raw + enhanced',qualityScore:quality?.score||'-',qualityWarnings:quality?.warnings||[],rawScore:textQuality(rawClean),finalScore:textQuality(final),cer:cer(groundTruth,final),wer:wordError(groundTruth,final),rawText:raw,finalText:final};
   const runs=benchStore();runs.push(item);benchSave(runs);
-  if(typeof RIPTWOSEC_PHASES?.saveThaiDataset==='function'){
-    const ds=RIPTWOSEC_PHASES.getThaiDataset();ds.push({...item,sourceName:item.name,layoutType:(typeof phaseDetectLayout==='function'?phaseDetectLayout(final).type:'plain'),reason:'benchmark'});RIPTWOSEC_PHASES.saveThaiDataset(ds);
+  const phases=window.RIPTWOSEC_PHASES;
+  if(phases&&typeof phases.saveThaiDataset==='function'){
+    const ds=phases.getThaiDataset();
+    ds.push({...item,sourceName:item.name,layoutType:(typeof phaseDetectLayout==='function'?phaseDetectLayout(final).type:'plain'),reason:'benchmark'});
+    phases.saveThaiDataset(ds);
   }
   return item;
 }
