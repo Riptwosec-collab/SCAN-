@@ -321,6 +321,7 @@ function loadDeferredScriptOnce(id,src){
 }
 
 loadDeferredScriptOnce('accuracyUpgradeScript','js/accuracy-upgrade.js?v=10');
+loadDeferredScriptOnce('phase1115Script','js/phase11-15.js?v=1');
 
 window.addEventListener('error',e=>setStatus('Error: '+e.message,'err'));
 window.addEventListener('unhandledrejection',e=>setStatus('Error: '+((e.reason&&e.reason.message)||e.reason),'err'));
