@@ -311,5 +311,16 @@ function dataUrlToImage(url){
   });
 }
 
+function loadDeferredScriptOnce(id,src){
+  if(document.getElementById(id))return;
+  const script=document.createElement('script');
+  script.id=id;
+  script.src=src;
+  script.defer=true;
+  document.head.appendChild(script);
+}
+
+loadDeferredScriptOnce('accuracyUpgradeScript','js/accuracy-upgrade.js?v=10');
+
 window.addEventListener('error',e=>setStatus('Error: '+e.message,'err'));
 window.addEventListener('unhandledrejection',e=>setStatus('Error: '+((e.reason&&e.reason.message)||e.reason),'err'));
