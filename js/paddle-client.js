@@ -18,6 +18,18 @@ function getPaddleLang(){
   return 'th';
 }
 
+function ensurePaddleQuickScanButton(){
+  if($('paddleScanBtn'))return;
+  const healthBtn=$('paddleHealthBtn');
+  if(!healthBtn)return;
+  const button=document.createElement('button');
+  button.className='btn small';
+  button.id='paddleScanBtn';
+  button.type='button';
+  button.textContent='OCR ด้วย Paddle';
+  healthBtn.insertAdjacentElement('afterend',button);
+}
+
 function bindPaddleClientSettings(){
   const input=$('paddleEndpoint');
   if(input){
@@ -30,7 +42,9 @@ function bindPaddleClientSettings(){
       setStatus('ตั้งค่า PaddleOCR endpoint: '+endpoint,'ok');
     });
   }
+  ensurePaddleQuickScanButton();
   $('paddleHealthBtn')?.addEventListener('click',testPaddleHealth);
+  $('paddleScanBtn')?.addEventListener('click',scanWithPaddleLocal);
 }
 
 async function testPaddleHealth(){
@@ -46,23 +60,41 @@ async function testPaddleHealth(){
   }
 }
 
+async function scanWithPaddleLocal(){
+  if($('ocrEngine')){
+    $('ocrEngine').value='paddle-local';
+    AppState.ocrEngine='paddle-local';
+  }
+  await testPaddleHealth();
+  if(typeof scanCurrent==='function')scanCurrent();
+}
+
 function canvasToPngBlob(canvas){
   return new Promise((resolve,reject)=>{
     canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('แปลงภาพเป็น PNG ไม่สำเร็จ')),'image/png');
   });
 }
 
+function normalizeConfidencePercent(value,fallback=0){
+  const n=Number(value);
+  if(!Number.isFinite(n))return Math.round(Number(fallback)||0);
+  if(n>0&&n<=1)return Math.round(n*100);
+  return Math.round(Math.max(0,Math.min(100,n)));
+}
+
 function normalizePaddleResponse(data,profile='image'){
-  const lines=(data.lines||[]).map((line,index)=>({
+  const rawLines=Array.isArray(data.lines)?data.lines:[];
+  const lines=rawLines.map((line,index)=>({
     text:String(line.text||'').trim(),
-    confidence:Math.round(Number(line.confidence??line.score??data.confidence_score??0)),
+    confidence:normalizeConfidencePercent(line.confidence??line.score??data.confidence_score),
+    score:Number(line.score??line.confidence??0),
     bounding_box:line.bounding_box||line.box||null,
     page_number:line.page_number||1,
     line_number:line.line_number||index+1
   })).filter(line=>line.text);
   const text=String(data.text||lines.map(line=>line.text).join('\n')||'').trim();
-  const confidence=Math.round(Number(data.confidence_score??(lines.reduce((sum,line)=>sum+line.confidence,0)/Math.max(1,lines.length))??0));
-  const words=data.low_confidence_words||data.words||[];
+  const confidence=normalizeConfidencePercent(data.confidence_score,lines.reduce((sum,line)=>sum+line.confidence,0)/Math.max(1,lines.length));
+  const words=Array.isArray(data.low_confidence_words)?data.low_confidence_words:(Array.isArray(data.words)?data.words:[]);
   return {
     text,
     confidence,
@@ -78,7 +110,8 @@ function normalizePaddleResponse(data,profile='image'){
       confidence:line.confidence
     })),
     detected_language:data.detected_language||getPaddleLang(),
-    profile
+    profile,
+    engine:data.engine||'PaddleOCR Local'
   };
 }
 
@@ -98,7 +131,7 @@ async function recognizeWithPaddle(canvas,start=0,end=100,profile='image'){
     let message='HTTP '+response.status;
     try{
       const data=await response.json();
-      message=data.detail||message;
+      message=data.detail||data.error||message;
     }catch(error){}
     throw new Error(message);
   }
