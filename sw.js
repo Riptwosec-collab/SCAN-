@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v33';
+const CACHE_NAME='riptwosec-scan-v34';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -11,27 +11,28 @@ const CORE_ASSETS=[
   './css/background.css',
   './css/tool-cleanup.css',
   './css/output-rim.css',
-  './css/pro-tool.css?v=8',
-  './css/themes.css?v=4',
-  './css/theme-contrast.css?v=20',
+  './css/pro-tool.css?v=9',
+  './css/themes.css?v=5',
+  './css/theme-contrast.css?v=21',
   './js/state.js',
-  './js/theme.js?v=16',
+  './js/theme.js?v=17',
   './js/utils.js?v=3',
   './js/ocr-skills.js?v=2',
   './js/pdf-skills.js?v=1',
+  './js/paddle-client.js?v=1',
   './js/dictionary-it.js',
   './js/custom-rules.js',
   './js/text-cleaner.js?v=9',
   './js/quality-review.js?v=3',
   './js/crop.js',
-  './js/ocr.js?v=8',
+  './js/ocr.js?v=9',
   './js/image-quality.js?v=1',
   './js/pdf-handler.js?v=2',
   './js/batch.js?v=2',
   './js/search.js',
   './js/exporter.js?v=6',
   './js/history.js',
-  './js/app.js?v=7',
+  './js/app.js?v=8',
   './js/scan-3d.js?v=5'
 ];
 
@@ -49,6 +50,7 @@ self.addEventListener('activate',event=>{
 
 self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET')return;
+  if(new URL(event.request.url).origin!==self.location.origin)return;
   event.respondWith(
     caches.match(event.request).then(cached=>{
       if(cached)return cached;

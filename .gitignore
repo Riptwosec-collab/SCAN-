@@ -1,0 +1,3 @@
+backend/paddleocr_service/.venv/
+backend/paddleocr_service/__pycache__/
+*.pyc

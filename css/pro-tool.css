@@ -1071,6 +1071,14 @@ input:hover{
   margin-top:8px;
 }
 
+.paddle-row input{
+  min-width:220px;
+}
+
+.paddle-row .btn{
+  flex:0 0 auto;
+}
+
 .btn.subtle{
   flex:0 0 auto;
   border-color:rgba(255,255,255,.10);

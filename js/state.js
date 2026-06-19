@@ -23,6 +23,8 @@ window.AppState={
   ocrPreset:'auto',
   ocrSkill:'general',
   ocrEngine:'auto',
+  paddleEndpoint:'http://127.0.0.1:8765',
+  paddleResult:null,
   fixedWords:[],
   confidence:null,
   reviewRequired:false,

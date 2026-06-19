@@ -539,6 +539,15 @@ function createPdfOcrPasses(){
 async function runOcr(canvas,start=0,end=100,profile='image'){
   const engine=$('ocrEngine')?.value||AppState.ocrEngine||'auto';
   AppState.ocrEngine=engine;
+  if(engine==='paddle-local'){
+    if(typeof recognizeWithPaddle!=='function')throw new Error('PaddleOCR client ยังไม่พร้อม');
+    const paddle=await recognizeWithPaddle(canvas,start,end,profile);
+    AppState.ocrCandidates=[paddle];
+    AppState.selectedCandidateIndex=0;
+    AppState.confidence=paddle.confidence;
+    setStatus('PaddleOCR อ่านเสร็จ · confidence '+(paddle.confidence??'-')+'%','ok');
+    return paddle.text||'';
+  }
   if(engine==='native'){
     const nativeOnly=await recognizeNativeText(canvas,start,end);
     if(!nativeOnly)throw new Error('Browser นี้ยังไม่รองรับ Native OCR (TextDetector) กรุณาเลือก Engine: Auto หรือ Tesseract');

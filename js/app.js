@@ -76,12 +76,13 @@ function bindAppEvents(){
   });
   if(typeof bindOcrSkillSelector==='function')bindOcrSkillSelector();
   if(typeof bindPdfSkillSelector==='function')bindPdfSkillSelector();
+  if(typeof bindPaddleClientSettings==='function')bindPaddleClientSettings();
   bindQuickModeButtons();
   bindUploadSourceButtons();
   bindNextActions();
 
   ['upscale','threshold','autoEnhance','autoCropDoc'].forEach(id=>$(id)?.addEventListener('change',updateProcessedPreview));
-  ['langSelect','modeSelect','ocrPreset','ocrEngine','cleanupLevel','pdfOrientation','removeNoise','cleanThai','itDictionary','highlightFixes','upscale','threshold','autoEnhance','autoCropDoc','ocrSkillSelect','pdfSkillSelect','skipBlankPdfPages','privacyMode','autoDeleteMinutes'].forEach(id=>{
+  ['langSelect','modeSelect','ocrPreset','ocrEngine','cleanupLevel','pdfOrientation','removeNoise','cleanThai','itDictionary','highlightFixes','upscale','threshold','autoEnhance','autoCropDoc','ocrSkillSelect','pdfSkillSelect','skipBlankPdfPages','privacyMode','autoDeleteMinutes','paddleEndpoint'].forEach(id=>{
     $(id)?.addEventListener('change',()=>{
       renderReadyChecklist();
       if(id==='modeSelect')syncQuickModeButtons();
@@ -98,7 +99,8 @@ function bindAppEvents(){
   });
   $('ocrEngine')?.addEventListener('change',()=>{
     AppState.ocrEngine=$('ocrEngine').value;
-    setStatus('ตั้งค่า OCR Engine: '+$('ocrEngine').selectedOptions[0].textContent,'ok');
+    if(AppState.ocrEngine==='paddle-local')setStatus('ตั้งค่า PaddleOCR Local แล้ว · กด Test Paddle หรือเปิด backend ก่อนสแกน','ok');
+    else setStatus('ตั้งค่า OCR Engine: '+$('ocrEngine').selectedOptions[0].textContent,'ok');
   });
   $('pdfOrientation')?.addEventListener('change',()=>{
     AppState.pdfOrientation=$('pdfOrientation').value;
