@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="css/background.css">
   <link rel="stylesheet" href="css/tool-cleanup.css">
   <link rel="stylesheet" href="css/output-rim.css">
-  <link rel="stylesheet" href="css/pro-tool.css?v=7">
+  <link rel="stylesheet" href="css/pro-tool.css?v=8">
   <link rel="stylesheet" href="css/themes.css?v=4">
   <link rel="stylesheet" href="css/theme-contrast.css?v=20">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -251,6 +251,7 @@
               <div><div class="mini-label">Original</div><canvas id="imgPreview" class="preview-canvas"></canvas></div>
               <div><div class="mini-label">Processed</div><canvas id="processedPreview" class="preview-canvas"></canvas></div>
             </div>
+            <div id="fileQualityPanel" class="file-quality-panel hide" aria-live="polite"></div>
             <div class="row compact-row">
               <button class="btn" id="enableCropBtn">เปิด Crop</button>
               <button class="btn" id="resetCropBtn">Reset Crop</button>
@@ -417,6 +418,8 @@
             <label><input id="highlightFixes" type="checkbox" checked> รายการคำที่แก้</label>
             <label><input id="upscale" type="checkbox" checked> ขยายภาพ</label>
             <label><input id="threshold" type="checkbox" checked> Contrast</label>
+            <label><input id="autoEnhance" type="checkbox" checked> Auto enhance</label>
+            <label><input id="autoCropDoc" type="checkbox" checked> Auto crop ขอบเอกสาร</label>
             </div>
           </details>
 
@@ -455,12 +458,15 @@
             <button class="btn small" id="clearSearchBtn">Clear</button>
             <button class="btn small" id="compareBtn" type="button">Compare</button>
             <button class="btn small" id="undoCleanBtn" type="button">Raw OCR</button>
+            <button class="btn small" id="goLowBtn" type="button">Go Low</button>
+            <button class="btn small" id="highlightSuspiciousBtn" type="button">Highlight</button>
+            <button class="btn small danger" id="reviewRequiredBtn" type="button">Review</button>
           </div>
           <div id="candidateBox" class="candidate-box hide"></div>
           <div id="qualityGate" class="quality-gate hide" aria-live="polite"></div>
           <div id="pdfPageResults" class="pdf-page-results hide" aria-live="polite"></div>
           <div id="comparePanel" class="compare-panel hide" aria-live="polite"></div>
-          <div id="output" class="out output-only">ผลลัพธ์จะแสดงที่นี่</div>
+          <div id="output" class="out output-only" contenteditable="true" spellcheck="false" aria-label="Result editor">ผลลัพธ์จะแสดงที่นี่</div>
           <details class="fix-box">
             <summary>Fixed Words</summary>
             <div id="fixReport" class="fix-report">ยังไม่มีรายการคำที่แก้</div>
@@ -498,7 +504,7 @@
     <footer class="footer-links"><span>© RIPTWOSEC.SCAN</span><a href="help.html">Help / Demo</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Use</a></footer>
   </div>
 
-  <script src="js/state.js"></script><script src="js/theme.js?v=15"></script><script src="js/utils.js?v=2"></script><script src="js/ocr-skills.js?v=2"></script><script src="js/pdf-skills.js?v=1"></script><script src="js/dictionary-it.js"></script><script src="js/custom-rules.js"></script><script src="js/text-cleaner.js?v=9"></script><script src="js/quality-review.js?v=2"></script><script src="js/crop.js"></script><script src="js/ocr.js?v=7"></script><script src="js/pdf-handler.js?v=2"></script><script src="js/batch.js?v=2"></script><script src="js/search.js"></script><script src="js/exporter.js?v=6"></script><script src="js/history.js"></script><script src="js/app.js?v=6"></script>
+  <script src="js/state.js"></script><script src="js/theme.js?v=16"></script><script src="js/utils.js?v=3"></script><script src="js/ocr-skills.js?v=2"></script><script src="js/pdf-skills.js?v=1"></script><script src="js/dictionary-it.js"></script><script src="js/custom-rules.js"></script><script src="js/text-cleaner.js?v=9"></script><script src="js/quality-review.js?v=3"></script><script src="js/crop.js"></script><script src="js/ocr.js?v=8"></script><script src="js/image-quality.js?v=1"></script><script src="js/pdf-handler.js?v=2"></script><script src="js/batch.js?v=2"></script><script src="js/search.js"></script><script src="js/exporter.js?v=6"></script><script src="js/history.js"></script><script src="js/app.js?v=7"></script>
   <script src="js/scan-3d.js?v=5"></script>
 </body>
 </html>

@@ -40,7 +40,10 @@ function drawImagePreview(){
 function updateProcessedPreview(){
   if(!AppState.imageCanvas)return;
   const base=cropCanvas(AppState.imageCanvas);
-  AppState.processedCanvas=preprocessCanvas(base,'auto-preview');
+  const prepared=typeof prepareImageForOcr==='function'?prepareImageForOcr(base):base;
+  AppState.preparedCanvas=prepared;
+  if(typeof renderFileQualityReport==='function')renderFileQualityReport(analyzeCanvasQuality(prepared));
+  AppState.processedCanvas=preprocessCanvas(prepared,'auto-preview');
   drawCanvasTo($('processedPreview'),AppState.processedCanvas);
 }
 
@@ -180,6 +183,15 @@ function preprocessCanvas(source,mode='default'){
       d[i]=d[i+1]=d[i+2]=v;
     }else if(mode==='gray'){
       d[i]=d[i+1]=d[i+2]=v;
+    }else if(mode==='denoise'){
+      v=(v-128)*1.22+128;
+      d[i]=d[i+1]=d[i+2]=clampByte(v);
+    }else if(mode==='shadow-clean'){
+      v=(v-avg)*1.48+176;
+      d[i]=d[i+1]=d[i+2]=clampByte(v);
+    }else if(mode==='sharpen-gray'){
+      v=(v-132)*1.58+132;
+      d[i]=d[i+1]=d[i+2]=clampByte(v);
     }else if(mode==='thai-soft'){
       v=(v-136)*1.48+136;
       d[i]=d[i+1]=d[i+2]=clampByte(v);
@@ -222,12 +234,13 @@ function preprocessCanvas(source,mode='default'){
       d[i]=d[i+1]=d[i+2]=v;
     }
   }
-  if(mode==='ui-sharp'||mode==='thai-sharp')sharpenImageData(d,canvas.width,canvas.height,.42);
+  if(mode==='ui-sharp'||mode==='thai-sharp'||mode==='sharpen-gray')sharpenImageData(d,canvas.width,canvas.height,.42);
   if(mode==='dark-ui'||mode==='dark-ui-binary')sharpenImageData(d,canvas.width,canvas.height,.5);
   if(mode==='ui-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,16,7);
   if(mode==='dark-ui-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,18,9);
   if(mode==='thai-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,20,6);
   if(mode==='doc-adaptive')adaptiveThresholdImageData(d,canvas.width,canvas.height,18,9);
+  if(mode==='shadow-clean')adaptiveThresholdImageData(d,canvas.width,canvas.height,22,5);
   ctx.putImageData(img,0,0);
   return canvas;
 }
@@ -451,6 +464,8 @@ function createImageOcrPasses(canvas){
     document:[
       {name:'Document Thai Sharp',mode:'thai-sharp',psm:'6'},
       {name:'Document Balanced',mode:'pdf-like',psm:'6'},
+      {name:'Document Shadow Clean',mode:'shadow-clean',psm:'6'},
+      {name:'Document Sharpen Gray',mode:'sharpen-gray',psm:'6'},
       {name:'Document Binary',mode:'doc-clean',psm:'6'},
       {name:'Dense Paragraph',mode:'pdf-like',psm:'4'},
       {name:'Gray Document',mode:'gray',psm:'6'}
@@ -476,6 +491,7 @@ function createImageOcrPasses(canvas){
     ],
     table:[
       {name:'Table Thai Line',mode:'thai-line',psm:'6'},
+      {name:'Table Shadow Clean',mode:'shadow-clean',psm:'6'},
       {name:'Table Dense',mode:'gray',psm:'6'},
       {name:'Table Sparse',mode:'ui-detail',psm:'11'},
       {name:'Table Clean',mode:'doc-clean',psm:'6'},
@@ -493,6 +509,9 @@ function createImageOcrPasses(canvas){
     {name:'PDF-like Document',mode:'pdf-like',psm:'6'},
     {name:'Document Clean',mode:'doc-clean',psm:'6'},
     {name:'Document Adaptive',mode:'doc-adaptive',psm:'6'},
+    {name:'Shadow Clean Document',mode:'shadow-clean',psm:'6'},
+    {name:'Sharpen Gray Document',mode:'sharpen-gray',psm:'6'},
+    {name:'Denoise Text',mode:'denoise',psm:'6'},
     {name:'Thai Dense Text',mode:'pdf-like',psm:'4'},
     {name:'Sparse UI/Text',mode:'ui-detail',psm:'11'},
     {name:'Soft Contrast',mode:'soft',psm:'6'},
@@ -598,8 +617,11 @@ async function scanImage(){
   }
   setStatus('กำลัง OCR รูปภาพแบบ PDF-grade...');
   const base=cropCanvas(AppState.imageCanvas);
-  const preview=preprocessCanvas(base,'pdf-like');
+  const prepared=typeof prepareImageForOcr==='function'?prepareImageForOcr(base):base;
+  AppState.preparedCanvas=prepared;
+  if(typeof renderFileQualityReport==='function')renderFileQualityReport(analyzeCanvasQuality(prepared));
+  const preview=preprocessCanvas(prepared,'pdf-like');
   AppState.processedCanvas=preview;
   drawCanvasTo($('processedPreview'),preview);
-  return runOcr(base,5,95,'image');
+  return runOcr(prepared,5,95,'image');
 }

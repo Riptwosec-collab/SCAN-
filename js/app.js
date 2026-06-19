@@ -63,6 +63,10 @@ function bindAppEvents(){
   $('clearSearchBtn').onclick=clearSearch;
   $('compareBtn').onclick=toggleComparePanel;
   $('undoCleanBtn').onclick=restoreRawOcr;
+  $('goLowBtn').onclick=goToLowConfidence;
+  $('highlightSuspiciousBtn').onclick=highlightSuspiciousOutput;
+  $('reviewRequiredBtn').onclick=markReviewRequired;
+  $('output')?.addEventListener('input',syncEditedOutput);
   $('applyWizardBtn').onclick=applyPresetWizard;
   document.querySelectorAll('[data-sample]').forEach(button=>{
     button.onclick=()=>loadDemoSample(button.dataset.sample);
@@ -76,8 +80,8 @@ function bindAppEvents(){
   bindUploadSourceButtons();
   bindNextActions();
 
-  ['upscale','threshold'].forEach(id=>$(id).addEventListener('change',updateProcessedPreview));
-  ['langSelect','modeSelect','ocrPreset','ocrEngine','cleanupLevel','pdfOrientation','removeNoise','cleanThai','itDictionary','highlightFixes','upscale','threshold','ocrSkillSelect','pdfSkillSelect','skipBlankPdfPages','privacyMode','autoDeleteMinutes'].forEach(id=>{
+  ['upscale','threshold','autoEnhance','autoCropDoc'].forEach(id=>$(id)?.addEventListener('change',updateProcessedPreview));
+  ['langSelect','modeSelect','ocrPreset','ocrEngine','cleanupLevel','pdfOrientation','removeNoise','cleanThai','itDictionary','highlightFixes','upscale','threshold','autoEnhance','autoCropDoc','ocrSkillSelect','pdfSkillSelect','skipBlankPdfPages','privacyMode','autoDeleteMinutes'].forEach(id=>{
     $(id)?.addEventListener('change',()=>{
       renderReadyChecklist();
       if(id==='modeSelect')syncQuickModeButtons();

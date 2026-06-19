@@ -158,6 +158,7 @@ function clearOutput(){
   AppState.batchResults=[];
   AppState.pdfPageInfo=[];
   AppState.pdfCompareResult=null;
+  AppState.reviewRequired=false;
   if(typeof renderPdfPageResults==='function')renderPdfPageResults();
 
   const output=$('output');
@@ -221,6 +222,8 @@ function removeImageFile(){
   AppState.imageFile=null;
   AppState.imageCanvas=null;
   AppState.processedCanvas=null;
+  AppState.preparedCanvas=null;
+  AppState.fileQuality=null;
   AppState.crop=null;
   AppState.cropEnabled=false;
   AppState.sourceName='';
@@ -228,6 +231,7 @@ function removeImageFile(){
   if(input)input.value='';
   clearCanvas('imgPreview');
   clearCanvas('processedPreview');
+  if(typeof renderFileQualityReport==='function')renderFileQualityReport(null);
   const info=$('imgFileInfo');
   if(info){info.classList.remove('file-success','file-pending','file-error');info.classList.add('hide');}
   clearFileSuccess('imgFileInfo','imgFileName','ยังไม่ได้เลือกไฟล์');
