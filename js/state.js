@@ -10,6 +10,7 @@ window.AppState={
   pdfDoc:null,
   pdfPages:0,
   pdfPageInfo:[],
+  currentPdfPage:null,
   pdfSkill:'auto-pdf',
   pdfCompareFile:null,
   pdfCompareResult:null,

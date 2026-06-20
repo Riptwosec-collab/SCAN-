@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v34';
+const CACHE_NAME='riptwosec-scan-v35';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -14,12 +14,12 @@ const CORE_ASSETS=[
   './css/pro-tool.css?v=9',
   './css/themes.css?v=5',
   './css/theme-contrast.css?v=21',
-  './js/state.js',
+  './js/state.js?v=1',
   './js/theme.js?v=17',
   './js/utils.js?v=3',
   './js/ocr-skills.js?v=2',
   './js/pdf-skills.js?v=1',
-  './js/paddle-client.js?v=1',
+  './js/paddle-client.js?v=2',
   './js/dictionary-it.js',
   './js/custom-rules.js',
   './js/text-cleaner.js?v=9',
@@ -27,7 +27,7 @@ const CORE_ASSETS=[
   './js/crop.js',
   './js/ocr.js?v=9',
   './js/image-quality.js?v=1',
-  './js/pdf-handler.js?v=2',
+  './js/pdf-handler.js?v=3',
   './js/batch.js?v=2',
   './js/search.js',
   './js/exporter.js?v=6',

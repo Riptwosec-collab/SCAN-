@@ -112,7 +112,7 @@ function phaseAnalyzeQuality(canvas){
   if(avg>226){warnings.push('ภาพสว่าง/จางเกิน');score-=10;}
   if(borderDark>.28){warnings.push('มีขอบดำ/ขอบภาพเยอะ ควร Crop');score-=12;}
   if(skew>7){warnings.push('ภาพอาจเอียง ควร Deskew');score-=10;}
-  if(smallText){warnings.push('ตัวอักษรเล็ก แนะนำ Vision Recheck');score-=8;}
+  if(smallText){warnings.push('ตัวอักษรเล็ก แนะนำใช้ PaddleOCR หรือเทียบภาพต้นฉบับ');score-=8;}
   const level=score>=82?'good':score>=62?'warn':'bad';
   return {width:canvas.width,height:canvas.height,avg,contrast,blur,borderDark,skew,smallText,darkRatio:dark/pixels,lightRatio:light/pixels,score:Math.max(20,Math.min(99,Math.round(score))),level,warnings,base};
 }

@@ -176,7 +176,14 @@ async function scanPdf(){
     if(needOcr){
       setStatus('หน้า '+pageNo+' ใช้ OCR จากภาพ · '+(hadTextLayer?'text layer สั้น/เลือก OCR ซ้ำ':'ไม่มี text layer'));
       const canvas=await pdfPageToCanvas(pageNo);
-      const ocrText=await runOcr(canvas,pct,Math.min(96,pct+(100/pages.length)),'pdf');
+      const previousPdfPage=AppState.currentPdfPage;
+      AppState.currentPdfPage=pageNo;
+      let ocrText='';
+      try{
+        ocrText=await runOcr(canvas,pct,Math.min(96,pct+(100/pages.length)),'pdf');
+      }finally{
+        AppState.currentPdfPage=previousPdfPage;
+      }
       const ocrConfidence=AppState.confidence||0;
       usedOcr=true;
       if(textUsable&&strategy==='auto'){
@@ -264,7 +271,13 @@ async function extractPdfDocText(doc,label='PDF'){
     let confidence=isTextLayerUsable(text)?98:0;
     if(!isTextLayerUsable(text)){
       const canvas=await pdfPageToCanvas(p,2.2,doc);
-      text=await runOcr(canvas,0,100,'pdf');
+      const previousPdfPage=AppState.currentPdfPage;
+      AppState.currentPdfPage=p;
+      try{
+        text=await runOcr(canvas,0,100,'pdf');
+      }finally{
+        AppState.currentPdfPage=previousPdfPage;
+      }
       confidence=AppState.confidence||0;
     }
     if(!isPdfBlankText(text))pages.push({page:p,text,confidence});

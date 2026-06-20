@@ -111,7 +111,8 @@ function normalizePaddleResponse(data,profile='image'){
     })),
     detected_language:data.detected_language||getPaddleLang(),
     profile,
-    engine:data.engine||'PaddleOCR Local'
+    engine:data.engine||'PaddleOCR Local',
+    pages:data.pages||[]
   };
 }
 
@@ -122,6 +123,7 @@ async function recognizeWithPaddle(canvas,start=0,end=100,profile='image'){
   form.append('file',blob,'scan.png');
   form.append('lang',getPaddleLang());
   form.append('profile',profile);
+  form.append('page_number',String(AppState.currentPdfPage||1));
   form.append('source','browser-canvas');
 
   setProgress(start+Math.min(5,(end-start)*.08));
@@ -138,6 +140,33 @@ async function recognizeWithPaddle(canvas,start=0,end=100,profile='image'){
   const data=await response.json();
   setProgress(end);
   const normalized=normalizePaddleResponse(data,profile);
+  AppState.paddleResult=data;
+  return normalized;
+}
+
+async function recognizePdfFileWithPaddle(file,options={}){
+  const endpoint=getPaddleEndpoint();
+  const form=new FormData();
+  form.append('file',file,file.name||'scan.pdf');
+  form.append('lang',options.lang||getPaddleLang());
+  form.append('profile',options.profile||'pdf');
+  form.append('pages',options.pages||'all');
+  form.append('strategy',options.strategy||'auto');
+  form.append('skip_blank',String(options.skipBlank!==false));
+  form.append('dpi',String(options.dpi||220));
+
+  setStatus('PaddleOCR Local · กำลังอ่าน PDF...');
+  const response=await fetch(endpoint+'/ocr/pdf',{method:'POST',body:form});
+  if(!response.ok){
+    let message='HTTP '+response.status;
+    try{
+      const data=await response.json();
+      message=data.detail||message;
+    }catch(error){}
+    throw new Error(message);
+  }
+  const data=await response.json();
+  const normalized=normalizePaddleResponse(data,'pdf');
   AppState.paddleResult=data;
   return normalized;
 }

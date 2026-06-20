@@ -38,6 +38,9 @@ Then click **Test Paddle**.
 
 - `GET /health`
 - `POST /ocr/image`
+- `POST /ocr/zone`
+- `POST /ocr/rescan`
+- `POST /ocr/pdf`
 
 `POST /ocr/image` accepts multipart form data:
 
@@ -45,6 +48,30 @@ Then click **Test Paddle**.
 - `lang`: `th` or `en`
 - `profile`: `image` or `pdf`
 - `page_number`: optional page number
+
+`POST /ocr/zone` accepts the same image fields plus:
+
+- `x`, `y`, `width`, `height`: crop area
+- `unit`: `pixel` or `percent`
+
+`POST /ocr/rescan` is an image scan endpoint for retry flows.
+
+`POST /ocr/pdf` accepts multipart form data:
+
+- `file`: PDF file
+- `lang`: `th` or `en`
+- `profile`: normally `pdf`
+- `pages`: `all`, `1-5`, or `1-3,7,10`
+- `strategy`: `auto`, `text-first`, or `ocr`
+- `skip_blank`: `true` or `false`
+- `dpi`: render DPI for scanned pages, recommended `220` to `300`
+
+PDF processing is page-aware:
+
+- pages with a usable text layer are extracted directly for speed and accuracy
+- scanned pages are rendered to images and sent through PaddleOCR
+- mixed PDFs can use text extraction on some pages and OCR on others
+- the response includes per-page text, confidence, method, low-confidence words, and layout blocks
 
 It returns:
 
@@ -57,3 +84,4 @@ It returns:
 - `detected_language`
 - `low_confidence_words`
 - `layout_blocks`
+- `pages[]` for PDF workflows
