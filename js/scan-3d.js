@@ -150,3 +150,73 @@ if(document.readyState==='loading'){
 }else{
   bootScan3d();
 }
+
+(function patchSafeCleanupDefault(){
+  const RAW_WARNING='Raw OCR คือข้อความดิบจาก OCR และมักเพี้ยนในภาษาไทย · เปลี่ยนเป็น Cleanup: Safe ให้แล้ว';
+
+  function getCleanupSelect(){
+    return typeof $==='function' ? $('cleanupLevel') : document.getElementById('cleanupLevel');
+  }
+
+  function forceSafeCleanup(showMessage=false){
+    const select=getCleanupSelect();
+    if(!select)return false;
+    if(!select.value||select.value==='raw'){
+      select.value='safe';
+      if(window.AppState)AppState.cleanupLevel='safe';
+      if(showMessage&&typeof setStatus==='function')setStatus(RAW_WARNING,'ok');
+      return true;
+    }
+    if(window.AppState)AppState.cleanupLevel=select.value;
+    return false;
+  }
+
+  function installPatch(){
+    forceSafeCleanup(false);
+
+    const cleanupSelect=getCleanupSelect();
+    cleanupSelect?.addEventListener('change',()=>{
+      if(cleanupSelect.value==='raw'){
+        if(typeof setStatus==='function')setStatus('Raw OCR จะแสดงข้อความดิบ อาจมีคำไทยเพี้ยนสูง · แนะนำ Safe/Strict','err');
+      }
+    });
+
+    const originalScan=window.scanCurrent;
+    if(typeof originalScan==='function'){
+      window.scanCurrent=async function(...args){
+        forceSafeCleanup(true);
+        return originalScan.apply(this,args);
+      };
+      const scanBtn=typeof $==='function' ? $('scanBtn') : document.getElementById('scanBtn');
+      if(scanBtn)scanBtn.onclick=window.scanCurrent;
+    }
+
+    const originalFormat=window.showCleanedResult;
+    if(typeof originalFormat==='function'){
+      window.showCleanedResult=async function(raw,animate=false){
+        if(!window.__ALLOW_RAW_OCR_PREVIEW)forceSafeCleanup(false);
+        return originalFormat.call(this,raw,animate);
+      };
+    }
+
+    const originalRestore=window.restoreRawOcr;
+    if(typeof originalRestore==='function'){
+      window.restoreRawOcr=function(...args){
+        window.__ALLOW_RAW_OCR_PREVIEW=true;
+        try{
+          return originalRestore.apply(this,args);
+        }finally{
+          window.setTimeout(()=>{window.__ALLOW_RAW_OCR_PREVIEW=false},0);
+        }
+      };
+      const rawBtn=typeof $==='function' ? $('undoCleanBtn') : document.getElementById('undoCleanBtn');
+      if(rawBtn)rawBtn.onclick=window.restoreRawOcr;
+    }
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',installPatch,{once:true});
+  }else{
+    installPatch();
+  }
+})();
