@@ -1,5 +1,9 @@
 // RIPTWOSEC.SCAN Benchmark Lab
 const BENCH_KEY='riptwosec.scan.benchmarkRuns';
+const THAI_URL_AGODA_SAMPLE=[
+  'บ้านพักพูลวิลล่าเท่ๆ@นครนายก',
+  'https://www.agoda.com/th-th/farmsuk-hill-pool-villa-a2/hotel/nakhon-nayok-th.html?'
+].join('\n');
 function benchStore(){try{return JSON.parse(localStorage.getItem(BENCH_KEY)||'[]')}catch{return []}}
 function benchSave(items){localStorage.setItem(BENCH_KEY,JSON.stringify((items||[]).slice(-150)))}
 function qs(id){return document.getElementById(id)}
@@ -99,11 +103,20 @@ async function runBenchmarkFile(file,groundTruth){
   const enhanced=enhResult.data.text||'';
   const rawClean=benchCleanText(raw);
   const enhancedClean=benchCleanText(enhanced);
+  let routedClean='';
+  try{
+    if(typeof autoDetectOcrProfile==='function'&&typeof runThaiUrlScreenshotOcr==='function'){
+      const route=autoDetectOcrProfile(canvas);
+      if(route.profile==='thai-url-screenshot')routedClean=(await runThaiUrlScreenshotOcr(canvas,{route,start:0,end:100})).text||'';
+    }
+  }catch(error){}
   const rawUi=typeof correctThaiUiTerms==='function'?correctThaiUiTerms(rawClean,{force:true}):rawClean;
   const enhancedUi=typeof correctThaiUiTerms==='function'?correctThaiUiTerms(enhancedClean,{force:true}):enhancedClean;
+  const routedUi=routedClean&&typeof correctThaiUiTerms==='function'?correctThaiUiTerms(routedClean,{force:true}):routedClean;
   const rawRank=textQuality(rawUi)+(typeof scoreThaiUiScreenshotText==='function'?scoreThaiUiScreenshotText(rawUi):0);
   const enhancedRank=textQuality(enhancedUi)+(typeof scoreThaiUiScreenshotText==='function'?scoreThaiUiScreenshotText(enhancedUi):0);
-  const final=enhancedRank>=rawRank?enhancedUi:rawUi;
+  const routedRank=routedUi?textQuality(routedUi)+80:0;
+  const final=routedRank>=Math.max(rawRank,enhancedRank)?routedUi:(enhancedRank>=rawRank?enhancedUi:rawUi);
   const item={id:'bench_'+Date.now(),createdAt:new Date().toISOString(),name:file.name,engine:'tesseract raw + enhanced',qualityScore:quality?.score||'-',qualityWarnings:quality?.warnings||[],rawScore:textQuality(rawClean),finalScore:textQuality(final),cer:cer(groundTruth,final),wer:wordError(groundTruth,final),metrics:benchmarkAccuracyMetrics(groundTruth,final),rawText:raw,finalText:final};
   const runs=benchStore();runs.push(item);benchSave(runs);
   const phases=window.RIPTWOSEC_PHASES;
@@ -128,7 +141,7 @@ async function runBenchmark(){
   }catch(e){setBenchStatus('Benchmark error: '+e.message,'err');benchProgress(0)}
 }
 document.addEventListener('DOMContentLoaded',()=>{
-  if(qs('groundTruth')&&!qs('groundTruth').value&&typeof DARK_THAI_UI_MENU_SAMPLE!=='undefined')qs('groundTruth').value=DARK_THAI_UI_MENU_SAMPLE;
+  if(qs('groundTruth')&&!qs('groundTruth').value)qs('groundTruth').value=THAI_URL_AGODA_SAMPLE;
   qs('runBenchBtn')?.addEventListener('click',runBenchmark);
   qs('clearBenchBtn')?.addEventListener('click',()=>{benchSave([]);renderBenchHistory();setBenchStatus('ล้าง Benchmark แล้ว','ok')});
   qs('exportBenchBtn')?.addEventListener('click',()=>{const blob=new Blob([JSON.stringify(benchStore(),null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='riptwosec-benchmark.json';a.click();URL.revokeObjectURL(url)});

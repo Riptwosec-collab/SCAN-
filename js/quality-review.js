@@ -385,10 +385,25 @@ function renderOcrReview(raw,cleaned){
   const box=$('fixReport');
   if(!box)return;
   const fixed=renderFixedWordsSummary(AppState.fixedWords||[]);
+  const autoDebug=renderAutoOcrDebugPanel();
   const review=issues.length
     ? '<div class="hint">ยังพบจุดน่าสงสัย: '+issues.map(i=>i.name+' '+i.count+' จุด').join(' · ')+'</div>'
     : '<div class="hint">ตรวจละเอียดแล้ว ไม่พบรูปแบบ OCR แปลกที่พบบ่อย</div>';
-  box.innerHTML=(fixed||'ไม่มีรายการคำที่แก้')+review+renderSpellReport(cleaned);
+  box.innerHTML=autoDebug+(fixed||'ไม่มีรายการคำที่แก้')+review+renderSpellReport(cleaned);
+}
+
+function renderAutoOcrDebugPanel(){
+  const debug=AppState.autoOcrDebug;
+  const route=debug?.route||AppState.autoOcrRoute;
+  if(!route)return '';
+  const lines=(debug?.lineReports||[]).map(line=>'<code>L'+(line.index+1)+' '+escapeHtml(line.type)+' → '+escapeHtml(line.engine)+'</code>').join('');
+  const reasons=(route.reasons||[]).map(reason=>'<span>'+escapeHtml(reason)+'</span>').join('');
+  const warnings=(debug?.warnings||[]).map(item=>'<span>'+escapeHtml(item)+'</span>').join('');
+  return '<div class="fix-summary auto-debug"><div class="fix-summary-head"><b>Auto OCR Router</b><span class="fix-summary-chip">'+escapeHtml(route.profile||debug.profile||'unknown')+' '+(route.confidence??'-')+'%</span></div>'+
+    '<div class="hint">Reasons: '+(reasons||'<span>-</span>')+'</div>'+
+    (lines?'<div class="low-confidence"><b>Lines</b><p>'+lines+'</p></div>':'')+
+    (warnings?'<div class="hint">Warnings: '+warnings+'</div>':'')+
+  '</div>';
 }
 
 function renderFixedWordsSummary(items){

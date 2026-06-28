@@ -185,7 +185,7 @@ async function scanPdf(){
       AppState.currentPdfPage=pageNo;
       let ocrText='';
       try{
-        if(typeof isDarkScreenshot==='function'&&isDarkScreenshot(canvas)){
+        if((previousPresetSelect||previousPreset)!=='auto'&&typeof isDarkScreenshot==='function'&&isDarkScreenshot(canvas)){
           AppState.ocrPreset='dark-thai-screenshot';
           if($('ocrPreset'))$('ocrPreset').value='dark-thai-screenshot';
           setStatus('หน้า '+pageNo+' ตรวจพบภาพพื้นหลังมืด กำลังใช้ Dark Thai Screenshot');

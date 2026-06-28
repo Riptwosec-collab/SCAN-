@@ -695,6 +695,20 @@ async function runOcr(canvas,start=0,end=100,profile='image'){
 
   if(!window.Tesseract)throw new Error('โหลด Tesseract.js ไม่สำเร็จ กรุณาต่ออินเทอร์เน็ต');
 
+  const preset=$('ocrPreset')?.value||AppState.ocrPreset||'auto';
+  if(engine==='auto'&&preset==='auto'&&typeof autoDetectOcrProfile==='function'&&typeof runThaiUrlScreenshotOcr==='function'){
+    const route=autoDetectOcrProfile(canvas);
+    AppState.autoOcrRoute=route;
+    if(route.profile==='thai-url-screenshot'&&route.confidence>=80){
+      const routed=await runThaiUrlScreenshotOcr(canvas,{route,start,end});
+      AppState.ocrCandidates=[routed];
+      AppState.selectedCandidateIndex=0;
+      AppState.confidence=routed.confidence;
+      setStatus('Auto ตรวจพบ: Thai + URL Screenshot → ใช้ OCR รายบรรทัด + URL mode','ok');
+      return routed.text||'';
+    }
+  }
+
   const passes=profile==='pdf'?createPdfOcrPasses():createImageOcrPasses(canvas);
   let best={text:'',confidence:0,score:-Infinity,mode:''};
   const candidates=[];
