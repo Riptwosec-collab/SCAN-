@@ -107,6 +107,7 @@ function cleanText(text){
     result=fixScreenshotLikeOcr(result);
   }
 
+  if(typeof correctThaiUiTerms==='function')result=correctThaiUiTerms(result);
   result=typeof restoreImportantTokens==='function'?restoreImportantTokens(result,protectedData.tokens):result;
   const symbols=typeof symbolPreservationScore==='function'?symbolPreservationScore(raw,result):null;
   if(symbols?.reviewRequired&&level!=='aggressive'){

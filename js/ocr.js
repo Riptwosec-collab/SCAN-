@@ -109,6 +109,91 @@ function sharpenImageData(data,width,height,amount=.34){
   }
 }
 
+function lightSharpenCanvas(source,amount=.22){
+  const canvas=document.createElement('canvas');
+  canvas.width=source.width;
+  canvas.height=source.height;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(source,0,0);
+  const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+  sharpenImageData(img.data,canvas.width,canvas.height,amount);
+  ctx.putImageData(img,0,0);
+  return canvas;
+}
+
+function prepareDarkThaiScreenshotCanvas(source){
+  const dark=isDarkScreenshot(source);
+  const minSide=Math.min(source.width,source.height);
+  const scale=minSide<520?6:minSide<900?5.5:5;
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.max(1,Math.round(source.width*scale));
+  canvas.height=Math.max(1,Math.round(source.height*scale));
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality='high';
+  ctx.drawImage(source,0,0,canvas.width,canvas.height);
+  const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+  const d=img.data;
+  for(let i=0;i<d.length;i+=4){
+    let gray=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+    if(dark)gray=255-gray;
+    gray=(gray-128)*1.35+128;
+    gray=clampByte(gray);
+    d[i]=d[i+1]=d[i+2]=gray;
+  }
+  ctx.putImageData(img,0,0);
+  if(dark&&typeof setStatus==='function')setStatus('ตรวจพบภาพพื้นหลังมืด กำลังใช้ Dark Thai Screenshot','ok');
+  return lightSharpenCanvas(canvas,.18);
+}
+
+function segmentTextLines(canvas){
+  const width=canvas.width;
+  const height=canvas.height;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  const data=ctx.getImageData(0,0,width,height).data;
+  const rows=[];
+  for(let y=0;y<height;y++){
+    let ink=0;
+    for(let x=0;x<width;x+=2){
+      const i=(y*width+x)*4;
+      const gray=.299*data[i]+.587*data[i+1]+.114*data[i+2];
+      if(gray<185)ink++;
+    }
+    rows.push(ink);
+  }
+  const threshold=Math.max(2,Math.round(width*.006));
+  const ranges=[];
+  let start=null;
+  for(let y=0;y<height;y++){
+    if(rows[y]>=threshold&&start===null)start=y;
+    if((rows[y]<threshold||y===height-1)&&start!==null){
+      const end=rows[y]<threshold?y-1:y;
+      if(end-start>Math.max(8,height*.006))ranges.push({start,end});
+      start=null;
+    }
+  }
+  const merged=[];
+  const gapLimit=Math.max(8,Math.round(height*.012));
+  for(const range of ranges){
+    const prev=merged[merged.length-1];
+    if(prev&&range.start-prev.end<=gapLimit)prev.end=range.end;
+    else merged.push({...range});
+  }
+  return merged
+    .filter(range=>range.end-range.start>=12)
+    .slice(0,24)
+    .map(range=>{
+      const pad=Math.max(10,Math.round((range.end-range.start)*.55));
+      const y=Math.max(0,range.start-pad);
+      const h=Math.min(height-y,range.end-range.start+1+(pad*2));
+      const line=document.createElement('canvas');
+      line.width=width;
+      line.height=h;
+      line.getContext('2d').drawImage(canvas,0,y,width,h,0,0,width,h);
+      return {canvas:line,y,height:h};
+    });
+}
+
 function adaptiveThresholdImageData(data,width,height,radius=14,bias=8){
   const gray=new Uint8ClampedArray(width*height);
   for(let i=0,p=0;i<data.length;i+=4,p++)gray[p]=Math.round(.299*data[i]+.587*data[i+1]+.114*data[i+2]);
@@ -135,6 +220,7 @@ function adaptiveThresholdImageData(data,width,height,radius=14,bias=8){
 }
 
 function preprocessCanvas(source,mode='default'){
+  if(mode==='dark-thai-screenshot'||mode==='dark-thai-soft')return prepareDarkThaiScreenshotCanvas(source);
   const scale=getSmartScale(source,mode);
   const canvas=document.createElement('canvas');
   canvas.width=Math.max(1,Math.round(source.width*scale));
@@ -389,6 +475,29 @@ async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6',extr
   return {text:getTesseractLineText(result)||result.data.text||'',confidence};
 }
 
+async function recognizeLineByLine(canvas,progressStart,progressEnd,label){
+  const lines=segmentTextLines(canvas);
+  if(!lines.length)return recognizeOnce(canvas,progressStart,progressEnd,label+' Whole', '6', {dpi:'520'});
+  if(typeof setStatus==='function')setStatus('ใช้ OCR รายบรรทัดเพื่อเพิ่มความแม่นภาษาไทย ('+lines.length+' บรรทัด)');
+  const parts=[];
+  const confidences=[];
+  for(let i=0;i<lines.length;i++){
+    const from=progressStart+((progressEnd-progressStart)*i/lines.length);
+    const to=progressStart+((progressEnd-progressStart)*(i+1)/lines.length);
+    const first=await recognizeOnce(lines[i].canvas,from,to,label+' line '+(i+1),'7',{dpi:'520'});
+    let best=first;
+    if(scoreOcrText(first.text,first.confidence)<35){
+      const fallback=await recognizeOnce(lines[i].canvas,from,to,label+' raw line '+(i+1),'13',{dpi:'520'});
+      best=scoreOcrText(fallback.text,fallback.confidence)>scoreOcrText(first.text,first.confidence)?fallback:first;
+    }
+    const cleaned=String(best.text||'').replace(/\s{2,}/g,' ').trim();
+    if(cleaned)parts.push(cleaned);
+    if(Number.isFinite(best.confidence))confidences.push(best.confidence);
+  }
+  const confidence=confidences.length?Math.round(confidences.reduce((a,b)=>a+b,0)/confidences.length):null;
+  return {text:parts.join('\n'),confidence};
+}
+
 function getTesseractLineText(result){
   const lines=(result?.data?.lines||[])
     .map(line=>String(line.text||'').trim())
@@ -430,6 +539,13 @@ function createImageOcrPasses(canvas){
     {name:'Dark Screenshot Single Block',mode:'dark-ui',psm:'4',dpi:'420'}
   ];
   const sets={
+    'dark-thai-screenshot':[
+      {name:'Dark Thai Line OCR',mode:'dark-thai-screenshot',psm:'7',dpi:'520',lineByLine:true},
+      {name:'Dark Thai Invert Whole',mode:'dark-thai-screenshot',psm:'6',dpi:'520'},
+      {name:'Dark Thai Sparse Symbols',mode:'dark-thai-screenshot',psm:'11',dpi:'520'},
+      {name:'Dark Thai Soft Whole',mode:'dark-thai-soft',psm:'6',dpi:'500'},
+      {name:'Dark Thai Single Line Raw',mode:'dark-thai-screenshot',psm:'13',dpi:'520'}
+    ],
     'thai-clear':[
       {name:'Thai Clear Original',mode:'original',psm:'6',dpi:'360'},
       {name:'Thai Clear Gray',mode:'gray',psm:'6',dpi:'360'},
@@ -536,7 +652,11 @@ function createImageOcrPasses(canvas){
 
 function createPdfOcrPasses(){
   const preset=$('ocrPreset')?.value||AppState.ocrPreset||'auto';
-  const passes=preset==='thai-clear'?[
+  const passes=preset==='dark-thai-screenshot'?[
+    {name:'PDF Dark Thai Line OCR',mode:'dark-thai-screenshot',psm:'7',dpi:'520',lineByLine:true},
+    {name:'PDF Dark Thai Invert Whole',mode:'dark-thai-screenshot',psm:'6',dpi:'520'},
+    {name:'PDF Dark Thai Sparse Symbols',mode:'dark-thai-screenshot',psm:'11',dpi:'520'}
+  ]:preset==='thai-clear'?[
     {name:'PDF Thai Clear Original',mode:'original',psm:'6',dpi:'360'},
     {name:'PDF Thai Clear Gray',mode:'gray',psm:'6',dpi:'380'},
     {name:'PDF Thai Clear Soft',mode:'thai-soft',psm:'6',dpi:'400'},
@@ -596,16 +716,20 @@ async function runOcr(canvas,start=0,end=100,profile='image'){
     const to=start+((end-start)*(i+1)/passes.length);
     setStatus('กำลังตรวจ OCR หลายโหมด: '+pass.name+' ('+(i+1)+'/'+passes.length+')');
     const processed=preprocessCanvas(canvas,pass.mode);
-    const result=await recognizeOnce(processed,from,to,pass.name,pass.psm,pass);
+    const result=pass.lineByLine
+      ? await recognizeLineByLine(processed,from,to,pass.name)
+      : await recognizeOnce(processed,from,to,pass.name,pass.psm,pass);
     const normalized=normalizeNetworkOcrText(result.text);
     const extracted=extractNetworkConnectionDetails(normalized);
-    const candidateText=extracted||normalized||result.text;
+    let candidateText=extracted||normalized||result.text;
+    if(typeof correctThaiUiTerms==='function')candidateText=correctThaiUiTerms(candidateText,{force:pass.mode==='dark-thai-screenshot'||pass.mode==='dark-thai-soft'});
     const risk=ocrRiskScore(candidateText);
     const reviewedForScore=typeof normalizeDocumentEmailAndDomains==='function'?normalizeDocumentEmailAndDomains(candidateText):candidateText;
     const normalizedForScore=typeof fixScreenshotLikeOcr==='function'?fixScreenshotLikeOcr(reviewedForScore):reviewedForScore;
     const symbolScore=typeof symbolPreservationScore==='function'?symbolPreservationScore(result.text,candidateText).score:100;
     const fieldScore=typeof validateImportantFields==='function'?Math.max(0,30-(validateImportantFields(candidateText).issues.length*10)):20;
-    const score=scoreOcrText(normalizedForScore,result.confidence)+(symbolScore*.35)+fieldScore-risk*.8+(extracted?120:0);
+    const uiScore=typeof scoreThaiUiScreenshotText==='function'?scoreThaiUiScreenshotText(candidateText):0;
+    const score=scoreOcrText(normalizedForScore,result.confidence)+(symbolScore*.35)+fieldScore+uiScore-risk*.8+(pass.lineByLine?18:0)+(extracted?120:0);
     candidates.push({text:candidateText,confidence:result.confidence,score,mode:pass.name,risk,canvas:processed});
     if(score>best.score){
       best={text:candidateText,confidence:result.confidence,score,mode:pass.name,risk,canvas:processed};

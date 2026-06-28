@@ -100,6 +100,7 @@ async function extractPdfText(pageNumber){
 async function pdfPageToCanvas(pageNumber,scale=2.8,doc=AppState.pdfDoc){
   const preset=$('ocrPreset')?.value||AppState.ocrPreset||'auto';
   if(preset==='thai-clear'&&scale<3.2)scale=3.2;
+  if(preset==='dark-thai-screenshot'&&scale<3.4)scale=3.4;
   const page=await doc.getPage(pageNumber);
   const viewport=page.getViewport({scale});
   const canvas=document.createElement('canvas');
@@ -179,12 +180,21 @@ async function scanPdf(){
       setStatus('หน้า '+pageNo+' ใช้ OCR จากภาพ · '+(hadTextLayer?'text layer สั้น/เลือก OCR ซ้ำ':'ไม่มี text layer'));
       const canvas=await pdfPageToCanvas(pageNo);
       const previousPdfPage=AppState.currentPdfPage;
+      const previousPreset=AppState.ocrPreset;
+      const previousPresetSelect=$('ocrPreset')?.value;
       AppState.currentPdfPage=pageNo;
       let ocrText='';
       try{
+        if(typeof isDarkScreenshot==='function'&&isDarkScreenshot(canvas)){
+          AppState.ocrPreset='dark-thai-screenshot';
+          if($('ocrPreset'))$('ocrPreset').value='dark-thai-screenshot';
+          setStatus('หน้า '+pageNo+' ตรวจพบภาพพื้นหลังมืด กำลังใช้ Dark Thai Screenshot');
+        }
         ocrText=await runOcr(canvas,pct,Math.min(96,pct+(100/pages.length)),'pdf');
       }finally{
         AppState.currentPdfPage=previousPdfPage;
+        AppState.ocrPreset=previousPreset;
+        if($('ocrPreset')&&previousPresetSelect)$('ocrPreset').value=previousPresetSelect;
       }
       const ocrConfidence=AppState.confidence||0;
       usedOcr=true;

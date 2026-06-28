@@ -57,8 +57,16 @@ function exactTokenAccuracy(ref,hyp,regex){
   const kept=expected.filter(item=>actual.includes(item)).length;
   return Math.round((kept/expected.length)*1000)/10;
 }
+function keywordAccuracy(ref,hyp,keywords){
+  const expected=keywords.filter(item=>String(ref||'').includes(item));
+  if(!expected.length)return null;
+  const actual=String(hyp||'');
+  const kept=expected.filter(item=>actual.includes(item)).length;
+  return Math.round((kept/expected.length)*1000)/10;
+}
 function benchmarkAccuracyMetrics(ref,hyp){
   const symbols=typeof symbolPreservationScore==='function'?symbolPreservationScore(ref,hyp):{score:null};
+  const menuKeywords=['เมนู','ข่าวประจำวัน','หนังโรงไทย','ซีรีส์น่าดู','แพลตฟอร์ม','เดือน','กดเข้า','ตามภาพ','รูป'];
   return {
     thaiCer:cer(String(ref||'').replace(/[^\u0e00-\u0e7f]/g,''),String(hyp||'').replace(/[^\u0e00-\u0e7f]/g,'')),
     symbolAccuracy:symbols.score,
@@ -67,7 +75,10 @@ function benchmarkAccuracyMetrics(ref,hyp){
     ipAccuracy:exactTokenAccuracy(ref,hyp,/\b(?:\d{1,3}\.){3}\d{1,3}\b/g),
     amountAccuracy:exactTokenAccuracy(ref,hyp,/[฿$]\s*\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?/g),
     dateAccuracy:exactTokenAccuracy(ref,hyp,/\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b/g),
-    ticketAccuracy:exactTokenAccuracy(ref,hyp,/\b(?:INC|REQ|TKT|CASE|ERR)[-_:]?[A-Z0-9-]{3,}\b/gi)
+    ticketAccuracy:exactTokenAccuracy(ref,hyp,/\b(?:INC|REQ|TKT|CASE|ERR)[-_:]?[A-Z0-9-]{3,}\b/gi),
+    englishAccuracy:keywordAccuracy(ref,hyp,['Netflix','Daily Brief']),
+    menuKeywordAccuracy:keywordAccuracy(ref,hyp,menuKeywords),
+    thaiUiScore:typeof scoreThaiUiScreenshotText==='function'?scoreThaiUiScreenshotText(hyp):null
   };
 }
 function renderBenchHistory(){
@@ -88,7 +99,11 @@ async function runBenchmarkFile(file,groundTruth){
   const enhanced=enhResult.data.text||'';
   const rawClean=benchCleanText(raw);
   const enhancedClean=benchCleanText(enhanced);
-  const final=textQuality(enhancedClean)>=textQuality(rawClean)?enhancedClean:rawClean;
+  const rawUi=typeof correctThaiUiTerms==='function'?correctThaiUiTerms(rawClean,{force:true}):rawClean;
+  const enhancedUi=typeof correctThaiUiTerms==='function'?correctThaiUiTerms(enhancedClean,{force:true}):enhancedClean;
+  const rawRank=textQuality(rawUi)+(typeof scoreThaiUiScreenshotText==='function'?scoreThaiUiScreenshotText(rawUi):0);
+  const enhancedRank=textQuality(enhancedUi)+(typeof scoreThaiUiScreenshotText==='function'?scoreThaiUiScreenshotText(enhancedUi):0);
+  const final=enhancedRank>=rawRank?enhancedUi:rawUi;
   const item={id:'bench_'+Date.now(),createdAt:new Date().toISOString(),name:file.name,engine:'tesseract raw + enhanced',qualityScore:quality?.score||'-',qualityWarnings:quality?.warnings||[],rawScore:textQuality(rawClean),finalScore:textQuality(final),cer:cer(groundTruth,final),wer:wordError(groundTruth,final),metrics:benchmarkAccuracyMetrics(groundTruth,final),rawText:raw,finalText:final};
   const runs=benchStore();runs.push(item);benchSave(runs);
   const phases=window.RIPTWOSEC_PHASES;
@@ -101,7 +116,7 @@ async function runBenchmarkFile(file,groundTruth){
 }
 function renderBenchResult(item){
   const box=qs('benchResult');if(!box)return;
-  box.innerHTML='<div class="result-grid"><div class="metric"><b>'+safeHtml(item.qualityScore)+'</b><span>Image Quality</span></div><div class="metric"><b>'+safeHtml(item.finalScore)+'</b><span>Text Score</span></div><div class="metric"><b>'+(item.cer??'-')+'</b><span>CER %</span></div><div class="metric"><b>'+(item.wer??'-')+'</b><span>WER %</span></div><div class="metric"><b>'+(item.metrics?.symbolAccuracy??'-')+'</b><span>Symbol %</span></div><div class="metric"><b>'+(item.metrics?.thaiCer??'-')+'</b><span>Thai CER %</span></div></div><h3>Final Output</h3><pre>'+safeHtml(item.finalText)+'</pre><h3>Raw OCR</h3><pre>'+safeHtml(item.rawText)+'</pre>';
+  box.innerHTML='<div class="result-grid"><div class="metric"><b>'+safeHtml(item.qualityScore)+'</b><span>Image Quality</span></div><div class="metric"><b>'+safeHtml(item.finalScore)+'</b><span>Text Score</span></div><div class="metric"><b>'+(item.cer??'-')+'</b><span>CER %</span></div><div class="metric"><b>'+(item.wer??'-')+'</b><span>WER %</span></div><div class="metric"><b>'+(item.metrics?.symbolAccuracy??'-')+'</b><span>Symbol %</span></div><div class="metric"><b>'+(item.metrics?.thaiCer??'-')+'</b><span>Thai CER %</span></div><div class="metric"><b>'+(item.metrics?.englishAccuracy??'-')+'</b><span>English %</span></div><div class="metric"><b>'+(item.metrics?.menuKeywordAccuracy??'-')+'</b><span>Menu %</span></div></div><h3>Final Output</h3><pre>'+safeHtml(item.finalText)+'</pre><h3>Raw OCR</h3><pre>'+safeHtml(item.rawText)+'</pre>';
 }
 async function runBenchmark(){
   try{
@@ -113,6 +128,7 @@ async function runBenchmark(){
   }catch(e){setBenchStatus('Benchmark error: '+e.message,'err');benchProgress(0)}
 }
 document.addEventListener('DOMContentLoaded',()=>{
+  if(qs('groundTruth')&&!qs('groundTruth').value&&typeof DARK_THAI_UI_MENU_SAMPLE!=='undefined')qs('groundTruth').value=DARK_THAI_UI_MENU_SAMPLE;
   qs('runBenchBtn')?.addEventListener('click',runBenchmark);
   qs('clearBenchBtn')?.addEventListener('click',()=>{benchSave([]);renderBenchHistory();setBenchStatus('ล้าง Benchmark แล้ว','ok')});
   qs('exportBenchBtn')?.addEventListener('click',()=>{const blob=new Blob([JSON.stringify(benchStore(),null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='riptwosec-benchmark.json';a.click();URL.revokeObjectURL(url)});

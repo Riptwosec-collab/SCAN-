@@ -28,6 +28,13 @@ const OCR_SKILLS=[
     config:{preprocessing_level:'thai-clear-soft',ocr_engine:'auto',language:'tha+eng',layout_detection:'line-order',ai_postprocess:'safe Thai normalize + token protection',export_options:['TXT','DOC','CSV','JSON','PDF'],confidence_threshold:82,preset:'thai-clear',mode:'clean',cleanup:'safe',orientation:'portrait',upscale:true,threshold:false,cleanThai:true,itDictionary:true,removeNoise:false}
   },
   {
+    id:'dark-thai-screenshot',
+    title:'Dark Thai Screenshot',
+    label:'ภาพหน้าจอพื้นหลังมืด / Dark Thai Screenshot',
+    description:'อ่าน screenshot พื้นหลังมืด ตัวอักษรขาว/เทา ภาษาไทย + English + symbol ด้วย invert, upscale high quality และ OCR รายบรรทัด',
+    config:{preprocessing_level:'dark-thai-invert-line',ocr_engine:'auto',language:'tha+eng',layout_detection:'screen-lines',ai_postprocess:'Thai UI dictionary + safe cleanup',export_options:['TXT','DOC','JSON','PDF'],confidence_threshold:78,preset:'dark-thai-screenshot',mode:'capture-list',cleanup:'safe',orientation:'portrait',upscale:true,threshold:false,cleanThai:true,itDictionary:false,removeNoise:false}
+  },
+  {
     id:'english-number',
     title:'English & Number',
     label:'อังกฤษ/ตัวเลข',
@@ -201,6 +208,12 @@ function applySkillPassPriority(passes,darkPasses=[]){
       {name:'Skill Thai Clear Gray',mode:'gray',psm:'6',dpi:'360'},
       {name:'Skill Thai Clear Soft',mode:'thai-soft',psm:'6',dpi:'380'},
       {name:'Skill Thai Clear Symbols',mode:'gray',psm:'11',dpi:'380'}
+    ],
+    'dark-thai-screenshot':[
+      {name:'Skill Dark Thai Line OCR',mode:'dark-thai-screenshot',psm:'7',dpi:'520',lineByLine:true},
+      {name:'Skill Dark Thai Invert',mode:'dark-thai-screenshot',psm:'6',dpi:'520'},
+      {name:'Skill Dark Thai Soft',mode:'dark-thai-soft',psm:'6',dpi:'500'},
+      {name:'Skill Dark Thai Symbols',mode:'dark-thai-screenshot',psm:'11',dpi:'520'}
     ],
     'english-number':[
       {name:'Skill English Number',mode:'gray',psm:'6',dpi:'420',whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/-.:_@#%+()[]{} '},
