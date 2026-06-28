@@ -51,6 +51,7 @@ function getSmartScale(source,mode='default'){
   const minSide=Math.min(source.width,source.height);
   const maxSide=Math.max(source.width,source.height);
   let scale=$('upscale')?.checked?3:1;
+  if(mode==='original')scale=Math.max(scale,1);
   if(mode==='pdf-like'||mode==='doc-clean'||mode==='receipt')scale=Math.max(scale,3.4);
   if(mode==='thai-soft'||mode==='thai-sharp'||mode==='thai-adaptive'||mode==='thai-line')scale=Math.max(scale,4.4);
   if(mode==='ui-detail'||mode==='ui-crisp'||mode==='ui-binary'||mode==='ui-sharp'||mode==='ui-adaptive')scale=Math.max(scale,4.8);
@@ -142,7 +143,7 @@ function preprocessCanvas(source,mode='default'){
   ctx.imageSmoothingEnabled=false;
   ctx.drawImage(source,0,0,canvas.width,canvas.height);
 
-  const shouldProcess=$('threshold')?.checked||mode!=='default';
+  const shouldProcess=mode==='original'?false:($('threshold')?.checked||mode!=='default');
   if(!shouldProcess)return canvas;
 
   const img=ctx.getImageData(0,0,canvas.width,canvas.height);
@@ -371,6 +372,8 @@ function extractNetworkConnectionDetails(text){
 
 async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6',extra={}){
   const lang=$('langSelect')?.value||'tha+eng';
+  const thaiLang=/\btha\b|^th\b|thai/i.test(lang);
+  const whitelist=thaiLang?undefined:extra.whitelist;
   const result=await Tesseract.recognize(canvas,lang,{
     logger:m=>{
       if(m.progress!==undefined)setProgress(progressStart+(m.progress*(progressEnd-progressStart)));
@@ -380,7 +383,7 @@ async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6',extr
     preserve_interword_spaces:extra.preserveSpaces===false?'0':'1',
     user_defined_dpi:extra.dpi||'300',
     tessedit_do_invert:'0',
-    tessedit_char_whitelist:extra.whitelist||undefined
+    tessedit_char_whitelist:whitelist||undefined
   });
   const confidence=extractAverageConfidence(result);
   return {text:getTesseractLineText(result)||result.data.text||'',confidence};
@@ -427,6 +430,13 @@ function createImageOcrPasses(canvas){
     {name:'Dark Screenshot Single Block',mode:'dark-ui',psm:'4',dpi:'420'}
   ];
   const sets={
+    'thai-clear':[
+      {name:'Thai Clear Original',mode:'original',psm:'6',dpi:'360'},
+      {name:'Thai Clear Gray',mode:'gray',psm:'6',dpi:'360'},
+      {name:'Thai Clear Soft',mode:'thai-soft',psm:'6',dpi:'380'},
+      {name:'Thai Clear Light Sharpen',mode:'sharpen-gray',psm:'6',dpi:'380'},
+      {name:'Thai Clear Sparse Symbols',mode:'gray',psm:'11',dpi:'380'}
+    ],
     invoice:[
       {name:'Invoice Thai Sharp',mode:'thai-sharp',psm:'6'},
       {name:'Invoice Thai Adaptive',mode:'thai-adaptive',psm:'6'},
@@ -525,7 +535,13 @@ function createImageOcrPasses(canvas){
 }
 
 function createPdfOcrPasses(){
-  const passes=[
+  const preset=$('ocrPreset')?.value||AppState.ocrPreset||'auto';
+  const passes=preset==='thai-clear'?[
+    {name:'PDF Thai Clear Original',mode:'original',psm:'6',dpi:'360'},
+    {name:'PDF Thai Clear Gray',mode:'gray',psm:'6',dpi:'380'},
+    {name:'PDF Thai Clear Soft',mode:'thai-soft',psm:'6',dpi:'400'},
+    {name:'PDF Thai Clear Light Sharpen',mode:'sharpen-gray',psm:'6',dpi:'400'}
+  ]:[
     {name:'PDF Page OCR',mode:'pdf-like',psm:'6'},
     {name:'PDF Clean OCR',mode:'doc-clean',psm:'6'},
     {name:'PDF Dense OCR',mode:'pdf-like',psm:'4'},
@@ -587,7 +603,9 @@ async function runOcr(canvas,start=0,end=100,profile='image'){
     const risk=ocrRiskScore(candidateText);
     const reviewedForScore=typeof normalizeDocumentEmailAndDomains==='function'?normalizeDocumentEmailAndDomains(candidateText):candidateText;
     const normalizedForScore=typeof fixScreenshotLikeOcr==='function'?fixScreenshotLikeOcr(reviewedForScore):reviewedForScore;
-    const score=scoreOcrText(normalizedForScore,result.confidence)+(extracted?120:0);
+    const symbolScore=typeof symbolPreservationScore==='function'?symbolPreservationScore(result.text,candidateText).score:100;
+    const fieldScore=typeof validateImportantFields==='function'?Math.max(0,30-(validateImportantFields(candidateText).issues.length*10)):20;
+    const score=scoreOcrText(normalizedForScore,result.confidence)+(symbolScore*.35)+fieldScore-risk*.8+(extracted?120:0);
     candidates.push({text:candidateText,confidence:result.confidence,score,mode:pass.name,risk,canvas:processed});
     if(score>best.score){
       best={text:candidateText,confidence:result.confidence,score,mode:pass.name,risk,canvas:processed};

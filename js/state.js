@@ -20,7 +20,7 @@ window.AppState={
   rawText:'',
   ocrCandidates:[],
   selectedCandidateIndex:0,
-  cleanupLevel:'normal',
+  cleanupLevel:'safe',
   ocrPreset:'auto',
   ocrSkill:'general',
   ocrEngine:'auto',

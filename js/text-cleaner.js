@@ -68,35 +68,55 @@ function applyKnownThaiWordJoin(text){
 
 function cleanText(text){
   resetFixReport();
-  const level=$('cleanupLevel')?.value||AppState.cleanupLevel||'normal';
-  AppState.cleanupLevel=level;
-  let result=(text||'')
+  const raw=String(text||'')
     .replace(/\r/g,'')
     .replace(/\$1\$2/g,'')
     .replace(/[ \t]+/g,' ')
     .replace(/\n{3,}/g,'\n\n')
     .trim();
+  const level=$('cleanupLevel')?.value||AppState.cleanupLevel||'safe';
+  AppState.cleanupLevel=level;
+  const protectedData=typeof protectImportantTokens==='function'
+    ? protectImportantTokens(raw)
+    : {text:raw,tokens:[]};
+  let result=protectedData.text;
 
-  if(level==='raw')return result;
-  if($('removeNoise')?.checked)result=fixNoise(result);
-  if(level==='light'){
-    result=fixUiOcrWords(result);
-    if($('itDictionary')?.checked)result=applyItDictionary(result);
-    result=applyCustomRules(result);
-    if(typeof applySpellingCorrections==='function')result=applySpellingCorrections(result);
-    result=fixScreenshotLikeOcr(result);
-    return result.split('\n').map(line=>line.trim()).filter(Boolean).join('\n');
+  if(level==='raw'){
+    result=typeof restoreImportantTokens==='function'?restoreImportantTokens(result,protectedData.tokens):result;
+    return typeof validateAndMarkSuspiciousFields==='function'?validateAndMarkSuspiciousFields(result):result;
   }
-  if($('itDictionary')?.checked)result=applyItDictionary(result);
-  result=applyCustomRules(result);
-  if($('cleanThai')?.checked)result=fixThaiWords(result);
-  result=fixUiOcrWords(result);
-  if(typeof applySpellingCorrections==='function')result=applySpellingCorrections(result);
-  result=postCleanThai(result);
-  result=fixScreenshotLikeOcr(result);
+
+  if(typeof safeThaiNormalize==='function')result=safeThaiNormalize(result);
+  if(level!=='light'&&typeof applySafeExactThaiCorrections==='function')result=applySafeExactThaiCorrections(result);
+
+  const shouldUseDictionary=level==='normal'||level==='strict'||level==='aggressive';
+  const shouldUseAggressive=level==='strict'||level==='aggressive'||($('removeNoise')?.checked&&level!=='safe');
+
+  if(level==='light'){
+    result=fixScreenshotLikeOcr(result);
+  }else{
+    if(shouldUseDictionary&&$('itDictionary')?.checked)result=applyItDictionary(result);
+    if(shouldUseDictionary)result=applyCustomRules(result);
+    if(shouldUseDictionary&&typeof applySpellingCorrections==='function')result=applySpellingCorrections(result);
+    if(shouldUseAggressive){
+      result=fixNoise(result);
+      if($('cleanThai')?.checked)result=fixThaiWords(result);
+      result=fixUiOcrWords(result);
+      result=postCleanThai(result);
+    }
+    result=fixScreenshotLikeOcr(result);
+  }
+
+  result=typeof restoreImportantTokens==='function'?restoreImportantTokens(result,protectedData.tokens):result;
+  const symbols=typeof symbolPreservationScore==='function'?symbolPreservationScore(raw,result):null;
+  if(symbols?.reviewRequired&&level!=='aggressive'){
+    result=typeof restoreImportantTokens==='function'?restoreImportantTokens(protectedData.text,protectedData.tokens):raw;
+    if(typeof safeThaiNormalize==='function')result=safeThaiNormalize(result);
+  }
+  result=typeof validateAndMarkSuspiciousFields==='function'?validateAndMarkSuspiciousFields(result):result;
 
   const mode=$('modeSelect')?.value||'clean';
-  if(mode==='plain')return result;
+  if(mode==='plain')return result.trim();
   if(mode==='document')return toDocument(result);
   if(mode==='email')return toEmail(result);
   if(mode==='ticket')return toTicket(result);

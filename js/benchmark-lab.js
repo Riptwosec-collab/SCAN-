@@ -50,6 +50,26 @@ function textQuality(text){
   if(typeof scoreOcrText==='function')return Math.round(scoreOcrText(text,80));
   const thai=(String(text).match(/[ก-ฮ]/g)||[]).length;const bad=(String(text).match(/[�{}<>~`^|]/g)||[]).length;return Math.max(0,thai*2-bad*8);
 }
+function exactTokenAccuracy(ref,hyp,regex){
+  const expected=String(ref||'').match(regex)||[];
+  if(!expected.length)return null;
+  const actual=String(hyp||'');
+  const kept=expected.filter(item=>actual.includes(item)).length;
+  return Math.round((kept/expected.length)*1000)/10;
+}
+function benchmarkAccuracyMetrics(ref,hyp){
+  const symbols=typeof symbolPreservationScore==='function'?symbolPreservationScore(ref,hyp):{score:null};
+  return {
+    thaiCer:cer(String(ref||'').replace(/[^\u0e00-\u0e7f]/g,''),String(hyp||'').replace(/[^\u0e00-\u0e7f]/g,'')),
+    symbolAccuracy:symbols.score,
+    urlAccuracy:exactTokenAccuracy(ref,hyp,/\bhttps?:\/\/[^\s<>"']+/gi),
+    emailAccuracy:exactTokenAccuracy(ref,hyp,/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi),
+    ipAccuracy:exactTokenAccuracy(ref,hyp,/\b(?:\d{1,3}\.){3}\d{1,3}\b/g),
+    amountAccuracy:exactTokenAccuracy(ref,hyp,/[฿$]\s*\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?/g),
+    dateAccuracy:exactTokenAccuracy(ref,hyp,/\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b/g),
+    ticketAccuracy:exactTokenAccuracy(ref,hyp,/\b(?:INC|REQ|TKT|CASE|ERR)[-_:]?[A-Z0-9-]{3,}\b/gi)
+  };
+}
 function renderBenchHistory(){
   const box=qs('benchHistory');if(!box)return;const runs=benchStore().slice().reverse();
   if(!runs.length){box.innerHTML='<p class="muted">ยังไม่มี Benchmark</p>';return;}
@@ -69,7 +89,7 @@ async function runBenchmarkFile(file,groundTruth){
   const rawClean=benchCleanText(raw);
   const enhancedClean=benchCleanText(enhanced);
   const final=textQuality(enhancedClean)>=textQuality(rawClean)?enhancedClean:rawClean;
-  const item={id:'bench_'+Date.now(),createdAt:new Date().toISOString(),name:file.name,engine:'tesseract raw + enhanced',qualityScore:quality?.score||'-',qualityWarnings:quality?.warnings||[],rawScore:textQuality(rawClean),finalScore:textQuality(final),cer:cer(groundTruth,final),wer:wordError(groundTruth,final),rawText:raw,finalText:final};
+  const item={id:'bench_'+Date.now(),createdAt:new Date().toISOString(),name:file.name,engine:'tesseract raw + enhanced',qualityScore:quality?.score||'-',qualityWarnings:quality?.warnings||[],rawScore:textQuality(rawClean),finalScore:textQuality(final),cer:cer(groundTruth,final),wer:wordError(groundTruth,final),metrics:benchmarkAccuracyMetrics(groundTruth,final),rawText:raw,finalText:final};
   const runs=benchStore();runs.push(item);benchSave(runs);
   const phases=window.RIPTWOSEC_PHASES;
   if(phases&&typeof phases.saveThaiDataset==='function'){
@@ -81,7 +101,7 @@ async function runBenchmarkFile(file,groundTruth){
 }
 function renderBenchResult(item){
   const box=qs('benchResult');if(!box)return;
-  box.innerHTML='<div class="result-grid"><div class="metric"><b>'+safeHtml(item.qualityScore)+'</b><span>Image Quality</span></div><div class="metric"><b>'+safeHtml(item.finalScore)+'</b><span>Text Score</span></div><div class="metric"><b>'+(item.cer??'-')+'</b><span>CER %</span></div><div class="metric"><b>'+(item.wer??'-')+'</b><span>WER %</span></div></div><h3>Final Output</h3><pre>'+safeHtml(item.finalText)+'</pre><h3>Raw OCR</h3><pre>'+safeHtml(item.rawText)+'</pre>';
+  box.innerHTML='<div class="result-grid"><div class="metric"><b>'+safeHtml(item.qualityScore)+'</b><span>Image Quality</span></div><div class="metric"><b>'+safeHtml(item.finalScore)+'</b><span>Text Score</span></div><div class="metric"><b>'+(item.cer??'-')+'</b><span>CER %</span></div><div class="metric"><b>'+(item.wer??'-')+'</b><span>WER %</span></div><div class="metric"><b>'+(item.metrics?.symbolAccuracy??'-')+'</b><span>Symbol %</span></div><div class="metric"><b>'+(item.metrics?.thaiCer??'-')+'</b><span>Thai CER %</span></div></div><h3>Final Output</h3><pre>'+safeHtml(item.finalText)+'</pre><h3>Raw OCR</h3><pre>'+safeHtml(item.rawText)+'</pre>';
 }
 async function runBenchmark(){
   try{

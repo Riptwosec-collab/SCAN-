@@ -224,12 +224,15 @@ function renderPdfPageResults(){
       const low=(page.lowConfidence?.lowWords||[]).slice(0,8).map(item=>'<mark title="word confidence '+item.confidence+'%">'+escapeHtml(item.text)+'</mark>').join(' ');
       const lowLines=(page.lowConfidence?.lowLines||[]).slice(0,3).map(item=>'<code title="line confidence '+item.confidence+'%">L'+item.index+' '+escapeHtml(item.text)+'</code>').join('');
       const layout=Array.isArray(page.layout)?page.layout.join(', '):page.layout;
+      const report=page.accuracyReport;
+      const review=report?.reviewRequired?'<div class="low-confidence"><b>Review required</b><p>fields '+report.fields+' · symbol '+report.symbolScore+'% · confidence '+(report.confidence??'-')+'%</p></div>':'';
       return '<details class="pdf-page-card '+(page.skippedBlank?'blank':'')+'">'+
         '<summary><span>หน้า '+page.page+'</span><b>'+escapeHtml(page.methodLabel||page.method||'PDF')+'</b><i>'+escapeHtml(page.language||'-')+' · '+escapeHtml(layout||'-')+' · '+(page.confidence??'-')+'%</i></summary>'+
         '<div class="pdf-page-meta">'+
           '<span>text layer: '+(page.hadTextLayer?'yes':'no')+'</span><span>OCR: '+(page.usedOcr?'yes':'no')+'</span><span>chars: '+(page.charCount||0)+'</span>'+
           (page.skippedBlank?'<span>blank skipped</span>':'')+
         '</div>'+
+        review+
         (low||lowLines?'<div class="low-confidence"><b>Low confidence</b>'+(low?'<p>'+low+'</p>':'')+(lowLines?'<div>'+lowLines+'</div>':'')+'</div>':'')+
         '<div class="pdf-page-compare"><div><b>Original OCR</b><pre>'+escapeHtml(page.rawText||page.text||'')+'</pre></div><div><b>Cleaned Text</b><pre>'+escapeHtml(page.cleanedText||page.text||'')+'</pre></div></div>'+
       '</details>';
