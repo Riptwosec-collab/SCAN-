@@ -98,6 +98,8 @@ async function extractPdfText(pageNumber){
 }
 
 async function pdfPageToCanvas(pageNumber,scale=2.8,doc=AppState.pdfDoc){
+  const preset=$('ocrPreset')?.value||AppState.ocrPreset||'auto';
+  if(preset==='thai-clear'&&scale<3.2)scale=3.2;
   const page=await doc.getPage(pageNumber);
   const viewport=page.getViewport({scale});
   const canvas=document.createElement('canvas');
@@ -165,7 +167,7 @@ async function scanPdf(){
     setProgress(pct);
     setStatus('กำลังตรวจ PDF หน้า '+pageNo+' ('+(i+1)+'/'+pages.length+') · '+(skill?.label||'Auto PDF'));
     const meta=await extractPdfTextMeta(pageNo);
-    const textLayer=(meta.text||'').trim();
+    const textLayer=(typeof safeThaiNormalize==='function'?safeThaiNormalize(meta.text||''):(meta.text||'')).trim();
     const hadTextLayer=!!textLayer;
     const textUsable=isTextLayerUsable(textLayer);
     let method=textUsable?'text-layer':'ocr';
@@ -226,18 +228,22 @@ async function scanPdf(){
       lowConfidence,
       skippedBlank:blank&&skipBlank
     };
+    pageInfo.accuracyReport=typeof buildPdfAccuracyReport==='function'?buildPdfAccuracyReport(pageInfo):null;
+    pageInfo.reviewRequired=!!pageInfo.accuracyReport?.reviewRequired;
     if(storeImages&&!pageInfo.skippedBlank){
       try{pageInfo.imageDataUrl=await getPdfPageImageData(pageNo)}catch(error){}
     }
     AppState.pdfPageInfo.push(pageInfo);
     if(typeof renderPdfPageResults==='function')renderPdfPageResults();
     if(pageInfo.skippedBlank)continue;
-    if(rawPageText){
-      parts.push(splitPages?formatPageBlock(pageNo,rawPageText):rawPageText);
+    const exportText=cleanedText||rawPageText;
+    if(exportText){
+      parts.push(splitPages?formatPageBlock(pageNo,exportText):exportText);
     }else if(splitPages){
       parts.push(formatPageBlock(pageNo,'ไม่พบข้อความในหน้านี้'));
     }
   }
+  AppState.pdfAccuracyReport=typeof buildPdfDocumentAccuracyReport==='function'?buildPdfDocumentAccuracyReport(AppState.pdfPageInfo):[];
   return parts.join('\n\n');
 }
 
