@@ -1,0 +1,278 @@
+diff --git a/js/custom-rules.js b/js/custom-rules.js
+index c841ab0..d8b79ca 100644
+--- a/js/custom-rules.js
++++ b/js/custom-rules.js
+@@ -134,21 +134,73 @@ function accuracyTextScore(text){
+   return typeof scoreOcrText==='function'?scoreOcrText(text,90)-(typeof ocrRiskScore==='function'?ocrRiskScore(text)*2:0):accuracyLineScore(text);
+ }
+ 
++function normalizedLineKey(line){
++  return String(line||'').replace(/\s+/g,'').toLowerCase();
++}
++
++// Cheap line similarity check: counts how many characters two lines share
++// (as a multiset, position-independent) relative to the longer line's length.
++// This is just good enough to tell "this is the OCR of the same source line,
++// read differently" apart from "this is an unrelated line" — it does not need
++// to be a true edit-distance metric for this use case.
++function lineSimilarity(a,b){
++  const ka=normalizedLineKey(a);
++  const kb=normalizedLineKey(b);
++  if(!ka||!kb)return 0;
++  const shorter=ka.length<=kb.length?ka.split(''):kb.split('');
++  const longerStr=ka.length<=kb.length?kb:ka;
++  const pool=longerStr.split('');
++  let hits=0;
++  for(const ch of shorter){
++    const idx=pool.indexOf(ch);
++    if(idx!==-1){hits++;pool.splice(idx,1);}
++  }
++  return hits/Math.max(ka.length,kb.length);
++}
++
++/*
++ * IMPORTANT FIX: the previous implementation collected every *unique-looking*
++ * line from *every* OCR pass and concatenated them all together. Since each
++ * pass now genuinely differs (after the PSM/worker fix), a pass that misread
++ * a line produces a *different* string than the pass that read it correctly
++ * — so both ended up kept side by side instead of one replacing the other,
++ * showing up as a garbled "shadow line" before every real line.
++ *
++ * This version instead treats the single best-scoring candidate as the
++ * structural backbone (its line count/order is always preserved — nothing is
++ * ever appended), and only swaps in another candidate's version of a line
++ * when that candidate is clearly reading the *same* line (high similarity)
++ * *and* scores meaningfully better for that specific line. Lines are never
++ * added or removed, only improved in place.
++ */
+ function ocrVotingMerge(candidates){
+-  const list=(candidates||[]).filter(c=>c&&c.text&&c.text.trim()).sort((a,b)=>(b.score||0)-(a.score||0));
++  const list=(candidates||[])
++    .filter(c=>c&&c.text&&c.text.trim())
++    .map(c=>({score:c.score||0,lines:String(c.text).split('\n').map(l=>applyAccuracyThaiSpell(l).trim())}))
++    .sort((a,b)=>b.score-a.score);
+   if(!list.length)return '';
+-  const lines=[];
+-  const seen=new Set();
+-  for(const cand of list){
+-    for(const raw of String(cand.text).split('\n')){
+-      const fixed=applyAccuracyThaiSpell(raw).trim();
+-      const key=fixed.replace(/\s+/g,'').toLowerCase();
+-      if(!fixed||seen.has(key)||accuracyLineScore(fixed)<2)continue;
+-      lines.push(fixed);
+-      seen.add(key);
++
++  const baseline=list[0];
++  const voters=list.slice(1,6); // a handful of next-best passes act as "voters", never the source of new lines
++
++  const merged=baseline.lines.map((baseLine,i)=>{
++    let best=baseLine;
++    let bestScore=accuracyLineScore(baseLine);
++    for(const cand of voters){
++      for(let j=Math.max(0,i-1);j<=Math.min(cand.lines.length-1,i+1);j++){
++        const candidateLine=cand.lines[j];
++        if(!candidateLine||lineSimilarity(baseLine,candidateLine)<0.45)continue;
++        const candidateScore=accuracyLineScore(candidateLine);
++        if(candidateScore>bestScore+2&&candidateScore>0){
++          best=candidateLine;
++          bestScore=candidateScore;
++        }
++      }
+     }
+-  }
+-  return parseAccuracyLayout(applyAccuracyThaiSpell(lines.join('\n')));
++    return best;
++  });
++
++  return parseAccuracyLayout(applyAccuracyThaiSpell(merged.join('\n')));
+ }
+ 
+ async function finalAccuracyUpgrade(rawText,cleanedText){
+diff --git a/js/ocr.js b/js/ocr.js
+index b7c9c6f..3cbd3b2 100644
+--- a/js/ocr.js
++++ b/js/ocr.js
+@@ -370,35 +370,124 @@ function extractNetworkConnectionDetails(text){
+   return lines.join('\n')+'\n\n--- Raw OCR ---\n'+src;
+ }
+ 
++/*
++ * Persistent Tesseract worker manager.
++ *
++ * IMPORTANT FIX: `Tesseract.recognize(image, lang, options)` (the one-shot
++ * convenience function) only forwards `options` to `createWorker()` — it does
++ * NOT apply OCR engine parameters like `tessedit_pageseg_mode`,
++ * `user_defined_dpi`, `tessedit_char_whitelist` or `tessedit_do_invert`.
++ * Those can only be applied via `worker.setParameters()` on an actual worker
++ * instance. Previously every single OCR pass (each preprocessing mode/preset
++ * defines its own `psm`/`dpi`) silently ran with Tesseract's default
++ * settings, so all the "document/ticket/table/screenshot" presets were
++ * producing near-identical engine behaviour and only differed by the canvas
++ * preprocessing — which is the main reason results looked inconsistent and
++ * "garbled" regardless of which mode was picked.
++ *
++ * On top of that, the one-shot API creates a brand new worker (and
++ * reinitializes the Thai+English language data) for every call, which is
++ * also why scanning with many passes was so slow. Keeping one worker alive
++ * per language and reusing it across passes fixes both problems.
++ */
++const OcrWorkerManager=(()=>{
++  let worker=null;
++  let workerLang=null;
++  let initPromise=null;
++  const progressCtx={start:0,end:100,label:''};
++
++  async function get(lang){
++    if(worker&&workerLang===lang)return worker;
++    if(initPromise)await initPromise.catch(()=>{});
++    if(worker&&workerLang===lang)return worker;
++    if(worker){
++      const stale=worker;
++      worker=null;
++      try{await stale.terminate();}catch(error){/* ignore */}
++    }
++    if(!window.Tesseract||typeof Tesseract.createWorker!=='function'){
++      throw new Error('โหลด Tesseract.js ไม่สำเร็จ กรุณาต่ออินเทอร์เน็ต');
++    }
++    initPromise=Tesseract.createWorker(lang,undefined,{
++      logger:m=>{
++        if(m.progress!==undefined)setProgress(progressCtx.start+(m.progress*(progressCtx.end-progressCtx.start)));
++        if(m.status)setStatus(progressCtx.label+' · '+m.status+' '+Math.round((m.progress||0)*100)+'%');
++      }
++    });
++    worker=await initPromise;
++    workerLang=lang;
++    initPromise=null;
++    return worker;
++  }
++
++  function setProgressContext(start,end,label){
++    progressCtx.start=start;
++    progressCtx.end=end;
++    progressCtx.label=label;
++  }
++
++  async function terminate(){
++    if(!worker)return;
++    const stale=worker;
++    worker=null;
++    workerLang=null;
++    try{await stale.terminate();}catch(error){/* ignore */}
++  }
++
++  return {get,setProgressContext,terminate};
++})();
++
++if(typeof window!=='undefined'){
++  window.addEventListener('beforeunload',()=>{OcrWorkerManager.terminate();});
++}
++
+ async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6',extra={}){
+   const lang=$('langSelect')?.value||'tha+eng';
+   const thaiLang=/\btha\b|^th\b|thai/i.test(lang);
+-  const whitelist=thaiLang?undefined:extra.whitelist;
+-  const result=await Tesseract.recognize(canvas,lang,{
+-    logger:m=>{
+-      if(m.progress!==undefined)setProgress(progressStart+(m.progress*(progressEnd-progressStart)));
+-      if(m.status)setStatus(label+' · '+m.status+' '+Math.round((m.progress||0)*100)+'%');
+-    },
+-    tessedit_pageseg_mode:psm,
++  const whitelist=thaiLang?'':(extra.whitelist||'');
++  const worker=await OcrWorkerManager.get(lang);
++  OcrWorkerManager.setProgressContext(progressStart,progressEnd,label);
++  // Every parameter is set explicitly (including the "off" cases) on every
++  // pass because the worker now persists across passes/calls — anything left
++  // unset would otherwise leak over from a previous pass instead of falling
++  // back to a sane default.
++  await worker.setParameters({
++    tessedit_pageseg_mode:String(psm),
+     preserve_interword_spaces:extra.preserveSpaces===false?'0':'1',
+-    user_defined_dpi:extra.dpi||'300',
++    user_defined_dpi:String(extra.dpi||'300'),
+     tessedit_do_invert:'0',
+-    tessedit_char_whitelist:whitelist||undefined
++    tessedit_char_whitelist:whitelist
+   });
++  const result=await worker.recognize(canvas);
+   const confidence=extractAverageConfidence(result);
+   return {text:getTesseractLineText(result)||result.data.text||'',confidence};
+ }
+ 
+ function getTesseractLineText(result){
++  // IMPORTANT FIX: on images with large blank regions (very common on
++  // dark-background chat/terminal screenshots with vertical gaps between
++  // paragraphs), some page segmentation modes hallucinate short bursts of
++  // fake "text" out of background noise/anti-aliasing in those gaps. This is
++  // reliably distinguishable from real text: empirically, every hallucinated
++  // token scored well under 60% confidence (often under 10%) while every
++  // genuine word in the same image scored 69%+ (usually 90%+). Filtering out
++  // low-confidence lines before they're ever joined into the candidate text
++  // removes this noise at the source — far more reliable than trying to
++  // guess the right page-segmentation mode for every document type.
++  const MIN_LINE_CONFIDENCE=45;
+   const lines=(result?.data?.lines||[])
+-    .map(line=>String(line.text||'').trim())
+-    .filter(Boolean);
+-  if(lines.length<2)return '';
+-  const joined=lines.join('\n');
+-  const raw=String(result?.data?.text||'').trim();
+-  if(!raw)return joined;
+-  const rawLineCount=raw.split('\n').filter(line=>line.trim()).length;
+-  return lines.length>rawLineCount?joined:raw;
++    .filter(line=>{
++      const text=String(line.text||'').trim();
++      if(!text)return false;
++      const conf=Number(line.confidence);
++      return !(Number.isFinite(conf)&&conf<MIN_LINE_CONFIDENCE);
++    })
++    .map(line=>String(line.text||'').trim());
++  if(lines.length>=2)return lines.join('\n');
++  // Confidence filtering left us with almost nothing (e.g. a single-line
++  // image, or a very low-confidence pass overall) — fall back to
++  // Tesseract's own flat transcription rather than returning too little.
++  return String(result?.data?.text||'').trim();
+ }
+ 
+ async function recognizeNativeText(canvas,start=0,end=100){
+diff --git a/js/thai-normalizer.js b/js/thai-normalizer.js
+index b7d8503..618a6ab 100644
+--- a/js/thai-normalizer.js
++++ b/js/thai-normalizer.js
+@@ -1,21 +1,27 @@
+ const THAI_EXACT_CORRECTIONS=[
++  // ำ (sara am) often drops to plain า in OCR — these are the highest
++  // frequency real-world misreads seen in Thai documents/invoices.
+   [/จานวนเงิน/g,'จำนวนเงิน'],
+   [/จํานวนเงิน/g,'จำนวนเงิน'],
+   [/ขอมูล/g,'ข้อมูล'],
+   [/โทรศัพท(?!์)/g,'โทรศัพท์'],
+   [/อีเมลล/g,'อีเมล'],
+-  [/อเมล/g,'อีเมล'],
++  [/อเมล(?!์)/g,'อีเมล'],
+   [/ใบกากับภาษี/g,'ใบกำกับภาษี'],
+-  [/จำนวนเงิน/g,'จำนวนเงิน'],
+-  [/บริษัท/g,'บริษัท'],
++  [/ใบกํากับภาษี/g,'ใบกำกับภาษี'],
+   [/จากัด/g,'จำกัด'],
+-  [/ข้อมูล/g,'ข้อมูล'],
+-  [/โทรศัพท์(?!์)/g,'โทรศัพท์'],
+-  [/อีเมลล/g,'อีเมล'],
+-  [/ใบกากับภาษี/g,'ใบกำกับภาษี'],
+-  [/สำคัญ/g,'สำคัญ'],
+-  [/วันที่/g,'วันที่'],
+-  [/เรื่อง/g,'เรื่อง']
++  [/จํากัด/g,'จำกัด'],
++  [/สาคัญ/g,'สำคัญ'],
++  [/สาเนา/g,'สำเนา'],
++  [/นาส่ง/g,'นำส่ง'],
++  [/ดาเนินการ/g,'ดำเนินการ'],
++  [/เลขประจาตัว/g,'เลขประจำตัว'],
++  [/หนังสือมอบอานาจ/g,'หนังสือมอบอำนาจ'],
++  [/ผู้รับมอบอานาจ/g,'ผู้รับมอบอำนาจ'],
++  [/ตาแหน่ง/g,'ตำแหน่ง'],
++  [/กาหนด/g,'กำหนด'],
++  [/อาเภอ/g,'อำเภอ'],
++  [/กาลัง/g,'กำลัง']
+ ];
+ 
+ function safeThaiNormalize(text){
