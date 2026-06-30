@@ -146,6 +146,66 @@ function prepareDarkThaiScreenshotCanvas(source){
   return lightSharpenCanvas(canvas,.18);
 }
 
+function cropDarkScreenshotContent(source){
+  if(!source)return source;
+  const probe=document.createElement('canvas');
+  const maxSide=Math.max(source.width,source.height);
+  const scale=maxSide>900?900/maxSide:1;
+  probe.width=Math.max(1,Math.round(source.width*scale));
+  probe.height=Math.max(1,Math.round(source.height*scale));
+  const ctx=probe.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(source,0,0,probe.width,probe.height);
+  const data=ctx.getImageData(0,0,probe.width,probe.height).data;
+  let minX=probe.width,minY=probe.height,maxX=0,maxY=0,seen=0;
+  for(let y=0;y<probe.height;y++){
+    for(let x=0;x<probe.width;x++){
+      const i=(y*probe.width+x)*4;
+      const r=data[i],g=data[i+1],b=data[i+2];
+      const gray=.299*r+.587*g+.114*b;
+      const brightText=gray>132;
+      const goldBorder=r>120&&g>85&&b<70;
+      if(brightText&&!goldBorder){
+        minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);seen++;
+      }
+    }
+  }
+  if(seen<probe.width*probe.height*.002)return source;
+  const pad=Math.round(Math.min(probe.width,probe.height)*.035);
+  minX=Math.max(0,minX-pad);minY=Math.max(0,minY-pad);maxX=Math.min(probe.width-1,maxX+pad);maxY=Math.min(probe.height-1,maxY+pad);
+  const sx=minX/scale,sy=minY/scale,sw=(maxX-minX+1)/scale,sh=(maxY-minY+1)/scale;
+  if(sw<source.width*.25||sh<source.height*.2)return source;
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.round(sw);
+  canvas.height=Math.round(sh);
+  canvas.getContext('2d').drawImage(source,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+  return canvas;
+}
+
+function prepareScreenshotDarkCanvas(source,scale=3,contrast=1.42){
+  const cropped=cropDarkScreenshotContent(source);
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.max(1,Math.round(cropped.width*scale));
+  canvas.height=Math.max(1,Math.round(cropped.height*scale));
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality='high';
+  ctx.drawImage(cropped,0,0,canvas.width,canvas.height);
+  const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+  const d=img.data;
+  for(let i=0;i<d.length;i+=4){
+    let gray=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+    gray=255-gray;
+    gray=(gray-128)*contrast+128;
+    gray=clampByte(gray);
+    if(gray>238)gray=255;
+    if(gray<20)gray=0;
+    d[i]=d[i+1]=d[i+2]=gray;
+  }
+  sharpenImageData(d,canvas.width,canvas.height,.24);
+  ctx.putImageData(img,0,0);
+  return canvas;
+}
+
 function segmentTextLines(canvas){
   const width=canvas.width;
   const height=canvas.height;
@@ -220,6 +280,9 @@ function adaptiveThresholdImageData(data,width,height,radius=14,bias=8){
 }
 
 function preprocessCanvas(source,mode='default'){
+  if(mode==='screenshot-dark'||mode==='screenshot-dark-3x')return prepareScreenshotDarkCanvas(source,3,1.38);
+  if(mode==='screenshot-dark-4x')return prepareScreenshotDarkCanvas(source,4,1.36);
+  if(mode==='screenshot-dark-high')return prepareScreenshotDarkCanvas(source,4,1.58);
   if(mode==='dark-thai-screenshot'||mode==='dark-thai-soft')return prepareDarkThaiScreenshotCanvas(source);
   const scale=getSmartScale(source,mode);
   const canvas=document.createElement('canvas');
@@ -475,6 +538,30 @@ async function recognizeOnce(canvas,progressStart,progressEnd,label,psm='6',extr
   return {text:getTesseractLineText(result)||result.data.text||'',confidence};
 }
 
+function scoreItineraryListText(text,confidence=0){
+  const value=String(text||'');
+  const lines=value.split('\n').map(line=>line.trim()).filter(Boolean);
+  const timeCount=(value.match(/\b\d{1,2}\.\d{2}\s*-\s*\d{1,2}\.\d{2}\b/g)||[]).length;
+  const singleTime=(value.match(/\b\d{1,2}\.\d{2}\b/g)||[]).length;
+  const bulletCount=lines.filter(line=>/^[•\-*]\s*/.test(line)).length;
+  const placeNames=(value.match(/Pranberry Field|Cafe Racer Marina|Anantasila Beach Resort Hua Hin|Chaplu Cafe|AKOYA|Beach Lounge/gi)||[]).length;
+  const thaiHints=(value.match(/วันที่|เดินทาง|รับประทาน|พักผ่อน|ชายหาด|คาเฟ่|ร้าน|หัวหิน|ปราณบุรี/g)||[]).length;
+  const mergedPenalty=lines.filter(line=>line.length>150&&((line.match(/\b\d{1,2}\.\d{2}/g)||[]).length>1||line.split(/\s{2,}/).length>3)).length;
+  const weird=(value.match(/[�ÆƟθϴƩΣÃÊÈË|{}<>~`_^=+\\]/g)||[]).length;
+  const noLinePenalty=lines.length<4?80:0;
+  let score=0;
+  score+=Math.min(120,lines.length*9);
+  score+=timeCount*45+singleTime*8;
+  score+=bulletCount*18;
+  score+=placeNames*36;
+  score+=thaiHints*18;
+  score+=(confidence||0)*.7;
+  score-=mergedPenalty*70;
+  score-=weird*12;
+  score-=noLinePenalty;
+  return score;
+}
+
 async function recognizeLineByLine(canvas,progressStart,progressEnd,label){
   const lines=segmentTextLines(canvas);
   if(!lines.length)return recognizeOnce(canvas,progressStart,progressEnd,label+' Whole', '6', {dpi:'520'});
@@ -492,6 +579,32 @@ async function recognizeLineByLine(canvas,progressStart,progressEnd,label){
     }
     const cleaned=String(best.text||'').replace(/\s{2,}/g,' ').trim();
     if(cleaned)parts.push(cleaned);
+    if(Number.isFinite(best.confidence))confidences.push(best.confidence);
+  }
+  const confidence=confidences.length?Math.round(confidences.reduce((a,b)=>a+b,0)/confidences.length):null;
+  return {text:parts.join('\n'),confidence};
+}
+
+async function recognizeItineraryLineByLine(canvas,progressStart,progressEnd,label){
+  const lines=segmentTextLines(canvas);
+  if(lines.length<3)return recognizeOnce(canvas,progressStart,progressEnd,label+' Sparse fallback','11',{dpi:'520'});
+  if(typeof setStatus==='function')setStatus('OCR Line-by-Line itinerary/list ('+lines.length+' lines)');
+  const parts=[];
+  const confidences=[];
+  for(let i=0;i<lines.length;i++){
+    const from=progressStart+((progressEnd-progressStart)*i/lines.length);
+    const to=progressStart+((progressEnd-progressStart)*(i+1)/lines.length);
+    const first=await recognizeOnce(lines[i].canvas,from,to,label+' line '+(i+1),'7',{dpi:'520'});
+    let best=first;
+    if(!/\S/.test(first.text)||scoreItineraryListText(first.text,first.confidence)<20){
+      const fallback=await recognizeOnce(lines[i].canvas,from,to,label+' line fallback '+(i+1),'13',{dpi:'520'});
+      best=scoreItineraryListText(fallback.text,fallback.confidence)>scoreItineraryListText(first.text,first.confidence)?fallback:first;
+    }
+    let text=String(best.text||'').replace(/[ \t]{2,}/g,' ').trim();
+    text=text.replace(/^[·•\.\*o0]\s+(?=\S)/,'• ');
+    text=text.replace(/\b([0-2]?\d)\s*[.,:]\s*([0-5]\d)\s*[-–—]\s*([0-2]?\d)\s*[.,:]\s*([0-5]\d)\b/g,'$1.$2 - $3.$4');
+    if(text&&/\b\d{1,2}\.\d{2}\s*-\s*\d{1,2}\.\d{2}\b/.test(text)&&!/^[•-]/.test(text))text='• '+text;
+    if(text)parts.push(text);
     if(Number.isFinite(best.confidence))confidences.push(best.confidence);
   }
   const confidence=confidences.length?Math.round(confidences.reduce((a,b)=>a+b,0)/confidences.length):null;
@@ -539,6 +652,13 @@ function createImageOcrPasses(canvas){
     {name:'Dark Screenshot Single Block',mode:'dark-ui',psm:'4',dpi:'420'}
   ];
   const sets={
+    'screenshot-dark':[
+      {name:'Screenshot Dark 3x Line',mode:'screenshot-dark-3x',psm:'7',dpi:'520',lineByLine:true,itineraryLine:true},
+      {name:'Screenshot Dark 4x Line',mode:'screenshot-dark-4x',psm:'7',dpi:'560',lineByLine:true,itineraryLine:true},
+      {name:'Screenshot Dark High Contrast',mode:'screenshot-dark-high',psm:'6',dpi:'560'},
+      {name:'Screenshot Dark Sparse',mode:'screenshot-dark-3x',psm:'11',dpi:'520'},
+      {name:'Screenshot Dark Single Block',mode:'screenshot-dark-4x',psm:'6',dpi:'560'}
+    ],
     'dark-thai-screenshot':[
       {name:'Dark Thai Line OCR',mode:'dark-thai-screenshot',psm:'7',dpi:'520',lineByLine:true},
       {name:'Dark Thai Invert Whole',mode:'dark-thai-screenshot',psm:'6',dpi:'520'},
@@ -730,7 +850,9 @@ async function runOcr(canvas,start=0,end=100,profile='image'){
     const to=start+((end-start)*(i+1)/passes.length);
     setStatus('กำลังตรวจ OCR หลายโหมด: '+pass.name+' ('+(i+1)+'/'+passes.length+')');
     const processed=preprocessCanvas(canvas,pass.mode);
-    const result=pass.lineByLine
+    const result=pass.itineraryLine
+      ? await recognizeItineraryLineByLine(processed,from,to,pass.name)
+      : pass.lineByLine
       ? await recognizeLineByLine(processed,from,to,pass.name)
       : await recognizeOnce(processed,from,to,pass.name,pass.psm,pass);
     const normalized=normalizeNetworkOcrText(result.text);
@@ -743,7 +865,8 @@ async function runOcr(canvas,start=0,end=100,profile='image'){
     const symbolScore=typeof symbolPreservationScore==='function'?symbolPreservationScore(result.text,candidateText).score:100;
     const fieldScore=typeof validateImportantFields==='function'?Math.max(0,30-(validateImportantFields(candidateText).issues.length*10)):20;
     const uiScore=typeof scoreThaiUiScreenshotText==='function'?scoreThaiUiScreenshotText(candidateText):0;
-    const score=scoreOcrText(normalizedForScore,result.confidence)+(symbolScore*.35)+fieldScore+uiScore-risk*.8+(pass.lineByLine?18:0)+(extracted?120:0);
+    const itineraryScore=($('cleanupLevel')?.value==='list-safe'||AppState.fileAnalysis?.contentType==='itinerary-list'||pass.itineraryLine)?scoreItineraryListText(candidateText,result.confidence):0;
+    const score=scoreOcrText(normalizedForScore,result.confidence)+(symbolScore*.35)+fieldScore+uiScore+itineraryScore-risk*.8+(pass.lineByLine?18:0)+(pass.itineraryLine?40:0)+(extracted?120:0);
     candidates.push({text:candidateText,confidence:result.confidence,score,mode:pass.name,risk,canvas:processed});
     if(score>best.score){
       best={text:candidateText,confidence:result.confidence,score,mode:pass.name,risk,canvas:processed};

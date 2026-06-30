@@ -144,6 +144,25 @@
   cursor:pointer;
 }
 
+.dark-shot-tools{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+  margin-top:8px;
+  padding-top:8px;
+  border-top:1px solid rgba(96,165,250,.22);
+}
+
+.dark-shot-tools span{
+  color:#bfdbfe;
+  font-size:12px;
+  line-height:1.35;
+}
+
+.dark-shot-tools button{
+  min-height:32px;
+}
+
 @media(max-width:1050px){
   .pro-dashboard{grid-template-columns:repeat(3,minmax(0,1fr))}
   .pro-auto,.pro-file-intel,.pro-recent,.pro-actions{grid-column:span 3}
@@ -153,4 +172,5 @@
   .pro-dashboard{grid-template-columns:1fr}
   .pro-auto,.pro-file-intel,.pro-recent,.pro-actions{grid-column:span 1}
   .history-tools{grid-template-columns:1fr}
+  .dark-shot-tools{grid-template-columns:1fr}
 }

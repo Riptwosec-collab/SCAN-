@@ -13,6 +13,8 @@ function protectImportantTokens(text){
     {type:'ticket',regex:/\b(?:INC|REQ|TKT|CASE|ERR)[-_:]?[A-Z0-9-]{3,}\b/gi},
     {type:'amount',regex:/[฿$]?\s*\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\b\d+(?:\.\d{2})?\s*(?:บาท|THB|USD)\b/gi},
     {type:'date',regex:/\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b/g},
+    {type:'timeRangeDot',regex:/\b\d{1,2}\.\d{2}\s*-\s*\d{1,2}\.\d{2}\b/g},
+    {type:'timeDot',regex:/\b\d{1,2}\.\d{2}\b/g},
     {type:'time',regex:/\b\d{1,2}:\d{2}(?::\d{2})?\b/g},
     {type:'percent',regex:/\b\d+(?:\.\d+)?%/g},
     {type:'version',regex:/\bv?\d+\.\d+(?:\.\d+){0,2}\b/gi},

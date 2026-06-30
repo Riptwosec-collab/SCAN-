@@ -81,6 +81,13 @@ function cleanText(text){
     : {text:raw,tokens:[]};
   let result=protectedData.text;
 
+  if(level==='list-safe'){
+    result=cleanListSafeText(result);
+    result=typeof restoreImportantTokens==='function'?restoreImportantTokens(result,protectedData.tokens):result;
+    result=protectItineraryTimeText(result);
+    return result.trim();
+  }
+
   if(level==='raw'){
     result=typeof restoreImportantTokens==='function'?restoreImportantTokens(result,protectedData.tokens):result;
     return typeof validateAndMarkSuspiciousFields==='function'?validateAndMarkSuspiciousFields(result):result;
@@ -129,6 +136,43 @@ function cleanText(text){
   if(mode==='table')return toTable(result);
   if(mode==='summary')return summarize(result);
   return result.split('\n').map(line=>line.trim()).filter(Boolean).join('\n');
+}
+
+function protectItineraryTimeText(text){
+  return String(text||'')
+    .replace(/\b([0-2]?\d)\s*[.,:]\s*([0-5]\d)\s*[-–—]\s*([0-2]?\d)\s*[.,:]\s*([0-5]\d)\b/g,'$1.$2 - $3.$4')
+    .replace(/\b([0-2]?\d)\s*[.,:]\s*([0-5]\d)\b/g,'$1.$2')
+    .replace(/\b0?([3-9]|1\d|2[0-3])\.(\d{2})\b/g,(m,h,mm)=>String(Number(h)).padStart(2,'0')+'.'+mm);
+}
+
+function cleanListSafeText(text){
+  const source=String(text||'').replace(/\r/g,'').replace(/\u00a0/g,' ');
+  const lines=source.split('\n');
+  const out=[];
+  for(const rawLine of lines){
+    let line=rawLine
+      .replace(/[ \t]{2,}/g,' ')
+      .replace(/[“”]/g,'"')
+      .replace(/[‘’]/g,"'")
+      .replace(/[•●◦▪▫]/g,'•')
+      .replace(/^[·•\.\*o0]\s+(?=\S)/,'• ')
+      .replace(/^\s*[-–—]\s*/,'- ')
+      .trim();
+    if(!line)continue;
+    line=protectItineraryTimeText(line);
+    line=line
+      .replace(/[{}<>~`_^=+\\]/g,'')
+      .replace(/\s+([,.;:])/g,'$1')
+      .replace(/([ก-ฮ])\s+([ะาำิีึืุูั็่้๊๋์])/g,'$1$2')
+      .replace(/([เแโใไ])\s+([ก-ฮ])/g,'$1$2')
+      .replace(/\s{2,}/g,' ')
+      .trim();
+    if(/\b\d{1,2}\.\d{2}\s*-\s*\d{1,2}\.\d{2}\b/.test(line)&&!/^[•-]/.test(line)){
+      line='• '+line;
+    }
+    out.push(line);
+  }
+  return out.join('\n');
 }
 
 function fixNoise(text){

@@ -278,6 +278,7 @@ function registerPwa(){
 
 function applyProfessionalPreset(preset){
   const map={
+    'screenshot-dark':{mode:'capture-list',cleanup:'list-safe',orientation:'portrait'},
     invoice:{mode:'document',cleanup:'strict',orientation:'portrait'},
     ticket:{mode:'ticket',cleanup:'strict',orientation:'portrait'},
     'email-alert':{mode:'email',cleanup:'strict',orientation:'portrait'},
@@ -345,6 +346,36 @@ function bindNextActions(){
   document.querySelectorAll('[data-next-action]').forEach(button=>{
     button.onclick=()=>actions[button.dataset.nextAction]?.();
   });
+  document.addEventListener('click',event=>{
+    const button=event.target.closest('[data-image-auto-action]');
+    if(!button)return;
+    const action=button.dataset.imageAutoAction;
+    if(action==='screenshot-dark'){
+      if($('ocrPreset'))$('ocrPreset').value='screenshot-dark';
+      if($('cleanupLevel'))$('cleanupLevel').value='list-safe';
+      if($('modeSelect'))$('modeSelect').value='capture-list';
+      AppState.ocrPreset='screenshot-dark';
+      AppState.cleanupLevel='list-safe';
+      setChecked?.('threshold',false);
+      setChecked?.('autoCropDoc',false);
+      updateProcessedPreview();
+      scanCurrent();
+    }
+    if(action==='line-by-line'){
+      if($('ocrPreset'))$('ocrPreset').value='screenshot-dark';
+      if($('cleanupLevel'))$('cleanupLevel').value='list-safe';
+      if($('modeSelect'))$('modeSelect').value='capture-list';
+      AppState.ocrPreset='screenshot-dark';
+      AppState.cleanupLevel='list-safe';
+      scanCurrent();
+    }
+    if(action==='preserve-list'){
+      if($('cleanupLevel'))$('cleanupLevel').value='list-safe';
+      if($('modeSelect'))$('modeSelect').value='capture-list';
+      AppState.cleanupLevel='list-safe';
+      if(AppState.rawText)showCleanedResult(AppState.rawText,true);
+    }
+  });
 }
 
 function switchTab(tab){
@@ -394,6 +425,7 @@ async function handleImageFile(file){
     drawImagePreview();
     if(typeof runScanProBackgroundAuto==='function')runScanProBackgroundAuto({analysis:AppState.fileAnalysis,quality,canvas:AppState.imageCanvas});
     updateProcessedPreview();
+    renderDarkScreenshotTools();
     if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.preprocessing,'Image ready for OCR');
     setStatus('อัปโหลดรูปภาพสำเร็จ: '+file.name,'ok');
   }catch(error){
@@ -514,6 +546,19 @@ function renderOcrCandidates(){
   box.querySelectorAll('[data-candidate]').forEach(button=>{
     button.onclick=()=>selectOcrCandidate(Number(button.dataset.candidate));
   });
+}
+
+function renderDarkScreenshotTools(){
+  const box=$('fileQualityPanel');
+  if(!box||AppState.tab!=='img')return;
+  const report=AppState.fileQuality;
+  const isDark=AppState.fileAnalysis?.recommendedPreset==='screenshot-dark'||AppState.autoTuning?.preset==='screenshot-dark'||(report&&report.avg<118&&report.darkRatio>.34);
+  box.querySelector('.dark-shot-tools')?.remove();
+  if(!isDark)return;
+  const panel=document.createElement('div');
+  panel.className='dark-shot-tools';
+  panel.innerHTML='<span>Detected: Dark Screenshot</span><span>Recommended preset: Screenshot Dark</span><span>Content type: Itinerary/List</span><span>Quality warning: small white text, use OCR Max Accuracy</span><button class="btn small" type="button" data-image-auto-action="screenshot-dark">Retry with Screenshot Dark</button><button class="btn small" type="button" data-image-auto-action="line-by-line">OCR Line-by-Line</button><button class="btn small" type="button" data-image-auto-action="preserve-list">Preserve List Format</button>';
+  box.appendChild(panel);
 }
 
 function selectOcrCandidate(index){

@@ -81,6 +81,10 @@ function analyzeUploadedFile(file,extra={}){
     orientation:extra.orientation||'unknown',
     brightness:extra.brightness||null,
     likelyKind:isPdf?'pdf':type.includes('png')||type.includes('webp')?'screenshot/image':'image',
+    recommendedPreset:extra.recommendedPreset||'auto',
+    recommendedScale:extra.recommendedScale||null,
+    preserveLineBreaks:!!extra.preserveLineBreaks,
+    contentType:extra.contentType||'unknown',
     createdAt:new Date().toISOString()
   };
 }
@@ -133,7 +137,7 @@ function buildScanProAutoConfig(context={}){
     config={...config,skill:'searchable-pdf',preset:'document',mode:'document',cleanup:'normal',autoCropDoc:true,reason:'PDF document flow'};
   }
   if(isDark){
-    config={...config,skill:'dark-thai-screenshot',preset:'dark-thai-screenshot',mode:'capture-list',cleanup:'safe',threshold:false,autoCropDoc:false,itDictionary:false,removeNoise:false,reason:'dark screenshot detected'};
+    config={...config,skill:'dark-thai-screenshot',preset:'screenshot-dark',mode:'capture-list',cleanup:'list-safe',threshold:false,autoCropDoc:false,itDictionary:false,removeNoise:false,recommendedScale:3,preserveLineBreaks:true,contentType:'itinerary-list',reason:'dark screenshot detected'};
   }else if(looksTable){
     config={...config,skill:'table',preset:'table',mode:'table',cleanup:'normal',orientation:'landscape',threshold:true,reason:'table or landscape layout'};
   }else if(looksTicket){
@@ -149,6 +153,15 @@ function buildScanProAutoConfig(context={}){
 function applyScanProAutoConfig(config,reason='auto background'){
   if(!config||AppState.scanProAutoMode===false)return null;
   AppState.autoTuning={...config,reason,appliedAt:new Date().toISOString()};
+  if(AppState.fileAnalysis){
+    AppState.fileAnalysis={
+      ...AppState.fileAnalysis,
+      recommendedPreset:config.preset,
+      recommendedScale:config.recommendedScale||AppState.fileAnalysis.recommendedScale,
+      preserveLineBreaks:!!config.preserveLineBreaks,
+      contentType:config.contentType||AppState.fileAnalysis.contentType
+    };
+  }
   if(config.skill&&typeof applyOcrSkill==='function')applyOcrSkill(config.skill,{silent:true});
   setScanProSelect('langSelect',config.language);
   setScanProSelect('ocrPreset',config.preset);
