@@ -68,18 +68,49 @@ function applyKnownThaiWordJoin(text){
 
 function cleanText(text){
   resetFixReport();
+  const level=$('cleanupLevel')?.value||AppState.cleanupLevel||'safe';
+  const preserveSpacing=['code-config-safe','table-safe'].includes(level);
   const raw=String(text||'')
     .replace(/\r/g,'')
     .replace(/\$1\$2/g,'')
-    .replace(/[ \t]+/g,' ')
+    .replace(/[ \t]+/g,match=>preserveSpacing?match:' ')
     .replace(/\n{3,}/g,'\n\n')
     .trim();
-  const level=$('cleanupLevel')?.value||AppState.cleanupLevel||'safe';
   AppState.cleanupLevel=level;
   const protectedData=typeof protectImportantTokens==='function'
     ? protectImportantTokens(raw)
     : {text:raw,tokens:[]};
   let result=protectedData.text;
+
+  if(level==='code-config-safe'){
+    result=cleanCodeConfigSafeText(result);
+    result=typeof restoreImportantTokens==='function'?restoreImportantTokens(result,protectedData.tokens):result;
+    return result.trim();
+  }
+
+  if(level==='table-safe'){
+    result=cleanTableSafeText(result);
+    result=typeof restoreImportantTokens==='function'?restoreImportantTokens(result,protectedData.tokens):result;
+    return result.trim();
+  }
+
+  if(level==='receipt-safe'){
+    result=cleanReceiptSafeText(result);
+    result=typeof restoreImportantTokens==='function'?restoreImportantTokens(result,protectedData.tokens):result;
+    return result.trim();
+  }
+
+  if(level==='paragraph-safe'){
+    result=cleanParagraphSafeText(result);
+    result=typeof restoreImportantTokens==='function'?restoreImportantTokens(result,protectedData.tokens):result;
+    return result.trim();
+  }
+
+  if(level==='thai-smart'||level==='english-smart'||level==='mixed-thai-eng'){
+    result=cleanMixedSmartText(result,level);
+    result=typeof restoreImportantTokens==='function'?restoreImportantTokens(result,protectedData.tokens):result;
+    return result.trim();
+  }
 
   if(level==='list-safe'){
     result=cleanListSafeText(result);
@@ -136,6 +167,45 @@ function cleanText(text){
   if(mode==='table')return toTable(result);
   if(mode==='summary')return summarize(result);
   return result.split('\n').map(line=>line.trim()).filter(Boolean).join('\n');
+}
+
+function cleanCodeConfigSafeText(text){
+  return String(text||'')
+    .replace(/\r/g,'')
+    .split('\n')
+    .map(line=>line.replace(/[ \t]+$/,'').replace(/[“”]/g,'"').replace(/[‘’]/g,"'"))
+    .filter(line=>line.trim())
+    .join('\n');
+}
+
+function cleanTableSafeText(text){
+  return String(text||'').replace(/\r/g,'').split('\n').map(line=>{
+    let out=line.trim().replace(/[ \t]{3,}/g,' | ').replace(/\s+\|\s+/g,' | ');
+    out=protectItineraryTimeText(out);
+    return out;
+  }).filter(Boolean).join('\n');
+}
+
+function cleanReceiptSafeText(text){
+  return String(text||'').replace(/\r/g,'').split('\n').map(line=>{
+    let out=line.trim().replace(/[ \t]{2,}/g,' ');
+    out=protectItineraryTimeText(out);
+    out=out.replace(/(\d)\s+([.,])\s+(\d{2})\b/g,'$1$2$3');
+    return out;
+  }).filter(Boolean).join('\n');
+}
+
+function cleanParagraphSafeText(text){
+  return String(text||'').replace(/\r/g,'').split('\n').map(line=>line.trim().replace(/[ \t]{2,}/g,' ')).filter(Boolean).join('\n');
+}
+
+function cleanMixedSmartText(text,level){
+  let out=String(text||'').replace(/\r/g,'').split('\n').map(line=>line.trim().replace(/[ \t]{2,}/g,' ')).filter(Boolean).join('\n');
+  if(level!=='english-smart'){
+    out=out.replace(/([เแโใไ])\s+([ก-ฮ])/g,'$1$2').replace(/([ก-ฮ])\s+([ะาำิีึืุูั็่้๊๋์])/g,'$1$2');
+  }
+  out=protectItineraryTimeText(out);
+  return out;
 }
 
 function protectItineraryTimeText(text){

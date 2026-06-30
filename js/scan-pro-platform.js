@@ -95,6 +95,129 @@ function setProcessingState(state,detail=''){
   renderScanProDashboard();
 }
 
+function analyzeAdaptiveImage(canvas,analysis={}){
+  if(!canvas)return null;
+  const quality=typeof analyzeCanvasQuality==='function'?analyzeCanvasQuality(canvas):null;
+  const brightness=typeof getCanvasBrightness==='function'?getCanvasBrightness(canvas):null;
+  const width=canvas.width;
+  const height=canvas.height;
+  const minSide=Math.min(width,height);
+  const maxSide=Math.max(width,height);
+  const name=String(analysis.name||AppState.sourceName||'').toLowerCase();
+  const mime=String(analysis.mime||AppState.imageFile?.type||'').toLowerCase();
+  const isScreenshot=/png|webp/.test(mime)||/screenshot|screen|capture|line|chat|log/.test(name);
+  const darkBackground=(brightness?.avg??quality?.avg??255)<118&&(brightness?.darkRatio??quality?.darkRatio??0)>.32;
+  const whiteText=darkBackground&&(brightness?.lightRatio??quality?.lightRatio??0)>.015;
+  const lowLight=(brightness?.avg??quality?.avg??255)<86;
+  const blurry=(quality?.blur??99)<18;
+  const lowContrast=(quality?.contrast??99)<38;
+  const smallText=minSide<720||maxSide>2200;
+  const aspect=width/Math.max(1,height);
+  const landscape=aspect>1.35;
+  const tableLike=detectImageTableLike(canvas);
+  const listLike=landscape||/schedule|trip|itinerary|list|เวลา|รายการ|เดินทาง/.test(name);
+  const receiptLike=/receipt|bill|invoice|slip|ใบเสร็จ|บิล/.test(name);
+  const codeLike=/log|config|code|json|yaml|terminal|console|router|switch|vlan|interface/.test(name);
+  const posterLike=/menu|poster|sign|ป้าย|เมนู/.test(name);
+  const bookLike=/book|page|หนังสือ/.test(name);
+  let imageType='raw/unknown';
+  if(codeLike)imageType='code-config-log';
+  else if(tableLike)imageType='table';
+  else if(receiptLike)imageType='receipt';
+  else if(darkBackground&&whiteText)imageType=listLike?'list-schedule':'screenshot-dark';
+  else if(isScreenshot)imageType='screenshot-light';
+  else if(bookLike)imageType='book-page';
+  else if(posterLike)imageType='poster/menu/sign';
+  else if(smallText)imageType='small-text';
+  else if(lowLight)imageType='low-light';
+  else if(blurry)imageType='blurry-text';
+  else imageType='document-photo';
+  if(listLike&&imageType==='screenshot-light')imageType='list-schedule';
+  const config=IMAGE_TYPE_CONFIG[imageType]||IMAGE_TYPE_CONFIG['raw/unknown'];
+  const warnings=[];
+  if(smallText)warnings.push('small text');
+  if(lowLight)warnings.push('low light');
+  if(blurry)warnings.push('possible blur');
+  if(lowContrast)warnings.push('low contrast');
+  if(tableLike)warnings.push('table-like lines');
+  if(darkBackground)warnings.push('dark background');
+  return {
+    imageType,
+    brightness:Math.round(brightness?.avg??quality?.avg??0),
+    contrast:Math.round(quality?.contrast??0),
+    blur:Math.round(quality?.blur??0),
+    noiseScore:estimateImageNoise(canvas),
+    textSize:smallText?'small':'normal',
+    resolution:width+'x'+height,
+    skewAngle:0,
+    screenshot:isScreenshot,
+    cameraPhoto:!isScreenshot,
+    tableLike,
+    denseParagraph:['document-photo','book-page'].includes(imageType),
+    listLike,
+    codeLike,
+    recommendedPreset:config.preset,
+    recommendedOcrStrategy:config.strategy,
+    cleanupMode:config.cleanup,
+    warnings
+  };
+}
+
+function estimateImageNoise(canvas){
+  if(!canvas)return 0;
+  const quality=typeof getImageStats==='function'?getImageStats(canvas):null;
+  const blur=quality?.blur??25;
+  const contrast=quality?.contrast??50;
+  return Math.max(0,Math.min(100,Math.round((contrast<30?20:0)+(blur<16?25:0))));
+}
+
+function detectImageTableLike(canvas){
+  if(!canvas)return false;
+  const probe=document.createElement('canvas');
+  const scale=Math.max(canvas.width,canvas.height)>700?700/Math.max(canvas.width,canvas.height):1;
+  probe.width=Math.max(1,Math.round(canvas.width*scale));
+  probe.height=Math.max(1,Math.round(canvas.height*scale));
+  const ctx=probe.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(canvas,0,0,probe.width,probe.height);
+  const data=ctx.getImageData(0,0,probe.width,probe.height).data;
+  let horizontal=0,vertical=0;
+  for(let y=0;y<probe.height;y+=3){
+    let ink=0;
+    for(let x=0;x<probe.width;x+=2){
+      const i=(y*probe.width+x)*4;
+      const g=.299*data[i]+.587*data[i+1]+.114*data[i+2];
+      if(g<90||g>210)ink++;
+    }
+    if(ink>probe.width*.22)horizontal++;
+  }
+  for(let x=0;x<probe.width;x+=4){
+    let ink=0;
+    for(let y=0;y<probe.height;y+=2){
+      const i=(y*probe.width+x)*4;
+      const g=.299*data[i]+.587*data[i+1]+.114*data[i+2];
+      if(g<90||g>210)ink++;
+    }
+    if(ink>probe.height*.18)vertical++;
+  }
+  return horizontal>=3&&vertical>=2;
+}
+
+const IMAGE_TYPE_CONFIG={
+  'document-photo':{preset:'document-photo',cleanup:'paragraph-safe',strategy:'multi-pass accurate OCR'},
+  'screenshot-light':{preset:'screenshot-light',cleanup:'mixed-thai-eng',strategy:'sparse text OCR'},
+  'screenshot-dark':{preset:'screenshot-dark',cleanup:'list-safe',strategy:'line-by-line OCR'},
+  receipt:{preset:'receipt',cleanup:'receipt-safe',strategy:'single block + sparse text OCR'},
+  table:{preset:'table-image',cleanup:'table-safe',strategy:'table-aware OCR'},
+  'book-page':{preset:'book-page',cleanup:'paragraph-safe',strategy:'paragraph-safe OCR'},
+  'poster/menu/sign':{preset:'poster-menu-sign',cleanup:'mixed-thai-eng',strategy:'sparse text OCR'},
+  'small-text':{preset:'small-text',cleanup:'mixed-thai-eng',strategy:'multi-pass accurate OCR'},
+  'low-light':{preset:'low-light',cleanup:'mixed-thai-eng',strategy:'multi-pass accurate OCR'},
+  'blurry-text':{preset:'blurry-text',cleanup:'mixed-thai-eng',strategy:'multi-pass accurate OCR'},
+  'code-config-log':{preset:'code-config-log',cleanup:'code-config-safe',strategy:'code-safe OCR'},
+  'list-schedule':{preset:'list-schedule',cleanup:'list-safe',strategy:'line-by-line OCR'},
+  'raw/unknown':{preset:'auto',cleanup:'safe',strategy:'multi-pass accurate OCR'}
+};
+
 function setScanProChecked(id,value){
   const el=$(id);
   if(el)el.checked=!!value;
@@ -108,6 +231,7 @@ function setScanProSelect(id,value){
 function buildScanProAutoConfig(context={}){
   const analysis=context.analysis||AppState.fileAnalysis||{};
   const quality=context.quality||AppState.fileQuality||{};
+  const adaptive=context.adaptive||AppState.adaptiveImageAnalysis||null;
   const fileName=(analysis.name||AppState.sourceName||'').toLowerCase();
   const isPdf=analysis.type==='pdf'||AppState.tab==='pdf';
   const isLandscape=(analysis.orientation||AppState.pdfOrientation)==='landscape';
@@ -133,6 +257,22 @@ function buildScanProAutoConfig(context={}){
     removeNoise:false,
     reason:'Thai + English cleanup'
   };
+  if(adaptive?.recommendedPreset){
+    config={
+      ...config,
+      preset:adaptive.recommendedPreset,
+      cleanup:adaptive.cleanupMode||config.cleanup,
+      mode:adaptive.imageType==='code-config-log'?'plain':adaptive.imageType==='table'?'table':adaptive.imageType==='list-schedule'?'capture-list':adaptive.denseParagraph?'document':config.mode,
+      threshold:!['screenshot-dark','list-schedule','code-config-log'].includes(adaptive.imageType),
+      autoCropDoc:['document-photo','book-page','receipt','low-light','blurry-text'].includes(adaptive.imageType),
+      itDictionary:adaptive.imageType!=='code-config-log',
+      removeNoise:false,
+      recommendedScale:['small-text','screenshot-dark','list-schedule'].includes(adaptive.imageType)?3:null,
+      preserveLineBreaks:['list-schedule','code-config-log','table'].includes(adaptive.imageType),
+      contentType:adaptive.imageType,
+      reason:'adaptive image type: '+adaptive.imageType
+    };
+  }
   if(isPdf){
     config={...config,skill:'searchable-pdf',preset:'document',mode:'document',cleanup:'normal',autoCropDoc:true,reason:'PDF document flow'};
   }
@@ -146,6 +286,22 @@ function buildScanProAutoConfig(context={}){
     config={...config,skill:'screenshot',preset:'email-alert',mode:'email',cleanup:'strict',threshold:true,reason:'email-like document'};
   }else if(isLowQuality){
     config={...config,skill:'handwriting',preset:'mobile',mode:'clean',cleanup:'light',threshold:true,autoCropDoc:true,reason:'low quality image boost'};
+  }
+  if(adaptive?.recommendedPreset&&!isPdf){
+    config={
+      ...config,
+      preset:adaptive.recommendedPreset,
+      cleanup:adaptive.cleanupMode||config.cleanup,
+      mode:adaptive.imageType==='code-config-log'?'plain':adaptive.imageType==='table'?'table':adaptive.imageType==='list-schedule'?'capture-list':adaptive.denseParagraph?'document':config.mode,
+      threshold:!['screenshot-dark','list-schedule','code-config-log'].includes(adaptive.imageType),
+      autoCropDoc:['document-photo','book-page','receipt','low-light','blurry-text'].includes(adaptive.imageType),
+      itDictionary:adaptive.imageType!=='code-config-log',
+      removeNoise:false,
+      recommendedScale:['small-text','screenshot-dark','list-schedule'].includes(adaptive.imageType)?3:null,
+      preserveLineBreaks:['list-schedule','code-config-log','table'].includes(adaptive.imageType),
+      contentType:adaptive.imageType,
+      reason:'adaptive image type: '+adaptive.imageType
+    };
   }
   return config;
 }

@@ -31,6 +31,7 @@ window.AppState={
   reviewRequired:false,
   sourceName:'',
   fileAnalysis:null,
+  adaptiveImageAnalysis:null,
   processingState:'idle',
   processingDetail:'',
   scanProAutoMode:true,

@@ -652,12 +652,68 @@ function createImageOcrPasses(canvas){
     {name:'Dark Screenshot Single Block',mode:'dark-ui',psm:'4',dpi:'420'}
   ];
   const sets={
+    'document-photo':[
+      {name:'Document Photo Deskew Base',mode:'doc-adaptive',psm:'6',dpi:'420'},
+      {name:'Document Photo Shadow Clean',mode:'shadow-clean',psm:'6',dpi:'420'},
+      {name:'Document Photo High Contrast',mode:'doc-clean',psm:'6',dpi:'420'},
+      {name:'Document Photo Dense Paragraph',mode:'pdf-like',psm:'4',dpi:'420'}
+    ],
+    'screenshot-light':[
+      {name:'Screenshot Light Sharp',mode:'ui-sharp',psm:'6',dpi:'420'},
+      {name:'Screenshot Light Sparse',mode:'ui-detail',psm:'11',dpi:'420'},
+      {name:'Screenshot Light Thin Font',mode:'gray',psm:'6',dpi:'420'},
+      {name:'Screenshot Light Adaptive',mode:'ui-adaptive',psm:'6',dpi:'420'}
+    ],
     'screenshot-dark':[
       {name:'Screenshot Dark 3x Line',mode:'screenshot-dark-3x',psm:'7',dpi:'520',lineByLine:true,itineraryLine:true},
       {name:'Screenshot Dark 4x Line',mode:'screenshot-dark-4x',psm:'7',dpi:'560',lineByLine:true,itineraryLine:true},
       {name:'Screenshot Dark High Contrast',mode:'screenshot-dark-high',psm:'6',dpi:'560'},
       {name:'Screenshot Dark Sparse',mode:'screenshot-dark-3x',psm:'11',dpi:'520'},
       {name:'Screenshot Dark Single Block',mode:'screenshot-dark-4x',psm:'6',dpi:'560'}
+    ],
+    'table-image':[
+      {name:'Table Image Lines',mode:'thai-line',psm:'6',dpi:'440'},
+      {name:'Table Image Sparse',mode:'ui-detail',psm:'11',dpi:'440'},
+      {name:'Table Image Shadow Clean',mode:'shadow-clean',psm:'6',dpi:'440'},
+      {name:'Table Image Dense',mode:'gray',psm:'6',dpi:'440'}
+    ],
+    'book-page':[
+      {name:'Book Page Paragraph',mode:'pdf-like',psm:'4',dpi:'420'},
+      {name:'Book Page Adaptive',mode:'doc-adaptive',psm:'6',dpi:'420'},
+      {name:'Book Page Shadow Clean',mode:'shadow-clean',psm:'6',dpi:'420'},
+      {name:'Book Page Gray',mode:'gray',psm:'6',dpi:'420'}
+    ],
+    'poster-menu-sign':[
+      {name:'Poster Sparse Text',mode:'ui-detail',psm:'11',dpi:'440'},
+      {name:'Poster High Contrast',mode:'ui-sharp',psm:'6',dpi:'440'},
+      {name:'Poster Block Text',mode:'ui-crisp',psm:'6',dpi:'440'}
+    ],
+    'small-text':[
+      {name:'Small Text 4x Sharp',mode:'ui-sharp',psm:'6',dpi:'560'},
+      {name:'Small Text Sparse',mode:'ui-detail',psm:'11',dpi:'560'},
+      {name:'Small Text Thai Adaptive',mode:'thai-adaptive',psm:'6',dpi:'560'},
+      {name:'Small Text Gray',mode:'gray',psm:'6',dpi:'560'}
+    ],
+    'low-light':[
+      {name:'Low Light Shadow Clean',mode:'shadow-clean',psm:'6',dpi:'460'},
+      {name:'Low Light Adaptive',mode:'doc-adaptive',psm:'6',dpi:'460'},
+      {name:'Low Light Sparse',mode:'ui-detail',psm:'11',dpi:'460'}
+    ],
+    'blurry-text':[
+      {name:'Blur Edge Enhance',mode:'sharpen-gray',psm:'6',dpi:'460'},
+      {name:'Blur Soft Threshold',mode:'thai-soft',psm:'6',dpi:'460'},
+      {name:'Blur Sparse',mode:'ui-detail',psm:'11',dpi:'460'}
+    ],
+    'code-config-log':[
+      {name:'Code Config Monospace',mode:'gray',psm:'6',dpi:'420'},
+      {name:'Code Config Sparse',mode:'ui-detail',psm:'11',dpi:'420'},
+      {name:'Code Config Sharp',mode:'ui-sharp',psm:'6',dpi:'420'}
+    ],
+    'list-schedule':[
+      {name:'List Schedule Line OCR',mode:'ui-sharp',psm:'7',dpi:'460',lineByLine:true,itineraryLine:true},
+      {name:'List Schedule Light Sparse',mode:'ui-detail',psm:'11',dpi:'460'},
+      {name:'List Schedule Block',mode:'ui-sharp',psm:'6',dpi:'460'},
+      {name:'List Schedule Gray',mode:'gray',psm:'6',dpi:'460'}
     ],
     'dark-thai-screenshot':[
       {name:'Dark Thai Line OCR',mode:'dark-thai-screenshot',psm:'7',dpi:'520',lineByLine:true},
@@ -908,7 +964,21 @@ async function scanImage(){
   const prepared=typeof prepareImageForOcr==='function'?prepareImageForOcr(base):base;
   AppState.preparedCanvas=prepared;
   if(typeof renderFileQualityReport==='function')renderFileQualityReport(analyzeCanvasQuality(prepared));
-  const preview=preprocessCanvas(prepared,'pdf-like');
+  const previewMode=({
+    'screenshot-dark':'screenshot-dark-3x',
+    'list-schedule':'ui-sharp',
+    'screenshot-light':'ui-sharp',
+    'document-photo':'doc-adaptive',
+    'table-image':'thai-line',
+    'book-page':'doc-adaptive',
+    'poster-menu-sign':'ui-detail',
+    'small-text':'ui-sharp',
+    'low-light':'shadow-clean',
+    'blurry-text':'sharpen-gray',
+    'code-config-log':'gray',
+    receipt:'receipt'
+  })[$('ocrPreset')?.value||AppState.ocrPreset]||'pdf-like';
+  const preview=preprocessCanvas(prepared,previewMode);
   AppState.processedCanvas=preview;
   drawCanvasTo($('processedPreview'),preview);
   return runOcr(prepared,5,95,'image');

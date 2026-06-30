@@ -278,7 +278,17 @@ function registerPwa(){
 
 function applyProfessionalPreset(preset){
   const map={
+    'document-photo':{mode:'document',cleanup:'paragraph-safe',orientation:'portrait'},
+    'screenshot-light':{mode:'capture-list',cleanup:'mixed-thai-eng',orientation:'portrait'},
     'screenshot-dark':{mode:'capture-list',cleanup:'list-safe',orientation:'portrait'},
+    'table-image':{mode:'table',cleanup:'table-safe',orientation:'landscape'},
+    'book-page':{mode:'document',cleanup:'paragraph-safe',orientation:'portrait'},
+    'poster-menu-sign':{mode:'capture-list',cleanup:'mixed-thai-eng',orientation:'portrait'},
+    'small-text':{mode:'clean',cleanup:'mixed-thai-eng',orientation:'portrait'},
+    'low-light':{mode:'clean',cleanup:'mixed-thai-eng',orientation:'portrait'},
+    'blurry-text':{mode:'clean',cleanup:'mixed-thai-eng',orientation:'portrait'},
+    'code-config-log':{mode:'plain',cleanup:'code-config-safe',orientation:'portrait'},
+    'list-schedule':{mode:'capture-list',cleanup:'list-safe',orientation:'portrait'},
     invoice:{mode:'document',cleanup:'strict',orientation:'portrait'},
     ticket:{mode:'ticket',cleanup:'strict',orientation:'portrait'},
     'email-alert':{mode:'email',cleanup:'strict',orientation:'portrait'},
@@ -350,14 +360,17 @@ function bindNextActions(){
     const button=event.target.closest('[data-image-auto-action]');
     if(!button)return;
     const action=button.dataset.imageAutoAction;
-    if(action==='screenshot-dark'){
-      if($('ocrPreset'))$('ocrPreset').value='screenshot-dark';
-      if($('cleanupLevel'))$('cleanupLevel').value='list-safe';
-      if($('modeSelect'))$('modeSelect').value='capture-list';
-      AppState.ocrPreset='screenshot-dark';
-      AppState.cleanupLevel='list-safe';
-      setChecked?.('threshold',false);
-      setChecked?.('autoCropDoc',false);
+    if(action==='recommended'||action==='screenshot-dark'){
+      const preset=AppState.adaptiveImageAnalysis?.recommendedPreset||'screenshot-dark';
+      const cleanup=AppState.adaptiveImageAnalysis?.cleanupMode||'list-safe';
+      const mode=cleanup==='code-config-safe'?'plain':cleanup==='table-safe'?'table':cleanup==='list-safe'?'capture-list':'clean';
+      if($('ocrPreset'))$('ocrPreset').value=preset;
+      if($('cleanupLevel'))$('cleanupLevel').value=cleanup;
+      if($('modeSelect'))$('modeSelect').value=mode;
+      AppState.ocrPreset=preset;
+      AppState.cleanupLevel=cleanup;
+      setChecked?.('threshold',!['screenshot-dark','list-schedule','code-config-log'].includes(AppState.adaptiveImageAnalysis?.imageType));
+      setChecked?.('autoCropDoc',['document-photo','book-page','receipt','low-light','blurry-text'].includes(AppState.adaptiveImageAnalysis?.imageType));
       updateProcessedPreview();
       scanCurrent();
     }
@@ -373,6 +386,26 @@ function bindNextActions(){
       if($('cleanupLevel'))$('cleanupLevel').value='list-safe';
       if($('modeSelect'))$('modeSelect').value='capture-list';
       AppState.cleanupLevel='list-safe';
+      if(AppState.rawText)showCleanedResult(AppState.rawText,true);
+    }
+    if(action==='max-accuracy'){
+      if($('ocrEngine'))$('ocrEngine').value='auto';
+      AppState.ocrEngine='auto';
+      const preset=AppState.adaptiveImageAnalysis?.recommendedPreset||$('ocrPreset')?.value||'auto';
+      if($('ocrPreset'))$('ocrPreset').value=preset;
+      AppState.ocrPreset=preset;
+      scanCurrent();
+    }
+    if(action==='preserve-table'){
+      if($('cleanupLevel'))$('cleanupLevel').value='table-safe';
+      if($('modeSelect'))$('modeSelect').value='table';
+      AppState.cleanupLevel='table-safe';
+      if(AppState.rawText)showCleanedResult(AppState.rawText,true);
+    }
+    if(action==='preserve-code'){
+      if($('cleanupLevel'))$('cleanupLevel').value='code-config-safe';
+      if($('modeSelect'))$('modeSelect').value='plain';
+      AppState.cleanupLevel='code-config-safe';
       if(AppState.rawText)showCleanedResult(AppState.rawText,true);
     }
   });
@@ -420,12 +453,14 @@ async function handleImageFile(file){
     const brightness=brightnessStats?Math.round(brightnessStats.avg):null;
     if(typeof analyzeUploadedFile==='function')AppState.fileAnalysis=analyzeUploadedFile(file,{orientation,brightness});
     const quality=typeof analyzeCanvasQuality==='function'?analyzeCanvasQuality(AppState.imageCanvas):null;
+    const adaptive=typeof analyzeAdaptiveImage==='function'?analyzeAdaptiveImage(AppState.imageCanvas,AppState.fileAnalysis):null;
+    AppState.adaptiveImageAnalysis=adaptive;
     AppState.crop=null;
     setFileSuccess('imgFileInfo','imgFileName',file);
     drawImagePreview();
-    if(typeof runScanProBackgroundAuto==='function')runScanProBackgroundAuto({analysis:AppState.fileAnalysis,quality,canvas:AppState.imageCanvas});
+    if(typeof runScanProBackgroundAuto==='function')runScanProBackgroundAuto({analysis:AppState.fileAnalysis,quality,adaptive,canvas:AppState.imageCanvas});
     updateProcessedPreview();
-    renderDarkScreenshotTools();
+    renderImageAdaptiveTools();
     if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.preprocessing,'Image ready for OCR');
     setStatus('อัปโหลดรูปภาพสำเร็จ: '+file.name,'ok');
   }catch(error){
@@ -466,7 +501,7 @@ async function scanCurrent(){
     setProgress(0);
     setOutputProcessing();
     if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.recognizing,'OCR running');
-    if(typeof runScanProBackgroundAuto==='function')runScanProBackgroundAuto({analysis:AppState.fileAnalysis,quality:AppState.fileQuality});
+    if(typeof runScanProBackgroundAuto==='function')runScanProBackgroundAuto({analysis:AppState.fileAnalysis,quality:AppState.fileQuality,adaptive:AppState.adaptiveImageAnalysis});
     setStatus('กำลังแปลง... กำลังพาไปที่กล่อง Output','ok');
     scrollToOutputBox();
     let raw='';
@@ -548,18 +583,29 @@ function renderOcrCandidates(){
   });
 }
 
-function renderDarkScreenshotTools(){
+function renderImageAdaptiveTools(){
   const box=$('fileQualityPanel');
   if(!box||AppState.tab!=='img')return;
+  box.querySelector('.dark-shot-tools')?.remove();
+  const adaptive=AppState.adaptiveImageAnalysis;
+  if(adaptive){
+    const panel=document.createElement('div');
+    panel.className='dark-shot-tools';
+    const warnings=adaptive.warnings?.length?adaptive.warnings.join(', '):'none';
+    panel.innerHTML='<span>Detected image type: '+escapeHtml(adaptive.imageType)+'</span><span>Recommended preset: '+escapeHtml(adaptive.recommendedPreset)+'</span><span>OCR strategy: '+escapeHtml(adaptive.recommendedOcrStrategy)+'</span><span>Cleanup mode: '+escapeHtml(adaptive.cleanupMode)+'</span><span>Warnings: '+escapeHtml(warnings)+'</span><button class="btn small" type="button" data-image-auto-action="recommended">Retry with Recommended Preset</button><button class="btn small" type="button" data-image-auto-action="max-accuracy">OCR Max Accuracy</button><button class="btn small" type="button" data-image-auto-action="line-by-line">OCR Line-by-Line</button><button class="btn small" type="button" data-image-auto-action="preserve-list">Preserve List</button><button class="btn small" type="button" data-image-auto-action="preserve-table">Preserve Table</button><button class="btn small" type="button" data-image-auto-action="preserve-code">Preserve Code</button>';
+    box.appendChild(panel);
+    return;
+  }
   const report=AppState.fileQuality;
   const isDark=AppState.fileAnalysis?.recommendedPreset==='screenshot-dark'||AppState.autoTuning?.preset==='screenshot-dark'||(report&&report.avg<118&&report.darkRatio>.34);
-  box.querySelector('.dark-shot-tools')?.remove();
   if(!isDark)return;
   const panel=document.createElement('div');
   panel.className='dark-shot-tools';
   panel.innerHTML='<span>Detected: Dark Screenshot</span><span>Recommended preset: Screenshot Dark</span><span>Content type: Itinerary/List</span><span>Quality warning: small white text, use OCR Max Accuracy</span><button class="btn small" type="button" data-image-auto-action="screenshot-dark">Retry with Screenshot Dark</button><button class="btn small" type="button" data-image-auto-action="line-by-line">OCR Line-by-Line</button><button class="btn small" type="button" data-image-auto-action="preserve-list">Preserve List Format</button>';
   box.appendChild(panel);
 }
+
+const renderDarkScreenshotTools=renderImageAdaptiveTools;
 
 function selectOcrCandidate(index){
   const item=(AppState.ocrCandidates||[])[index];
