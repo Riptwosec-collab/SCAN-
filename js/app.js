@@ -385,11 +385,14 @@ async function handleImageFile(file){
     AppState.sourceName=file.name;
     AppState.imageCanvas=await imageFileToCanvas(file);
     const orientation=AppState.imageCanvas.width>=AppState.imageCanvas.height?'landscape':'portrait';
-    const brightness=typeof getCanvasBrightness==='function'?Math.round(getCanvasBrightness(AppState.imageCanvas)):null;
+    const brightnessStats=typeof getCanvasBrightness==='function'?getCanvasBrightness(AppState.imageCanvas):null;
+    const brightness=brightnessStats?Math.round(brightnessStats.avg):null;
     if(typeof analyzeUploadedFile==='function')AppState.fileAnalysis=analyzeUploadedFile(file,{orientation,brightness});
+    const quality=typeof analyzeCanvasQuality==='function'?analyzeCanvasQuality(AppState.imageCanvas):null;
     AppState.crop=null;
     setFileSuccess('imgFileInfo','imgFileName',file);
     drawImagePreview();
+    if(typeof runScanProBackgroundAuto==='function')runScanProBackgroundAuto({analysis:AppState.fileAnalysis,quality,canvas:AppState.imageCanvas});
     updateProcessedPreview();
     if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.preprocessing,'Image ready for OCR');
     setStatus('อัปโหลดรูปภาพสำเร็จ: '+file.name,'ok');
@@ -412,6 +415,7 @@ async function handlePdfFile(file){
     if(typeof analyzeUploadedFile==='function')AppState.fileAnalysis=analyzeUploadedFile(file);
     await loadPdfFile(file);
     if(AppState.fileAnalysis)AppState.fileAnalysis={...AppState.fileAnalysis,pageCount:AppState.pdfPages||0};
+    if(typeof runScanProBackgroundAuto==='function')runScanProBackgroundAuto({analysis:AppState.fileAnalysis});
     if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.renderingPdf,'PDF ready: '+(AppState.pdfPages||0)+' pages');
     setFileSuccess('pdfFileInfo','pdfFileName',file);
   }catch(error){
@@ -430,6 +434,7 @@ async function scanCurrent(){
     setProgress(0);
     setOutputProcessing();
     if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.recognizing,'OCR running');
+    if(typeof runScanProBackgroundAuto==='function')runScanProBackgroundAuto({analysis:AppState.fileAnalysis,quality:AppState.fileQuality});
     setStatus('กำลังแปลง... กำลังพาไปที่กล่อง Output','ok');
     scrollToOutputBox();
     let raw='';

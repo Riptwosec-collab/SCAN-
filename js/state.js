@@ -33,6 +33,8 @@ window.AppState={
   fileAnalysis:null,
   processingState:'idle',
   processingDetail:'',
+  scanProAutoMode:true,
+  autoTuning:null,
   processingTime:null,
   layoutBlocks:[],
   uploadSource:'local',

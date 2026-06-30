@@ -91,6 +91,97 @@ function setProcessingState(state,detail=''){
   renderScanProDashboard();
 }
 
+function setScanProChecked(id,value){
+  const el=$(id);
+  if(el)el.checked=!!value;
+}
+
+function setScanProSelect(id,value){
+  const el=$(id);
+  if(el&&value!==undefined&&value!==null)el.value=value;
+}
+
+function buildScanProAutoConfig(context={}){
+  const analysis=context.analysis||AppState.fileAnalysis||{};
+  const quality=context.quality||AppState.fileQuality||{};
+  const fileName=(analysis.name||AppState.sourceName||'').toLowerCase();
+  const isPdf=analysis.type==='pdf'||AppState.tab==='pdf';
+  const isLandscape=(analysis.orientation||AppState.pdfOrientation)==='landscape';
+  const isDark=(quality.avg&&quality.avg<118&&quality.darkRatio>.34)||quality.darkRatio>.52;
+  const isLowQuality=(quality.score&&quality.score<72)||quality.blur<18||quality.contrast<38;
+  const looksTable=isLandscape||/table|sheet|excel|csv|ตาราง|รายงาน|ราคา|invoice|receipt|bill/.test(fileName);
+  const looksTicket=/ticket|incident|noc|network|alert|แจ้งเตือน/.test(fileName);
+  const looksEmail=/mail|email|outlook|gmail/.test(fileName);
+  let config={
+    skill:'general',
+    language:'tha+eng',
+    preset:'thai-clear',
+    mode:'clean',
+    cleanup:'safe',
+    engine:'auto',
+    orientation:isLandscape?'landscape':'portrait',
+    upscale:true,
+    threshold:!isDark,
+    autoEnhance:true,
+    autoCropDoc:!isDark,
+    cleanThai:true,
+    itDictionary:true,
+    removeNoise:false,
+    reason:'Thai + English cleanup'
+  };
+  if(isPdf){
+    config={...config,skill:'searchable-pdf',preset:'document',mode:'document',cleanup:'normal',autoCropDoc:true,reason:'PDF document flow'};
+  }
+  if(isDark){
+    config={...config,skill:'dark-thai-screenshot',preset:'dark-thai-screenshot',mode:'capture-list',cleanup:'safe',threshold:false,autoCropDoc:false,itDictionary:false,removeNoise:false,reason:'dark screenshot detected'};
+  }else if(looksTable){
+    config={...config,skill:'table',preset:'table',mode:'table',cleanup:'normal',orientation:'landscape',threshold:true,reason:'table or landscape layout'};
+  }else if(looksTicket){
+    config={...config,skill:'screenshot',preset:'ticket',mode:'ticket',cleanup:'strict',threshold:true,reason:'ticket / NOC text'};
+  }else if(looksEmail){
+    config={...config,skill:'screenshot',preset:'email-alert',mode:'email',cleanup:'strict',threshold:true,reason:'email-like document'};
+  }else if(isLowQuality){
+    config={...config,skill:'handwriting',preset:'mobile',mode:'clean',cleanup:'light',threshold:true,autoCropDoc:true,reason:'low quality image boost'};
+  }
+  return config;
+}
+
+function applyScanProAutoConfig(config,reason='auto background'){
+  if(!config||AppState.scanProAutoMode===false)return null;
+  AppState.autoTuning={...config,reason,appliedAt:new Date().toISOString()};
+  if(config.skill&&typeof applyOcrSkill==='function')applyOcrSkill(config.skill,{silent:true});
+  setScanProSelect('langSelect',config.language);
+  setScanProSelect('ocrPreset',config.preset);
+  setScanProSelect('modeSelect',config.mode);
+  setScanProSelect('cleanupLevel',config.cleanup);
+  setScanProSelect('ocrEngine',config.engine);
+  setScanProSelect('pdfOrientation',config.orientation);
+  setScanProChecked('upscale',config.upscale);
+  setScanProChecked('threshold',config.threshold);
+  setScanProChecked('autoEnhance',config.autoEnhance);
+  setScanProChecked('autoCropDoc',config.autoCropDoc);
+  setScanProChecked('cleanThai',config.cleanThai);
+  setScanProChecked('itDictionary',config.itDictionary);
+  setScanProChecked('removeNoise',config.removeNoise);
+  setScanProChecked('highlightFixes',true);
+  AppState.ocrPreset=config.preset;
+  AppState.cleanupLevel=config.cleanup;
+  AppState.ocrEngine=config.engine;
+  AppState.pdfOrientation=config.orientation;
+  if(typeof syncQuickModeButtons==='function')syncQuickModeButtons();
+  if(typeof renderReadyChecklist==='function')renderReadyChecklist();
+  renderScanProDashboard();
+  return AppState.autoTuning;
+}
+
+function runScanProBackgroundAuto(context={}){
+  if(AppState.scanProAutoMode===false)return null;
+  const config=buildScanProAutoConfig(context);
+  const applied=applyScanProAutoConfig(config,config.reason);
+  if(applied&&typeof setStatus==='function')setStatus('Auto background tuned: '+config.reason,'ok');
+  return applied;
+}
+
 function getScanProHistory(){
   return readJsonStorage(SCAN_PRO_HISTORY_KEY,[]);
 }
@@ -119,6 +210,7 @@ function saveScanProHistoryRecord(record={}){
     thumbnail:record.thumbnail||AppState.thumbnail||'',
     exportFormats:record.exportFormats||[],
     processingTime:record.processingTime??AppState.processingTime??null,
+    autoTuning:record.autoTuning||AppState.autoTuning||null,
     settings:{
       ocrPreset:$('ocrPreset')?.value||AppState.ocrPreset,
       cleanupLevel:$('cleanupLevel')?.value||AppState.cleanupLevel,
@@ -174,7 +266,8 @@ function getScanProDashboardStats(){
     mostUsedMode,
     storageUsed:formatBytes(storageBytes),
     processingState:AppState.processingState||PROCESSING_STATES.idle,
-    processingDetail:AppState.processingDetail||''
+    processingDetail:AppState.processingDetail||'',
+    autoTuning:AppState.autoTuning||null
   };
 }
 
@@ -193,6 +286,7 @@ function renderScanProDashboard(){
     '<div class="pro-stat"><b>'+escapeHtml(stats.mostUsedMode)+'</b><span>Most Used Mode</span></div>'+
     '<div class="pro-stat"><b>'+stats.storageUsed+'</b><span>Storage Used</span></div>'+
     '<div class="pro-stat"><b>'+escapeHtml(stats.processingState)+'</b><span>'+escapeHtml(stats.processingDetail||'Processing State')+'</span></div>'+
+    '<div class="pro-auto"><b>Auto Background</b><span>'+(stats.autoTuning?escapeHtml(stats.autoTuning.reason)+' · '+escapeHtml(stats.autoTuning.preset)+' · '+escapeHtml(stats.autoTuning.cleanup):'Waiting for file analysis')+'</span></div>'+
     '<div class="pro-file-intel"><b>File Intelligence</b><span>'+(file?escapeHtml(file.name)+' · '+escapeHtml(file.type)+' · '+escapeHtml(file.sizeLabel):'No file selected')+'</span>'+(file?.warnings?.length?'<em>'+file.warnings.map(escapeHtml).join(', ')+'</em>':'')+'</div>'+
     '<div class="pro-recent"><b>Recent Files</b><div>'+(recent||'<span class="hint">No OCR history yet</span>')+'</div></div>'+
     '<div class="pro-actions"><button type="button" data-pro-action="scan-image">Scan Image</button><button type="button" data-pro-action="scan-pdf">Scan PDF</button><button type="button" data-pro-action="paste">Paste Screenshot</button><button type="button" data-pro-action="export-history">Export History</button><button type="button" data-pro-action="clear-history">Clear History</button></div>';
@@ -235,6 +329,7 @@ function collectExportMetadata(format){
     language:$('langSelect')?.value||'',
     confidence:AppState.confidence,
     blocks:AppState.layoutBlocks||[],
+    autoTuning:AppState.autoTuning||null,
     settings:getScanProSettings(),
     format,
     processingTime:AppState.processingTime||null
