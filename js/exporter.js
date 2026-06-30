@@ -243,10 +243,13 @@ function exportCsv(){
 }
 
 function exportJson(){
+  if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.exporting,'Exporting JSON');
   const items=getExportItems();
   const orientation=items[0]?.orientation||getExportOrientation();
+  const scanProMetadata=typeof collectExportMetadata==='function'?collectExportMetadata('json'):null;
   const payload={
-    app:'RIPTWOSEC.SCAN',
+    app:'SCAN PRO AI',
+    platform:scanProMetadata,
     ocrSkill:typeof getActiveOcrSkill==='function'?getActiveOcrSkill():null,
     pdfSkill:typeof getActivePdfSkill==='function'?getActivePdfSkill():null,
     sourceName:AppState.sourceName||'',
@@ -267,6 +270,7 @@ function exportJson(){
     exportedAt:new Date().toISOString()
   };
   downloadFile('riptwosec-scan-'+(orientation==='landscape'?'landscape':'portrait')+'.json',JSON.stringify(payload,null,2),'application/json');
+  if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.done,'JSON exported');
 }
 
 function exportMarkdown(){

@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded',()=>{
   bindAppEvents();
   bindCropCanvas();
+  if(typeof applyScanProSettingsToUi==='function')applyScanProSettingsToUi();
+  if(typeof renderScanProDashboard==='function')renderScanProDashboard();
   renderHistory();
   renderCustomRules();
   renderReadyChecklist();
@@ -378,13 +380,18 @@ async function handleImageFile(file){
       return;
     }
     clearOutput();
+    if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.analyzing,'Analyzing image file');
     AppState.imageFile=file;
     AppState.sourceName=file.name;
     AppState.imageCanvas=await imageFileToCanvas(file);
+    const orientation=AppState.imageCanvas.width>=AppState.imageCanvas.height?'landscape':'portrait';
+    const brightness=typeof getCanvasBrightness==='function'?Math.round(getCanvasBrightness(AppState.imageCanvas)):null;
+    if(typeof analyzeUploadedFile==='function')AppState.fileAnalysis=analyzeUploadedFile(file,{orientation,brightness});
     AppState.crop=null;
     setFileSuccess('imgFileInfo','imgFileName',file);
     drawImagePreview();
     updateProcessedPreview();
+    if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.preprocessing,'Image ready for OCR');
     setStatus('อัปโหลดรูปภาพสำเร็จ: '+file.name,'ok');
   }catch(error){
     setStatus('โหลดรูปไม่ได้: '+error.message,'err');
@@ -401,7 +408,11 @@ async function handlePdfFile(file){
     clearOutput();
     setFileSuccess('pdfFileInfo','pdfFileName',file);
     setStatus('กำลังโหลด PDF...');
+    if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.analyzing,'Analyzing PDF file');
+    if(typeof analyzeUploadedFile==='function')AppState.fileAnalysis=analyzeUploadedFile(file);
     await loadPdfFile(file);
+    if(AppState.fileAnalysis)AppState.fileAnalysis={...AppState.fileAnalysis,pageCount:AppState.pdfPages||0};
+    if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.renderingPdf,'PDF ready: '+(AppState.pdfPages||0)+' pages');
     setFileSuccess('pdfFileInfo','pdfFileName',file);
   }catch(error){
     setStatus('โหลด PDF ไม่ได้: '+error.message,'err');
@@ -414,9 +425,11 @@ function scrollToOutputBox(){
 }
 
 async function scanCurrent(){
+  const startedAt=performance.now();
   try{
     setProgress(0);
     setOutputProcessing();
+    if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.recognizing,'OCR running');
     setStatus('กำลังแปลง... กำลังพาไปที่กล่อง Output','ok');
     scrollToOutputBox();
     let raw='';
@@ -426,18 +439,30 @@ async function scanCurrent(){
 
     AppState.rawText=raw;
     await showCleanedResult(raw,true);
+    AppState.processingTime=Math.round(performance.now()-startedAt);
+    if(typeof saveScanProHistoryRecord==='function'){
+      saveScanProHistoryRecord({
+        rawText:raw,
+        cleanedText:AppState.lastText,
+        processingTime:AppState.processingTime,
+        confidence:AppState.confidence
+      });
+    }
+    if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.done,'Completed in '+AppState.processingTime+' ms');
     setProgress(100);
     setStatus('แปลงสำเร็จ · ตรวจละเอียดก่อนแสดงผลแล้ว','ok');
     if(typeof scheduleAutoDelete==='function')scheduleAutoDelete();
     setTimeout(scrollToOutputBox,120);
   }catch(error){
     clearOutputState();
+    if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.error,error.message);
     setStatus('แปลงไม่ได้: '+error.message,'err');
     setProgress(0);
   }
 }
 
 async function showCleanedResult(raw,animate=false){
+  if(typeof setProcessingState==='function')setProcessingState(PROCESSING_STATES.cleaning,'Cleaning OCR text');
   let cleaned=cleanText(raw);
   const level=$('cleanupLevel')?.value||AppState.cleanupLevel||'normal';
   AppState.cleanupLevel=level;

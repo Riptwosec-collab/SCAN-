@@ -1,0 +1,144 @@
+.pro-dashboard{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:8px;
+  margin:12px 0;
+}
+
+.pro-stat,.pro-file-intel,.pro-recent,.pro-actions{
+  border:1px solid rgba(187,247,208,.16);
+  border-radius:8px;
+  background:rgba(4,8,12,.68);
+  padding:10px;
+  min-width:0;
+}
+
+.pro-stat b{
+  display:block;
+  color:#bbf7d0;
+  font-family:'Space Mono',monospace;
+  font-size:20px;
+  line-height:1.1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.pro-stat span,.pro-file-intel span,.pro-file-intel em,.pro-recent span{
+  color:#9fb0bd;
+  font-size:12px;
+  line-height:1.35;
+}
+
+.pro-file-intel{
+  grid-column:span 2;
+  display:grid;
+  gap:4px;
+}
+
+.pro-file-intel b,.pro-recent>b{
+  color:#f4fff7;
+  font-size:13px;
+}
+
+.pro-file-intel em{
+  color:#fde68a;
+  font-style:normal;
+}
+
+.pro-recent{
+  grid-column:span 2;
+}
+
+.pro-recent>div{
+  display:grid;
+  gap:5px;
+  margin-top:6px;
+}
+
+.pro-recent button,.pro-actions button{
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:7px;
+  background:rgba(255,255,255,.025);
+  color:#e7eef6;
+  text-align:left;
+  padding:7px 8px;
+  cursor:pointer;
+}
+
+.pro-recent button b{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:12px;
+}
+
+.pro-recent button span{
+  display:block;
+}
+
+.pro-actions{
+  grid-column:span 2;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+}
+
+.pro-actions button{
+  text-align:center;
+  font-weight:800;
+  min-height:34px;
+}
+
+.history-tools{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  gap:6px;
+  margin-bottom:8px;
+}
+
+.history-tools input{
+  min-width:0;
+}
+
+.hist{
+  display:grid;
+  gap:3px;
+}
+
+.hist b{
+  color:#e7eef6;
+  font-size:12px;
+}
+
+.hist small{
+  color:#9fb0bd;
+  font-size:11px;
+}
+
+.hist-actions{
+  display:flex;
+  gap:6px;
+  margin-top:3px;
+}
+
+.hist-actions button{
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:6px;
+  background:rgba(0,0,0,.16);
+  color:#bfdbfe;
+  font-size:11px;
+  cursor:pointer;
+}
+
+@media(max-width:1050px){
+  .pro-dashboard{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .pro-file-intel,.pro-recent,.pro-actions{grid-column:span 3}
+}
+
+@media(max-width:640px){
+  .pro-dashboard{grid-template-columns:1fr}
+  .pro-file-intel,.pro-recent,.pro-actions{grid-column:span 1}
+  .history-tools{grid-template-columns:1fr}
+}
