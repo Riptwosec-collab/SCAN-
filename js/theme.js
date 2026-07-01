@@ -202,7 +202,7 @@ function ensureOcrFormatterAssets(){
   loadCssOnce('css/ocr-layout-formatter.css?v=1','ocrLayoutFormatterCss');
   loadScriptOnce('js/ocr-layout-formatter.js?v=1','ocrLayoutFormatterScript');
 }
-function ensureOqcStrictAssets(){loadScriptOnce('js/oqc-strict-review.js?v=2','oqcStrictReviewScript');}
+function ensureOqcStrictAssets(){loadScriptOnce('js/oqc-strict-review.js?v=3','oqcStrictReviewScript');}
 function ensureCyberAiTheme(){loadCssOnce('css/cyber-ai-theme.css?v=2','cyberAiThemeCss');}
 
 window.simplifyScanUi=simplifyScanUi;
