@@ -94,10 +94,7 @@ function simplifyPresetOptions(){
 function simplifyTopExports(){
   ['csvBtn','jsonBtn'].forEach(id=>{const button=document.getElementById(id);if(button)button.style.display='none';});
   const doc=document.getElementById('docBtn');
-  if(doc){
-    doc.innerHTML='<span aria-hidden="true">DX</span>DOCX';
-    doc.onclick=()=>typeof exportDocx==='function'?exportDocx():exportDoc?.();
-  }
+  if(doc){doc.innerHTML='<span aria-hidden="true">DX</span>DOCX';doc.onclick=()=>typeof exportDocx==='function'?exportDocx():exportDoc?.();}
 }
 
 function simplifyNextActions(){
@@ -125,31 +122,18 @@ function simplifyPrivacyAndPdfTools(){
   const pdfCompare=document.getElementById('pdfCompareBox');
   if(pdfCompare)pdfCompare.style.display='none';
   const autoDelete=document.getElementById('autoDeleteMinutes');
-  if(autoDelete){
-    autoDelete.value='0';
-    const row=autoDelete.closest('.row');
-    if(row)row.style.display='none';
-  }
+  if(autoDelete){autoDelete.value='0';const row=autoDelete.closest('.row');if(row)row.style.display='none';}
   if(!document.getElementById('globalPrivacyRow')){
     const oldPrivacy=document.getElementById('privacyMode');
     const anchor=document.getElementById('readyChecklist')||document.querySelector('.input-panel');
     const row=document.createElement('label');
     row.id='globalPrivacyRow';
     row.className='privacy-lite-toggle';
-    row.style.display='flex';
-    row.style.alignItems='center';
-    row.style.gap='8px';
-    row.style.margin='12px 0';
+    row.style.display='flex';row.style.alignItems='center';row.style.gap='8px';row.style.margin='12px 0';
     row.innerHTML='<input id="globalPrivacyMode" type="checkbox"> <span>ไม่บันทึกประวัติ</span>';
     anchor?.after(row);
     const global=document.getElementById('globalPrivacyMode');
-    if(global&&oldPrivacy){
-      global.checked=oldPrivacy.checked;
-      global.onchange=()=>{
-        oldPrivacy.checked=global.checked;
-        if(window.AppState)AppState.privacyMode=global.checked;
-      };
-    }
+    if(global&&oldPrivacy){global.checked=oldPrivacy.checked;global.onchange=()=>{oldPrivacy.checked=global.checked;if(window.AppState)AppState.privacyMode=global.checked;};}
   }
 }
 
@@ -164,41 +148,27 @@ function simplifyEngineAndScan(){
 
 function simplifyScanUi(){
   const theme=document.getElementById('themeSelect');
-  if(theme&&theme.options.length>3){
-    const next=setSelectOptions(theme,SIMPLE_THEME_OPTIONS,['pearl','carbon','midnight'].includes(theme.value)?theme.value:'carbon');
-    if(typeof applyTheme==='function')applyTheme(next);
-  }
-  simplifyPresetOptions();
-  simplifyTopExports();
-  simplifyNextActions();
-  simplifySearchTools();
-  simplifyPrivacyAndPdfTools();
-  simplifyEngineAndScan();
+  if(theme&&theme.options.length>3){const next=setSelectOptions(theme,SIMPLE_THEME_OPTIONS,['pearl','carbon','midnight'].includes(theme.value)?theme.value:'carbon');if(typeof applyTheme==='function')applyTheme(next);}
+  simplifyPresetOptions();simplifyTopExports();simplifyNextActions();simplifySearchTools();simplifyPrivacyAndPdfTools();simplifyEngineAndScan();
 }
 
-function loadCssOnce(href,id){
-  if(document.getElementById(id))return;
-  const link=document.createElement('link');
-  link.id=id;
-  link.rel='stylesheet';
-  link.href=href;
-  document.head.appendChild(link);
-}
-
-function loadScriptOnce(src,id){
-  if(document.getElementById(id))return;
-  const script=document.createElement('script');
-  script.id=id;
-  script.src=src;
-  script.defer=true;
-  document.body.appendChild(script);
-}
+function loadCssOnce(href,id){if(document.getElementById(id))return;const link=document.createElement('link');link.id=id;link.rel='stylesheet';link.href=href;document.head.appendChild(link);}
+function loadScriptOnce(src,id){return new Promise((resolve,reject)=>{const existing=document.getElementById(id);if(existing)return resolve(existing);const script=document.createElement('script');script.id=id;script.src=src;script.async=false;script.onload=()=>resolve(script);script.onerror=()=>reject(new Error('โหลด '+src+' ไม่สำเร็จ'));document.body.appendChild(script);});}
 
 function ensureLiveOcrAssets(){loadCssOnce('css/multi-ocr-live-ui.css?v=2','multiOcrLiveCss');loadScriptOnce('js/multi-ocr-live-ui.js?v=1','multiOcrLiveScript');}
 function ensureOcrFormatterAssets(){loadCssOnce('css/ocr-layout-formatter.css?v=1','ocrLayoutFormatterCss');loadScriptOnce('js/ocr-layout-formatter.js?v=1','ocrLayoutFormatterScript');}
 function ensureOqcStrictAssets(){loadScriptOnce('js/oqc-strict-review.js?v=3','oqcStrictReviewScript');}
 function ensureCyberAiTheme(){loadCssOnce('css/cyber-ai-theme.css?v=2','cyberAiThemeCss');}
-function ensureSystemUpgradeAssets(){loadCssOnce('css/system-upgrade.css?v=1','systemUpgradeCss');loadScriptOnce('js/system-upgrade.js?v=2','systemUpgradeScript');}
+function ensureSystemUpgradeAssets(){loadCssOnce('css/system-upgrade.css?v=2','systemUpgradeCss');loadScriptOnce('js/system-upgrade.js?v=2','systemUpgradeScript');}
+async function ensureAdvancedOcrBrainAssets(){
+  await loadScriptOnce('js/image-analyzer.js?v=1','imageAnalyzerScript');
+  await loadScriptOnce('js/preprocess-service.js?v=1','preprocessServiceScript');
+  await loadScriptOnce('js/user-learning.js?v=1','userLearningScript');
+  await loadScriptOnce('js/document-extractor.js?v=1','documentExtractorScript');
+  await loadScriptOnce('js/multi-ocr-service.js?v=1','multiOcrServiceScript');
+  await loadScriptOnce('js/oqc-brain.js?v=1','oqcBrainScript');
+  await loadScriptOnce('js/ocr-dashboard-ui.js?v=1','ocrDashboardUiScript');
+}
 
 window.simplifyScanUi=simplifyScanUi;
 document.addEventListener('DOMContentLoaded',()=>{
@@ -208,5 +178,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(ensureOcrFormatterAssets,80);
   setTimeout(ensureOqcStrictAssets,120);
   setTimeout(ensureSystemUpgradeAssets,170);
+  setTimeout(()=>ensureAdvancedOcrBrainAssets().catch(error=>console.warn(error)),230);
 });
 document.addEventListener('riptwosec:themechange',()=>setTimeout(simplifyScanUi,0));
