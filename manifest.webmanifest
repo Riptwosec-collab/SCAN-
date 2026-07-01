@@ -1,0 +1,13 @@
+{
+  "name": "RIPTWOSEC.SCAN",
+  "short_name": "SCAN",
+  "description": "Local Thai OCR post-processor for IT, PDF, image, ticket and document workflows.",
+  "start_url": "index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0e11",
+  "theme_color": "#0b0e11",
+  "lang": "th",
+  "orientation": "any",
+  "categories": ["productivity", "utilities"]
+}
