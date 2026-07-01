@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v45-gov-memo-clean';
+const CACHE_NAME='riptwosec-scan-v46-system-upgrade';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -8,6 +8,7 @@ const CORE_ASSETS=[
   './manifest.webmanifest',
   './css/style.css',
   './css/cyber-ai-theme.css?v=2',
+  './css/system-upgrade.css?v=1',
   './css/features.css',
   './css/background.css',
   './css/tool-cleanup.css',
@@ -46,6 +47,7 @@ const CORE_ASSETS=[
   './js/multi-ocr-live-ui.js?v=1',
   './js/ocr-layout-formatter.js?v=1',
   './js/oqc-strict-review.js?v=3',
+  './js/system-upgrade.js?v=1',
   './js/scan-3d.js?v=5'
 ];
 
