@@ -1,27 +1,12 @@
 const THEME_KEY='riptwosec-scan-theme';
-const THEME_META_COLORS={
-  carbon:'#080706',
-  ivory:'#efe3cf',
-  pearl:'#edf4f6',
-  sage:'#071b14',
-  midnight:'#08111f'
-};
-const SIMPLE_THEME_OPTIONS=[
-  {value:'pearl',label:'Light'},
-  {value:'carbon',label:'Dark'},
-  {value:'midnight',label:'Pro Gold'}
-];
-const SIMPLE_PRESET_OPTIONS=[
-  {value:'document',label:'เอกสารทั่วไป'},
-  {value:'invoice',label:'ใบเสร็จ / ใบกำกับภาษี'},
-  {value:'mobile',label:'ภาพจากมือถือ'},
-  {value:'table',label:'ตาราง / ฟอร์ม'}
-];
+const THEME_META_COLORS={carbon:'#080706',ivory:'#efe3cf',pearl:'#edf4f6',sage:'#071b14',midnight:'#08111f'};
+const SIMPLE_THEME_OPTIONS=[{value:'pearl',label:'Light'},{value:'carbon',label:'Dark'},{value:'midnight',label:'Pro Gold'}];
+const SIMPLE_PRESET_OPTIONS=[{value:'document',label:'เอกสารทั่วไป'},{value:'invoice',label:'ใบเสร็จ / ใบกำกับภาษี'},{value:'mobile',label:'ภาพจากมือถือ'},{value:'table',label:'ตาราง / ฟอร์ม'}];
 
 function applyTheme(theme){
   const selected=THEME_META_COLORS[theme]?theme:'carbon';
   document.body.dataset.theme=selected;
-  AppState.theme=selected;
+  if(window.AppState)AppState.theme=selected;
   localStorage.setItem(THEME_KEY,selected);
   applyThemeControlContrast(selected);
   const meta=document.querySelector('meta[name="theme-color"]');
@@ -37,7 +22,7 @@ function applyThemeControlContrast(theme){
     const el=document.getElementById(id);
     if(!el)return;
     ['background','background-color','background-image','border-color','color','-webkit-text-fill-color','color-scheme'].forEach(prop=>el.style.removeProperty(prop));
-    if(theme==='ivory' || theme==='pearl'){
+    if(theme==='ivory'||theme==='pearl'){
       const isPearl=theme==='pearl';
       el.style.setProperty('background',isPearl?'#f4fbfb':'#f4ead8','important');
       el.style.setProperty('background-color',isPearl?'#f4fbfb':'#f4ead8','important');
@@ -47,11 +32,7 @@ function applyThemeControlContrast(theme){
       el.style.setProperty('-webkit-text-fill-color',isPearl?'#15242b':'#241b10','important');
       el.style.setProperty('color-scheme','light','important');
     }else{
-      const palette={
-        carbon:{bg:'#181510',border:'rgba(231,195,112,.46)',text:'#fff8e8'},
-        sage:{bg:'#0a2b20',border:'rgba(220,182,86,.46)',text:'#f4fff8'},
-        midnight:{bg:'#0f1e2f',border:'rgba(230,195,106,.42)',text:'#eef5fb'}
-      }[theme]||{bg:'#111820',border:'rgba(180,190,200,.22)',text:'#f8fafc'};
+      const palette={carbon:{bg:'#181510',border:'rgba(231,195,112,.46)',text:'#fff8e8'},sage:{bg:'#0a2b20',border:'rgba(220,182,86,.46)',text:'#f4fff8'},midnight:{bg:'#0f1e2f',border:'rgba(230,195,106,.42)',text:'#eef5fb'}}[theme]||{bg:'#111820',border:'rgba(180,190,200,.22)',text:'#f8fafc'};
       el.style.setProperty('background',palette.bg,'important');
       el.style.setProperty('background-color',palette.bg,'important');
       el.style.setProperty('background-image','none','important');
@@ -79,8 +60,7 @@ function initTheme(){
   const allowed=SIMPLE_THEME_OPTIONS.map(item=>item.value);
   if(select)setSelectOptions(select,SIMPLE_THEME_OPTIONS,allowed.includes(saved)?saved:'carbon');
   applyTheme(allowed.includes(saved)?saved:'carbon');
-  if(!select)return;
-  select.addEventListener('change',()=>applyTheme(select.value));
+  if(select)select.addEventListener('change',()=>applyTheme(select.value));
 }
 
 document.addEventListener('DOMContentLoaded',initTheme);
@@ -102,9 +82,7 @@ function makeUiDrawer(id,title){
 
 function moveButtonsToDrawer(buttons,drawer){
   const body=drawer.querySelector('.advanced-ui-body');
-  buttons.forEach(button=>{
-    if(button&&body&&!body.contains(button))body.appendChild(button);
-  });
+  buttons.forEach(button=>{if(button&&body&&!body.contains(button))body.appendChild(button);});
 }
 
 function simplifyPresetOptions(){
@@ -114,10 +92,7 @@ function simplifyPresetOptions(){
 }
 
 function simplifyTopExports(){
-  ['csvBtn','jsonBtn'].forEach(id=>{
-    const button=document.getElementById(id);
-    if(button)button.style.display='none';
-  });
+  ['csvBtn','jsonBtn'].forEach(id=>{const button=document.getElementById(id);if(button)button.style.display='none';});
   const doc=document.getElementById('docBtn');
   if(doc){
     doc.innerHTML='<span aria-hidden="true">DX</span>DOCX';
@@ -149,14 +124,12 @@ function simplifySearchTools(){
 function simplifyPrivacyAndPdfTools(){
   const pdfCompare=document.getElementById('pdfCompareBox');
   if(pdfCompare)pdfCompare.style.display='none';
-
   const autoDelete=document.getElementById('autoDeleteMinutes');
   if(autoDelete){
     autoDelete.value='0';
     const row=autoDelete.closest('.row');
     if(row)row.style.display='none';
   }
-
   if(!document.getElementById('globalPrivacyRow')){
     const oldPrivacy=document.getElementById('privacyMode');
     const anchor=document.getElementById('readyChecklist')||document.querySelector('.input-panel');
@@ -225,19 +198,12 @@ function ensureLiveOcrAssets(){
   loadCssOnce('css/multi-ocr-live-ui.css?v=2','multiOcrLiveCss');
   loadScriptOnce('js/multi-ocr-live-ui.js?v=1','multiOcrLiveScript');
 }
-
 function ensureOcrFormatterAssets(){
   loadCssOnce('css/ocr-layout-formatter.css?v=1','ocrLayoutFormatterCss');
   loadScriptOnce('js/ocr-layout-formatter.js?v=1','ocrLayoutFormatterScript');
 }
-
-function ensureOqcStrictAssets(){
-  loadScriptOnce('js/oqc-strict-review.js?v=1','oqcStrictReviewScript');
-}
-
-function ensureCyberAiTheme(){
-  loadCssOnce('css/cyber-ai-theme.css?v=1','cyberAiThemeCss');
-}
+function ensureOqcStrictAssets(){loadScriptOnce('js/oqc-strict-review.js?v=2','oqcStrictReviewScript');}
+function ensureCyberAiTheme(){loadCssOnce('css/cyber-ai-theme.css?v=2','cyberAiThemeCss');}
 
 window.simplifyScanUi=simplifyScanUi;
 document.addEventListener('DOMContentLoaded',()=>{
