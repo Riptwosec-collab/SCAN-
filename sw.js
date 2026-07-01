@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v35';
+const CACHE_NAME='riptwosec-scan-v36-multi-oqc';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -14,25 +14,32 @@ const CORE_ASSETS=[
   './css/pro-tool.css?v=9',
   './css/themes.css?v=5',
   './css/theme-contrast.css?v=21',
-  './js/state.js?v=1',
+  './css/multi-ocr-oqc.css?v=1',
+  './js/state.js?v=2',
   './js/theme.js?v=17',
   './js/utils.js?v=3',
-  './js/ocr-skills.js?v=2',
+  './js/token-protector.js?v=1',
+  './js/thai-normalizer.js?v=1',
+  './js/field-validator.js?v=1',
+  './js/symbol-score.js?v=1',
+  './js/pdf-accuracy-pipeline.js?v=1',
+  './js/ocr-skills.js?v=3',
   './js/pdf-skills.js?v=1',
   './js/paddle-client.js?v=2',
   './js/dictionary-it.js',
   './js/custom-rules.js',
-  './js/text-cleaner.js?v=9',
+  './js/text-cleaner.js?v=10',
   './js/quality-review.js?v=3',
   './js/crop.js',
-  './js/ocr.js?v=9',
+  './js/ocr.js?v=10',
   './js/image-quality.js?v=1',
-  './js/pdf-handler.js?v=3',
+  './js/pdf-handler.js?v=4',
   './js/batch.js?v=2',
   './js/search.js',
   './js/exporter.js?v=6',
   './js/history.js',
   './js/app.js?v=8',
+  './js/multi-ocr-oqc.js?v=1',
   './js/scan-3d.js?v=5'
 ];
 

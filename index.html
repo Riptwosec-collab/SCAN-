@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b0e11">
-  <title>RIPTWOSEC.SCAN | OCR สำหรับเอกสาร รูปภาพ และข้อความภาษาไทย</title>
-  <meta name="description" content="OCR สำหรับเอกสาร PDF รูปภาพ และข้อความภาษาไทย แก้คำไทยเพี้ยน รองรับ Batch OCR และ Export หลายรูปแบบ">
+  <title>RIPTWOSEC.SCAN | Multi OCR + OQC Quality Check</title>
+  <meta name="description" content="OCR สำหรับเอกสาร PDF รูปภาพ และข้อความภาษาไทย พร้อม Multi OCR 5 ตัวและ OQC Quality Check 2 ตัว">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="css/pro-tool.css?v=9">
   <link rel="stylesheet" href="css/themes.css?v=5">
   <link rel="stylesheet" href="css/theme-contrast.css?v=21">
+  <link rel="stylesheet" href="css/multi-ocr-oqc.css?v=1">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.min.js"></script>
@@ -27,7 +28,7 @@
     <header class="site-header">
       <a class="brand-block" href="index.html">
         <span class="brand">RIPTWOSEC.SCAN</span>
-        <span class="sub">OCR for IT · PDF · Image · Thai Cleanup</span>
+        <span class="sub">Multi OCR · OQC Quality Check · Thai Cleanup</span>
       </a>
       <nav class="nav-links">
         <a href="#features">Features</a>
@@ -50,21 +51,28 @@
 
     <section class="hero clean-section">
       <div class="hero-copy">
-        <div class="eyebrow">OCR FOR DOCUMENTS / IMAGES / THAI TEXT</div>
-        <h1>OCR สำหรับเอกสาร PDF รูปภาพ และข้อความภาษาไทย</h1>
-        <p class="hero-lead">แปลงรูปภาพหรือ PDF เป็นข้อความ พร้อมช่วยแก้คำไทยเพี้ยน สระหาย ช่องว่างกลางคำ และคำเฉพาะทางหลายสายงาน เช่น เอกสารบริษัท ราชการ บัญชี ภาษี IT Ticket และรายงานทั่วไป</p>
+        <div class="eyebrow">AI OCR DASHBOARD / MULTI OCR / OQC</div>
+        <h1>สแกนภาพและ PDF ด้วย OCR 5 ตัว แล้วให้ OQC 2 ตัวช่วยตัดสินผลลัพธ์ที่แม่นที่สุด</h1>
+        <p class="hero-lead">ระบบใหม่ไม่พึ่ง OCR ตัวเดียวอีกต่อไป: OCR #1-#5 จะอ่านข้อความจากไฟล์เดียวกัน จากนั้น OQC #1 และ OQC #2 จะเปรียบเทียบคำที่ไม่ตรงกัน ตรวจรูปแบบเอกสาร และสร้าง Final Text พร้อมคะแนนความมั่นใจสุดท้าย</p>
         <div class="hero-actions">
-          <a class="btn primary" href="#tool">เริ่มใช้งาน</a>
-          <a class="btn" href="#features">ดูความสามารถ</a>
+          <a class="btn primary" href="#tool">เริ่ม Multi OCR</a>
+          <a class="btn" href="#multiOqcDashboard">ดู OQC Dashboard</a>
+        </div>
+        <div class="multi-hero-badges" aria-label="Multi OCR highlights">
+          <span>🤖 OCR #1-#5</span>
+          <span>🛡️ OQC #1-#2</span>
+          <span>🧠 Majority Vote</span>
+          <span>📤 TXT · DOCX · PDF</span>
         </div>
       </div>
       <div class="hero-card clean-card">
         <div class="mini-label">Workflow</div>
         <ol class="workflow-list">
-          <li>Upload Image / PDF</li>
-          <li>OCR ไทย + อังกฤษ</li>
-          <li>Clean Thai + Multi Dictionary</li>
-          <li>Export TXT / DOC / CSV / JSON / PDF</li>
+          <li>Upload JPG / PNG / WEBP / PDF</li>
+          <li>OCR #1-#5 Scanning</li>
+          <li>Compare Results + Majority Vote</li>
+          <li>OQC #1-#2 Quality Check</li>
+          <li>Final Text + Export</li>
         </ol>
       </div>
     </section>
@@ -74,129 +82,39 @@
         <div>
           <div class="label">Real Use Cases</div>
           <h2>จุดเด่นที่ใช้กับงานจริง</h2>
-          <p>เหมาะกับงานเอกสารทุกสายงาน: แปลงไว อ่านง่าย ลดเวลาพิมพ์ซ้ำ และเก็บผลลัพธ์ไปใช้งานต่อได้ทันที</p>
+          <p>เหมาะกับเอกสารบริษัท ใบเสร็จ รายการสินค้า วันที่ ราคา ยอดรวม งาน IT Ticket และข้อความไทย/อังกฤษที่ OCR มักอ่านเพี้ยน</p>
         </div>
       </div>
       <div class="scan-3d-stage" aria-hidden="true">
         <canvas id="scan3dCanvas"></canvas>
-        <div class="scan-wire-stack">
-          <i></i><i></i><i></i><i></i><i></i>
-        </div>
-        <div class="scan-3d-label"><b>SCAN FLOW</b><span>Image · OCR · Clean · Export</span></div>
+        <div class="scan-wire-stack"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="scan-3d-label"><b>MULTI OCR FLOW</b><span>5 OCR · 2 OQC · Final Text</span></div>
       </div>
       <div class="feature-grid real-grid">
-        <details class="feature-card feature-accordion main-feature">
-          <summary><span class="feature-icon">🧠</span><b>แก้ข้อความไทยจาก OCR</b><p>รวมคำไทยผิดช่องว่าง แก้สระหาย และลบอักษรแปลก</p><span class="feature-open">เปิดดู</span></summary>
-          <div class="feature-detail"><p>ช่วยรวมคำที่โดนเว้นวรรคผิด แก้สระหาย และลบอักษรแปลก เช่น <code>เครื อง</code> → <code>เครื่อง</code>, <code>ขั นตอน</code> → <code>ขั้นตอน</code></p><div class="feature-tags"><span>Thai Cleanup</span><span>Noise Fix</span></div></div>
+        <details class="feature-card feature-accordion main-feature" open>
+          <summary><span class="feature-icon">🤖</span><b>Multi OCR Engine 5 ตัว</b><p>สแกนไฟล์เดียวกันด้วย OCR #1-#5 พร้อมแยกสถานะสำเร็จ/ล้มเหลว</p><span class="feature-open">เปิดดู</span></summary>
+          <div class="feature-detail"><p>แต่ละ OCR คืนค่า text, confidence, duration, status และ uncertain words โดย OCR ที่ล้มเหลวจะไม่ทำให้ระบบทั้งหมดพัง</p><div class="feature-tags"><span>OCR #1</span><span>OCR #2</span><span>OCR #3</span><span>OCR #4</span><span>OCR #5</span></div></div>
         </details>
         <details class="feature-card feature-accordion">
-          <summary><span class="feature-icon">📄</span><b>อ่าน PDF Text / Scan</b><p>ดึง text layer ก่อน แล้ว fallback OCR สำหรับหน้า scan</p><span class="feature-open">เปิดดู</span></summary>
-          <div class="feature-detail"><p>ถ้า PDF มี Text Layer จะดึงข้อความโดยตรง ถ้าเป็นไฟล์สแกนจะ fallback ไป OCR จากภาพหน้าเอกสาร</p><div class="feature-tags"><span>PDF</span><span>OCR Fallback</span></div></div>
+          <summary><span class="feature-icon">🛡️</span><b>OQC Quality Check 2 ตัว</b><p>AI QC ตรวจคำที่อ่านไม่ตรงกัน สะกดผิด รูปแบบใบเสร็จ วันที่ ราคา และยอดรวม</p><span class="feature-open">เปิดดู</span></summary>
+          <div class="feature-detail"><p>OQC #1 ใช้ majority vote และ confidence ส่วน OQC #2 ตรวจ logic ของเอกสารก่อนรวมเป็น Final Text</p><div class="feature-tags"><span>OQC #1</span><span>OQC #2</span><span>Final Score</span></div></div>
         </details>
         <details class="feature-card feature-accordion">
-          <summary><span class="feature-icon">📦</span><b>Batch OCR หลายไฟล์</b><p>แปลงรูปภาพและ PDF หลายไฟล์ต่อเนื่อง</p><span class="feature-open">เปิดดู</span></summary>
-          <div class="feature-detail"><p>เหมาะกับรูปจาก LINE/Teams, คู่มือหลายหน้า หรือเอกสารงาน Support ที่ต้องแปลงต่อเนื่องหลายไฟล์</p><div class="feature-tags"><span>Batch</span><span>Multi-file</span></div></div>
+          <summary><span class="feature-icon">📊</span><b>Comparison View</b><p>ตารางเทียบ OCR #1-#5 พร้อม highlight คำที่ไม่ตรงกัน</p><span class="feature-open">เปิดดู</span></summary>
+          <div class="feature-detail"><p>ดูได้ว่าบรรทัดไหน OCR อ่านตรงกัน และบรรทัดไหน OQC เลือกคำจาก engine ตัวไหน</p><div class="feature-tags"><span>Majority Vote</span><span>Mismatch Highlight</span></div></div>
         </details>
         <details class="feature-card feature-accordion">
-          <summary><span class="feature-icon">🛠</span><b>Dictionary หลายสายงาน</b><p>คำเฉพาะ IT/NOC, Email/Ticket, บัญชี/ภาษี และราชการ</p><span class="feature-open">เปิดดู</span></summary>
-          <div class="feature-detail"><p>มีตัวอย่างคำเฉพาะหลายหมวด เช่น IT/NOC, Network, Email/Ticket, บัญชี/ภาษี, เอกสารบริษัท และราชการ</p><div class="feature-tags"><span>IT/NOC</span><span>บัญชี/ภาษี</span><span>ราชการ</span></div></div>
-        </details>
-        <details class="feature-card feature-accordion">
-          <summary><span class="feature-icon">✂️</span><b>Crop เฉพาะจุด</b><p>ลดพื้นหลัง เมนู ไอคอน และเส้นรบกวนก่อน OCR</p><span class="feature-open">เปิดดู</span></summary>
-          <div class="feature-detail"><p>ลากเลือกเฉพาะพื้นที่ข้อความในรูป เพื่อลดสิ่งรบกวนจากเมนู ไอคอน หรือพื้นหลังที่ทำให้ OCR อ่านมั่ว</p><div class="feature-tags"><span>Crop</span><span>Cleaner Output</span></div></div>
-        </details>
-        <details class="feature-card feature-accordion">
-          <summary><span class="feature-icon">📤</span><b>Export พร้อมใช้งานต่อ</b><p>ส่งออก TXT, DOC, CSV, JSON และไฟล์สำหรับ Print เป็น PDF</p><span class="feature-open">เปิดดู</span></summary>
-          <div class="feature-detail"><p>คัดลอกหรือส่งออกเป็น TXT, DOC, CSV, JSON และไฟล์สำหรับ Print เป็น PDF เพื่อใช้ต่อใน Ticket, Report หรือเอกสารงาน</p><div class="feature-tags"><span>Export</span><span>Report Ready</span></div></div>
+          <summary><span class="feature-icon">📤</span><b>Export พร้อมใช้งานต่อ</b><p>คัดลอก หรือดาวน์โหลด TXT, DOC, DOCX, CSV, JSON และ PDF</p><span class="feature-open">เปิดดู</span></summary>
+          <div class="feature-detail"><p>ผลลัพธ์สุดท้ายถูกเก็บใน Output เดิม จึงใช้ระบบ Export เดิมต่อได้ทันที</p><div class="feature-tags"><span>TXT</span><span>DOCX</span><span>PDF</span></div></div>
         </details>
       </div>
-      <details class="function-guide collapsed-guide">
-        <summary class="function-guide-head">
-          <div>
-            <div class="label">Function Guide</div>
-            <h3>คำอธิบายปุ่มและตัวเลือกทั้งหมด</h3>
-          </div>
-          <p>แยกตามลำดับใช้งานจริง ตั้งแต่เลือกไฟล์ ปรับ OCR ตรวจผล ไปจนถึงส่งออกไฟล์หลังแปลงเสร็จ</p>
-          <span class="guide-toggle">เปิดคู่มือ</span>
-        </summary>
-        <div class="guide-grid">
-          <details class="guide-card">
-            <summary>
-              <span class="guide-icon" aria-hidden="true">▣</span>
-              <b>ก่อนแปลง</b>
-              <p>เลือกไฟล์ แหล่งอัปโหลด Crop และช่วงหน้า PDF ให้พร้อมก่อนเริ่ม OCR</p>
-              <span class="guide-tags"><i>Input</i><i>Crop</i><i>PDF Page</i></span>
-            </summary>
-            <dl class="guide-detail">
-              <dt>รูปภาพ / PDF / Batch</dt><dd>เลือกชนิดงาน: รูปเดี่ยว, PDF รายหน้า หรือหลายไฟล์พร้อมกัน</dd>
-              <dt>เครื่อง / Drive / Dropbox</dt><dd>เลือกแหล่งไฟล์ก่อนอัปโหลด เครื่องจะเปิดตัวเลือกไฟล์ทันที ส่วน Drive/Dropbox เปิดหน้าแหล่งไฟล์</dd>
-              <dt>เปิด Crop / Reset Crop</dt><dd>ใช้กับรูปภาพเพื่อเลือกเฉพาะพื้นที่ข้อความ และล้างกรอบเลือกกลับทั้งภาพ</dd>
-              <dt>หน้าเริ่ม / หน้าสุดท้าย / ทุกหน้า</dt><dd>กำหนดช่วงหน้า PDF ที่ต้องการอ่าน หรือเลือกทุกหน้าครั้งเดียว</dd>
-              <dt>OCR เฉพาะหน้าที่ไม่มี Text Layer</dt><dd>ลดความมั่วด้วยการดึงข้อความจริงจาก PDF ก่อน แล้วค่อย OCR เฉพาะหน้าสแกน</dd>
-              <dt>แยกผลลัพธ์ตามหน้า</dt><dd>คงหัวข้อหน้าใน output เพื่อเอาไปตรวจหรือ export แยกหน้าได้ง่าย</dd>
-            </dl>
-          </details>
-          <details class="guide-card">
-            <summary>
-              <span class="guide-icon" aria-hidden="true">✓</span>
-              <b>ตัวเลือกตรวจคำ</b>
-              <p>ตั้งภาษา รูปแบบข้อความ Preset, Cleanup, Dictionary และความชัดของภาพ</p>
-              <span class="guide-tags"><i>OCR</i><i>Cleanup</i><i>Dictionary</i></span>
-            </summary>
-            <dl class="guide-detail">
-              <dt>ไทย + อังกฤษ</dt><dd>เลือกภาษา OCR ให้เหมาะกับเอกสารไทยล้วน อังกฤษล้วน หรือปนกัน</dd>
-              <dt>Engine: Auto / Tesseract / Browser Native</dt><dd>Auto จะลอง Native OCR ถ้า browser รองรับ แล้วเทียบกับ Tesseract เพื่อเลือกผลที่ดีที่สุด</dd>
-              <dt>ข้อความล้วน / จัดเป็นเอกสาร / อีเมล / Ticket</dt><dd>เลือกรูปแบบจัดข้อความหลัง OCR ตามงานที่จะเอาไปใช้ต่อ</dd>
-              <dt>Preset: Auto / Document / IT Screenshot / Mobile / Table</dt><dd>ปรับวิธีเตรียมภาพให้เข้ากับต้นฉบับ เช่น เอกสารสแกน ภาพมือถือ หรือหน้าจอระบบ</dd>
-              <dt>Cleanup: Raw / Light / Balanced / Strict</dt><dd>กำหนดความแรงในการล้างคำเพี้ยน โดย Balanced เหมาะกับงานทั่วไป</dd>
-              <dt>PDF: แนวตั้ง / แนวนอน</dt><dd>กำหนดแนวเอกสารสำหรับ DOC/PDF export และ metadata ของไฟล์ที่ส่งออก</dd>
-              <dt>ลบอักษรแปลก / รวมคำไทยผิดช่องว่าง</dt><dd>ล้างเศษ OCR และรวมคำไทยที่โดนเว้นวรรคผิด เช่น ข้ อมูล ให้กลับเป็นคำเดียว</dd>
-              <dt>Dictionary หลายสาย</dt><dd>เปิดคลังคำ IT/NOC, บัญชี, ภาษี, ราชการ เพื่อช่วยแก้คำเฉพาะทาง</dd>
-              <dt>รายการคำที่แก้ / ขยายภาพ / Contrast</dt><dd>แสดงคำที่ถูกแก้ และช่วยเพิ่มความชัดก่อน OCR เมื่อภาพเล็กหรือจาง</dd>
-            </dl>
-          </details>
-          <details class="guide-card">
-            <summary>
-              <span class="guide-icon" aria-hidden="true">⌕</span>
-              <b>แปลงและตรวจผล</b>
-              <p>เริ่มแปลง จัดข้อความซ้ำ ค้นหา ตรวจคำที่แก้ และดูคะแนนความมั่นใจ</p>
-              <span class="guide-tags"><i>Scan</i><i>Search</i><i>Review</i></span>
-            </summary>
-            <dl class="guide-detail">
-              <dt>เพิ่มคำแก้เอง</dt><dd>ใส่คู่คำผิด-คำถูกเอง เพื่อให้ระบบจำกฎแก้คำเฉพาะของงานนั้น</dd>
-              <dt>แปลง</dt><dd>เริ่ม OCR ตามไฟล์และตัวเลือกที่ตั้งไว้ พร้อมเลื่อนไปยังกล่อง Output</dd>
-              <dt>จัดข้อความใหม่</dt><dd>นำข้อความเดิมใน Output มาจัด/ล้างใหม่โดยไม่ต้อง OCR ซ้ำ</dd>
-              <dt>Search / Clear</dt><dd>ค้นคำในผลลัพธ์ เช่น CUCM, SD-WAN, NOC และล้างไฮไลต์ค้นหา</dd>
-              <dt>OCR Candidates</dt><dd>ถ้ามีหลายผลอ่าน ให้สลับ candidate ที่อ่านใกล้เคียงกว่าได้</dd>
-              <dt>Fixed Words / Confidence / History</dt><dd>ดูคำที่ระบบแก้ คะแนนความมั่นใจ และย้อนดูผลล่าสุดที่เคยแปลง</dd>
-            </dl>
-          </details>
-          <details class="guide-card export-function-card">
-            <summary>
-              <span class="guide-icon" aria-hidden="true">↧</span>
-              <b>Export พร้อมใช้งานต่อ</b>
-              <p>คัดลอกหรือส่งออกเป็น TXT, DOC, CSV, JSON และไฟล์สำหรับ Print เป็น PDF</p>
-              <span class="guide-tags"><i>Export</i><i>Report Ready</i></span>
-            </summary>
-            <div class="export-guide guide-detail">
-              <span><b>Copy</b> คัดลอกข้อความไปวางใน Ticket, Email หรือ Report</span>
-              <span><b>TXT</b> ส่งออกข้อความล้วน อ่านง่าย เปิดได้ทุกเครื่อง</span>
-              <span><b>DOC</b> ส่งออกไฟล์ Word-ready ตามแนวตั้ง/แนวนอนที่เลือก</span>
-              <span><b>CSV</b> แยกผลลัพธ์ทีละบรรทัด พร้อมชื่อไฟล์และแนวเอกสาร</span>
-              <span><b>JSON</b> เก็บ raw text, cleaned text, fixed words, confidence และ metadata</span>
-              <span><b>PDF</b> สร้างไฟล์ HTML สำหรับ Print / Save as PDF ตามแนวที่เลือกทุกไฟล์</span>
-              <span><b>Clear</b> ล้าง output และสถานะงานปัจจุบันเพื่อเริ่มงานใหม่</span>
-            </div>
-          </details>
-        </div>
-      </details>
     </section>
 
     <section class="privacy-note clean-section">
       <div>
         <div class="label">Privacy First</div>
-        <h2>ไฟล์ถูกประมวลผลบน Browser เป็นหลัก</h2>
-        <p>History จะอยู่ใน localStorage ของ Browser ผู้ใช้ และสามารถล้างได้เอง</p>
+        <h2>ไฟล์ประมวลผลบน Browser เป็นหลัก</h2>
+        <p>ระบบนี้ใช้ mock/API-ready OQC ในฝั่ง Browser ก่อน หากต่อ API จริงภายหลังสามารถต่อผ่าน service layer ได้ โดย History ยังคงอยู่ใน localStorage ของผู้ใช้</p>
       </div>
       <div class="hero-actions">
         <a class="btn" href="privacy.html">Privacy Policy</a>
@@ -208,7 +126,7 @@
       <div class="tool-title-row">
         <div>
           <div class="label">SCAN TOOL</div>
-          <h2>เครื่องมือแปลงข้อความ</h2>
+          <h2>Multi OCR + OQC Quality Check</h2>
         </div>
         <div class="top-actions tool-actions">
           <button class="btn icon-btn" id="copyBtn"><span aria-hidden="true">⧉</span>Copy</button>
@@ -227,9 +145,18 @@
         <button id="tabBatch" class="tab" data-tab="batch">Batch</button>
       </nav>
 
+      <div class="scan-timeline" aria-label="Scan workflow timeline">
+        <div class="scan-step active" data-scan-step="1"><b>Step 1</b><span>Upload Image / PDF</span></div>
+        <div class="scan-step" data-scan-step="2"><b>Step 2</b><span>OCR #1-#5 Scanning</span></div>
+        <div class="scan-step" data-scan-step="3"><b>Step 3</b><span>Compare Results</span></div>
+        <div class="scan-step" data-scan-step="4"><b>Step 4</b><span>OQC #1-#2 Check</span></div>
+        <div class="scan-step" data-scan-step="5"><b>Step 5</b><span>Generate Final Text</span></div>
+        <div class="scan-step" data-scan-step="6"><b>Step 6</b><span>Export Result</span></div>
+      </div>
+
       <main class="tool-grid">
         <aside class="panel input-panel">
-          <div class="step-title"><span>01</span><b>Input / Preview</b></div>
+          <div class="step-title"><span>01</span><b>Upload Zone / Preview</b></div>
           <div class="upload-source" aria-label="เลือกแหล่งอัปโหลด">
             <button class="source-btn active" data-upload-source="local" type="button"><span>▣</span><b>เครื่อง</b></button>
             <button class="source-btn" data-upload-source="drive" type="button"><span>◈</span><b>Drive</b></button>
@@ -238,10 +165,10 @@
 
           <div id="imgPanel" class="input-mode">
             <div class="drop" id="imgDrop">
-              <input id="imgInput" type="file" accept="image/*">
+              <input id="imgInput" type="file" accept="image/png,image/jpeg,image/webp,image/*">
               <div class="drop-icon">🖼</div>
-              <b>เลือกหรือวางรูปภาพ</b>
-              <span class="hint">PNG · JPG · WEBP · Ctrl+V · Crop OCR</span>
+              <b>เลือก ลากวาง หรือ Paste รูปภาพ</b>
+              <span class="hint">JPG · PNG · WEBP · Drag & Drop · Ctrl+V · Crop OCR</span>
             </div>
             <div id="imgFileInfo" class="file-info hide">
               <span id="imgFileName">ยังไม่ได้เลือกไฟล์</span>
@@ -262,12 +189,12 @@
             <div class="drop" id="pdfDrop">
               <input id="pdfInput" type="file" accept="application/pdf">
               <div class="drop-icon">📄</div>
-              <b>เลือก PDF</b>
-              <span class="hint">Text Layer + OCR fallback</span>
+              <b>เลือก ลากวาง PDF</b>
+              <span class="hint">Text Layer + Multi OCR fallback</span>
             </div>
             <div id="pdfFileInfo" class="file-info hide">
               <span id="pdfFileName">ยังไม่ได้เลือกไฟล์</span>
-              <button class="btn small danger" id="removePdfBtn">ยกเลิกไฟล์นี้</button>
+              <button class="btn small danger" id="removePdfBtn">ยกเลิกไฟล์</button>
             </div>
             <div class="row compact-row">
               <input id="pageFrom" type="number" min="1" value="1" placeholder="หน้าเริ่ม">
@@ -308,7 +235,7 @@
 
           <div id="batchPanel" class="input-mode hide">
             <div class="drop" id="batchDrop">
-              <input id="batchInput" type="file" accept="image/*,application/pdf" multiple>
+              <input id="batchInput" type="file" accept="image/png,image/jpeg,image/webp,image/*,application/pdf" multiple>
               <div class="drop-icon">📦</div>
               <b>เลือกหลายไฟล์</b>
               <span class="hint">รูปภาพ + PDF หลายไฟล์</span>
@@ -350,6 +277,8 @@
               <button class="sample-btn" data-image-sample="invoice" type="button">ภาพ Mock</button>
             </div>
           </details>
+
+          <div id="readyChecklist" class="ready-card"></div>
 
           <div class="step-title space-top"><span>02</span><b>Options</b></div>
           <div class="ocr-skill-panel">
@@ -396,38 +325,31 @@
           <details class="advanced-options">
             <summary>ตัวเลือกขั้นสูง</summary>
             <div class="row compact-row precision-row">
-            <select id="ocrEngine">
-              <option value="auto" selected>Engine: Auto</option>
-              <option value="paddle-local">Engine: PaddleOCR Local</option>
-              <option value="tesseract-accurate">Engine: Tesseract Accurate</option>
-              <option value="tesseract-fast">Engine: Tesseract Fast</option>
-              <option value="native">Engine: Browser Native</option>
-            </select>
-            <select id="pdfOrientation">
-              <option value="portrait" selected>PDF: แนวตั้ง</option>
-              <option value="landscape">PDF: แนวนอน</option>
-            </select>
+              <select id="ocrEngine">
+                <option value="auto" selected>Engine: Auto</option>
+                <option value="paddle-local">Engine: PaddleOCR Local</option>
+                <option value="tesseract-accurate">Engine: Tesseract Accurate</option>
+                <option value="tesseract-fast">Engine: Tesseract Fast</option>
+                <option value="native">Engine: Browser Native</option>
+              </select>
+              <select id="pdfOrientation">
+                <option value="portrait" selected>PDF: แนวตั้ง</option>
+                <option value="landscape">PDF: แนวนอน</option>
+              </select>
             </div>
             <div class="row compact-row paddle-row">
               <input id="paddleEndpoint" placeholder="PaddleOCR endpoint" value="http://127.0.0.1:8765">
               <button class="btn small" id="paddleHealthBtn" type="button">Test Paddle</button>
             </div>
-
             <div class="checks compact-checks hidden-default-controls">
-            <label><input id="removeNoise" type="checkbox" checked> ลบอักษรแปลก</label>
-            <label><input id="cleanThai" type="checkbox" checked> รวมคำไทยผิดช่องว่าง</label>
-            <label class="dictionary-check">
-              <input id="itDictionary" type="checkbox" checked>
-              <span class="check-copy">
-                <b>Dictionary หลายสาย</b>
-                <small><span>IT/NOC</span><span>บัญชี</span><span>ภาษี</span><span>ราชการ</span></small>
-              </span>
-            </label>
-            <label><input id="highlightFixes" type="checkbox" checked> รายการคำที่แก้</label>
-            <label><input id="upscale" type="checkbox" checked> ขยายภาพ</label>
-            <label><input id="threshold" type="checkbox" checked> Contrast</label>
-            <label><input id="autoEnhance" type="checkbox" checked> Auto enhance</label>
-            <label><input id="autoCropDoc" type="checkbox" checked> Auto crop ขอบเอกสาร</label>
+              <label><input id="removeNoise" type="checkbox" checked> ลบอักษรแปลก</label>
+              <label><input id="cleanThai" type="checkbox" checked> รวมคำไทยผิดช่องว่าง</label>
+              <label class="dictionary-check"><input id="itDictionary" type="checkbox" checked><span class="check-copy"><b>Dictionary หลายสาย</b><small><span>IT/NOC</span><span>บัญชี</span><span>ภาษี</span><span>ราชการ</span></small></span></label>
+              <label><input id="highlightFixes" type="checkbox" checked> รายการคำที่แก้</label>
+              <label><input id="upscale" type="checkbox" checked> ขยายภาพ</label>
+              <label><input id="threshold" type="checkbox" checked> Contrast</label>
+              <label><input id="autoEnhance" type="checkbox" checked> Auto enhance</label>
+              <label><input id="autoCropDoc" type="checkbox" checked> Auto crop ขอบเอกสาร</label>
             </div>
           </details>
 
@@ -442,7 +364,7 @@
           </details>
 
           <div class="row action-row">
-            <button class="btn primary" id="scanBtn">⚡ แปลง</button>
+            <button class="btn primary" id="scanBtn">⚡ Multi OCR + OQC Scan</button>
             <button class="btn subtle" id="formatBtn">จัดข้อความใหม่</button>
           </div>
           <div class="progress"><span id="progressBar"></span></div>
@@ -457,7 +379,7 @@
 
         <section class="panel output-panel">
           <div class="output-head">
-            <div><div class="step-title"><span>03</span><b>Output</b></div><div class="hint">แสดงเฉพาะข้อความที่แปลงได้</div></div>
+            <div><div class="step-title"><span>03</span><b>Output / Final Result</b></div><div class="hint">แสดงผลลัพธ์ที่ผ่าน OQC แล้ว พร้อมตารางเปรียบเทียบ OCR</div></div>
           </div>
           <div id="skillResultBar" class="skill-result-bar hide"></div>
           <div class="search-row">
@@ -474,16 +396,49 @@
           <div id="qualityGate" class="quality-gate hide" aria-live="polite"></div>
           <div id="pdfPageResults" class="pdf-page-results hide" aria-live="polite"></div>
           <div id="comparePanel" class="compare-panel hide" aria-live="polite"></div>
+
+          <div id="multiOqcDashboard" class="multi-oqc-dashboard" aria-live="polite">
+            <section class="multi-panel multi-flow">
+              <div class="multi-panel-head">
+                <div><h3>OCR Team Status</h3><p>OCR 5 ตัวอ่านข้อความจากไฟล์เดียวกัน พร้อม progress, confidence, duration และ uncertain words</p></div>
+                <div class="multi-mini-actions"><button class="btn small" id="multiClearBtn" type="button">Reset Dashboard</button></div>
+              </div>
+              <div id="ocrTeamStatus" class="ocr-team-grid"></div>
+            </section>
+            <section class="multi-panel multi-flow">
+              <div class="multi-panel-head">
+                <div><h3>OQC Quality Check Panel</h3><p>OQC #1 และ OQC #2 ตรวจคำที่อ่านไม่ตรงกัน ตรวจสะกดผิด และตรวจรูปแบบเอกสาร</p></div>
+                <button class="btn small" id="oqcExplainBtn" type="button">ดูวิธีระบบตัดสินผลลัพธ์</button>
+              </div>
+              <div id="oqcPanel" class="oqc-grid"></div>
+              <div id="oqcExplainPanel" class="oqc-explain hide">
+                <b>OQC ตัดสิน Final Text อย่างไร</b>
+                <ol>
+                  <li>OCR #1-#5 อ่านไฟล์เดียวกันด้วยโหมดภาพต่างกัน</li>
+                  <li>ถ้าบรรทัด/คำใดตรงกัน 3 ตัวขึ้นไป ระบบให้เป็น majority vote</li>
+                  <li>ถ้าอ่านไม่ตรงกัน OQC จะเลือก candidate ที่ confidence สูงและมี noise ต่ำกว่า</li>
+                  <li>OQC ตรวจ logic เอกสาร เช่น วันที่ ราคา ยอดรวม และคำสะกดเพี้ยน</li>
+                  <li>รวมผลเป็น Final Text พร้อม Final Confidence Score</li>
+                </ol>
+              </div>
+            </section>
+            <section class="multi-panel">
+              <div class="multi-panel-head"><div><h3>Comparison View</h3><p>ตารางเปรียบเทียบบรรทัดจาก OCR #1-#5 พร้อม OQC Decision</p></div></div>
+              <div id="ocrComparisonTable"></div>
+            </section>
+            <section class="multi-panel">
+              <div class="multi-panel-head"><div><h3>Final Result</h3><p>ข้อความสุดท้ายที่ผ่าน OQC แล้ว สามารถ Copy และ Export ได้ทันที</p></div></div>
+              <div id="finalResultBox"></div>
+            </section>
+          </div>
+
           <div id="output" class="out output-only" contenteditable="true" spellcheck="false" aria-label="Result editor">ผลลัพธ์จะแสดงที่นี่</div>
           <details class="fix-box">
             <summary>Fixed Words</summary>
             <div id="fixReport" class="fix-report">ยังไม่มีรายการคำที่แก้</div>
           </details>
           <div id="nextActions" class="next-actions hide" aria-live="polite">
-            <div class="next-head">
-              <b>ดำเนินการต่อเพื่อ...</b>
-              <span>เลือกงานต่อหลังแปลงเสร็จ</span>
-            </div>
+            <div class="next-head"><b>ดำเนินการต่อเพื่อ...</b><span>เลือกงานต่อหลังแปลงเสร็จ</span></div>
             <div id="exportReview" class="export-review">
               <b>Review Checklist ก่อน DOC/PDF</b>
               <label><input type="checkbox" data-review-check> ตรวจเลขเอกสาร / Ticket No.</label>
@@ -512,7 +467,7 @@
     <footer class="footer-links"><span>© RIPTWOSEC.SCAN</span><a href="help.html">Help / Demo</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Use</a></footer>
   </div>
 
-  <script src="js/state.js?v=2"></script><script src="js/theme.js?v=17"></script><script src="js/utils.js?v=3"></script><script src="js/token-protector.js?v=1"></script><script src="js/thai-normalizer.js?v=1"></script><script src="js/field-validator.js?v=1"></script><script src="js/symbol-score.js?v=1"></script><script src="js/pdf-accuracy-pipeline.js?v=1"></script><script src="js/ocr-skills.js?v=3"></script><script src="js/pdf-skills.js?v=1"></script><script src="js/paddle-client.js?v=2"></script><script src="js/dictionary-it.js"></script><script src="js/custom-rules.js"></script><script src="js/text-cleaner.js?v=10"></script><script src="js/quality-review.js?v=3"></script><script src="js/crop.js"></script><script src="js/ocr.js?v=10"></script><script src="js/image-quality.js?v=1"></script><script src="js/pdf-handler.js?v=4"></script><script src="js/batch.js?v=2"></script><script src="js/search.js"></script><script src="js/exporter.js?v=6"></script><script src="js/history.js"></script><script src="js/app.js?v=8"></script>
+  <script src="js/state.js?v=2"></script><script src="js/theme.js?v=17"></script><script src="js/utils.js?v=3"></script><script src="js/token-protector.js?v=1"></script><script src="js/thai-normalizer.js?v=1"></script><script src="js/field-validator.js?v=1"></script><script src="js/symbol-score.js?v=1"></script><script src="js/pdf-accuracy-pipeline.js?v=1"></script><script src="js/ocr-skills.js?v=3"></script><script src="js/pdf-skills.js?v=1"></script><script src="js/paddle-client.js?v=2"></script><script src="js/dictionary-it.js"></script><script src="js/custom-rules.js"></script><script src="js/text-cleaner.js?v=10"></script><script src="js/quality-review.js?v=3"></script><script src="js/crop.js"></script><script src="js/ocr.js?v=10"></script><script src="js/image-quality.js?v=1"></script><script src="js/pdf-handler.js?v=4"></script><script src="js/batch.js?v=2"></script><script src="js/search.js"></script><script src="js/exporter.js?v=6"></script><script src="js/history.js"></script><script src="js/app.js?v=8"></script><script src="js/multi-ocr-oqc.js?v=1"></script>
   <script src="js/scan-3d.js?v=5"></script>
 </body>
 </html>
