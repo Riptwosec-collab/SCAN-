@@ -194,16 +194,11 @@ function loadScriptOnce(src,id){
   document.body.appendChild(script);
 }
 
-function ensureLiveOcrAssets(){
-  loadCssOnce('css/multi-ocr-live-ui.css?v=2','multiOcrLiveCss');
-  loadScriptOnce('js/multi-ocr-live-ui.js?v=1','multiOcrLiveScript');
-}
-function ensureOcrFormatterAssets(){
-  loadCssOnce('css/ocr-layout-formatter.css?v=1','ocrLayoutFormatterCss');
-  loadScriptOnce('js/ocr-layout-formatter.js?v=1','ocrLayoutFormatterScript');
-}
+function ensureLiveOcrAssets(){loadCssOnce('css/multi-ocr-live-ui.css?v=2','multiOcrLiveCss');loadScriptOnce('js/multi-ocr-live-ui.js?v=1','multiOcrLiveScript');}
+function ensureOcrFormatterAssets(){loadCssOnce('css/ocr-layout-formatter.css?v=1','ocrLayoutFormatterCss');loadScriptOnce('js/ocr-layout-formatter.js?v=1','ocrLayoutFormatterScript');}
 function ensureOqcStrictAssets(){loadScriptOnce('js/oqc-strict-review.js?v=3','oqcStrictReviewScript');}
 function ensureCyberAiTheme(){loadCssOnce('css/cyber-ai-theme.css?v=2','cyberAiThemeCss');}
+function ensureSystemUpgradeAssets(){loadCssOnce('css/system-upgrade.css?v=1','systemUpgradeCss');loadScriptOnce('js/system-upgrade.js?v=1','systemUpgradeScript');}
 
 window.simplifyScanUi=simplifyScanUi;
 document.addEventListener('DOMContentLoaded',()=>{
@@ -212,5 +207,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(ensureLiveOcrAssets,40);
   setTimeout(ensureOcrFormatterAssets,80);
   setTimeout(ensureOqcStrictAssets,120);
+  setTimeout(ensureSystemUpgradeAssets,170);
 });
 document.addEventListener('riptwosec:themechange',()=>setTimeout(simplifyScanUi,0));
