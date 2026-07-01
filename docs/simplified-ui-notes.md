@@ -44,6 +44,14 @@ This branch adds a lightweight UI simplification layer on top of the merged Mult
 - The demo button creates a sample image and runs real Tesseract OCR through the Multi OCR + OQC pipeline.
 - Service worker cache now includes `multi-ocr-live-ui` assets.
 
+## OCR layout formatter
+
+- Adds a formatted article view after OCR completes.
+- Splits scanned text into step cards when it detects `ขั้นตอนที่ 1`, `ขั้นตอนที่ 2`, `Step 1`, or numbered headings.
+- Renders big bold headings, readable paragraphs, and numbered badges similar to the reference image.
+- Highlights command-like text such as `ipconfig /release`, `ipconfig /renew`, `ping`, `nslookup`, and quoted settings as rounded code pills.
+- Keeps raw OCR text available for normal copy/export.
+
 ## Implementation
 
-The simplification is implemented in `js/theme.js` as a post-load UI layer so existing OCR, export, and OQC features remain available without rewriting the full page. The actionable dashboard behavior lives in `js/multi-ocr-live-ui.js` with styles in `css/multi-ocr-live-ui.css`.
+The simplification is implemented in `js/theme.js` as a post-load UI layer so existing OCR, export, and OQC features remain available without rewriting the full page. The actionable dashboard behavior lives in `js/multi-ocr-live-ui.js` with styles in `css/multi-ocr-live-ui.css`. The formatted article output lives in `js/ocr-layout-formatter.js` with styles in `css/ocr-layout-formatter.css`.
