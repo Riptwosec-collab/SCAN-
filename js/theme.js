@@ -203,6 +203,32 @@ function simplifyScanUi(){
   simplifyEngineAndScan();
 }
 
+function loadCssOnce(href,id){
+  if(document.getElementById(id))return;
+  const link=document.createElement('link');
+  link.id=id;
+  link.rel='stylesheet';
+  link.href=href;
+  document.head.appendChild(link);
+}
+
+function loadScriptOnce(src,id){
+  if(document.getElementById(id))return;
+  const script=document.createElement('script');
+  script.id=id;
+  script.src=src;
+  script.defer=true;
+  document.body.appendChild(script);
+}
+
+function ensureLiveOcrAssets(){
+  loadCssOnce('css/multi-ocr-live-ui.css?v=1','multiOcrLiveCss');
+  loadScriptOnce('js/multi-ocr-live-ui.js?v=1','multiOcrLiveScript');
+}
+
 window.simplifyScanUi=simplifyScanUi;
-document.addEventListener('DOMContentLoaded',()=>setTimeout(simplifyScanUi,0));
+document.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(simplifyScanUi,0);
+  setTimeout(ensureLiveOcrAssets,40);
+});
 document.addEventListener('riptwosec:themechange',()=>setTimeout(simplifyScanUi,0));
