@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v47-thai-pdf-rescue';
+const CACHE_NAME='riptwosec-scan-v48-advanced-ocr-brain';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -8,7 +8,7 @@ const CORE_ASSETS=[
   './manifest.webmanifest',
   './css/style.css',
   './css/cyber-ai-theme.css?v=2',
-  './css/system-upgrade.css?v=1',
+  './css/system-upgrade.css?v=2',
   './css/features.css',
   './css/background.css',
   './css/tool-cleanup.css',
@@ -48,6 +48,13 @@ const CORE_ASSETS=[
   './js/ocr-layout-formatter.js?v=1',
   './js/oqc-strict-review.js?v=3',
   './js/system-upgrade.js?v=2',
+  './js/image-analyzer.js?v=1',
+  './js/preprocess-service.js?v=1',
+  './js/multi-ocr-service.js?v=1',
+  './js/oqc-brain.js?v=1',
+  './js/document-extractor.js?v=1',
+  './js/user-learning.js?v=1',
+  './js/ocr-dashboard-ui.js?v=1',
   './js/scan-3d.js?v=5'
 ];
 
