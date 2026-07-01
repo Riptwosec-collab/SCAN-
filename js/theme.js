@@ -222,13 +222,17 @@ function loadScriptOnce(src,id){
 }
 
 function ensureLiveOcrAssets(){
-  loadCssOnce('css/multi-ocr-live-ui.css?v=1','multiOcrLiveCss');
+  loadCssOnce('css/multi-ocr-live-ui.css?v=2','multiOcrLiveCss');
   loadScriptOnce('js/multi-ocr-live-ui.js?v=1','multiOcrLiveScript');
 }
 
 function ensureOcrFormatterAssets(){
   loadCssOnce('css/ocr-layout-formatter.css?v=1','ocrLayoutFormatterCss');
   loadScriptOnce('js/ocr-layout-formatter.js?v=1','ocrLayoutFormatterScript');
+}
+
+function ensureOqcStrictAssets(){
+  loadScriptOnce('js/oqc-strict-review.js?v=1','oqcStrictReviewScript');
 }
 
 function ensureCyberAiTheme(){
@@ -238,8 +242,9 @@ function ensureCyberAiTheme(){
 window.simplifyScanUi=simplifyScanUi;
 document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(simplifyScanUi,0);
+  setTimeout(ensureCyberAiTheme,20);
   setTimeout(ensureLiveOcrAssets,40);
   setTimeout(ensureOcrFormatterAssets,80);
-  setTimeout(ensureCyberAiTheme,20);
+  setTimeout(ensureOqcStrictAssets,120);
 });
 document.addEventListener('riptwosec:themechange',()=>setTimeout(simplifyScanUi,0));
