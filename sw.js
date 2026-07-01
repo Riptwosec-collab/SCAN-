@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v42-oqc-cyber-theme';
+const CACHE_NAME='riptwosec-scan-v43-hide-compare-final';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -7,7 +7,7 @@ const CORE_ASSETS=[
   './terms.html',
   './manifest.webmanifest',
   './css/style.css',
-  './css/cyber-ai-theme.css?v=1',
+  './css/cyber-ai-theme.css?v=2',
   './css/features.css',
   './css/background.css',
   './css/tool-cleanup.css',
