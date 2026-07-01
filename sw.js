@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v43-hide-compare-final';
+const CACHE_NAME='riptwosec-scan-v44-oqc-token-clean';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -45,7 +45,7 @@ const CORE_ASSETS=[
   './js/multi-ocr-oqc.js?v=1',
   './js/multi-ocr-live-ui.js?v=1',
   './js/ocr-layout-formatter.js?v=1',
-  './js/oqc-strict-review.js?v=1',
+  './js/oqc-strict-review.js?v=2',
   './js/scan-3d.js?v=5'
 ];
 
