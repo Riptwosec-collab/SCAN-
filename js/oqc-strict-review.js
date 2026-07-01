@@ -7,8 +7,8 @@
   function splitLines(text){return String(text||'').replace(/\r/g,'').split('\n').map(normalize).filter(Boolean)}
 
   const trustedTerms=[
-    'ขั้นตอน','ตรวจสอบ','เชื่อมต่อ','กายภาพ','รีเฟรช','ตั้งค่า','เครือข่าย','ระบบ','ซอฟต์แวร์','เราเตอร์','พอร์ต','สาย','ข้อมูล','วิเคราะห์','องค์กร','หน่วยงาน','รายงาน','เอกสาร','ใบเสร็จ','ใบกำกับ','ราคา','ยอดรวม','วันที่','รายการ','จำนวน','ภาษี','บาท','สินค้า','บริการ',
-    'physical','connection','command','line','windows','dhcp','ip','dns','static','properties','automatically','analysis','software','data','organization','enterprise','government','ai'
+    'ขั้นตอน','ตรวจสอบ','เชื่อมต่อ','กายภาพ','รีเฟรช','ตั้งค่า','เครือข่าย','ระบบ','ซอฟต์แวร์','เราเตอร์','พอร์ต','สาย','ข้อมูล','วิเคราะห์','องค์กร','หน่วยงาน','รายงาน','เอกสาร','ใบเสร็จ','ใบกำกับ','ราคา','ยอดรวม','วันที่','รายการ','จำนวน','ภาษี','บาท','สินค้า','บริการ','หุ้น','ตลาดหุ้น','ลงทุน','บริษัท','อ้างอิง',
+    'physical','connection','command','line','windows','dhcp','ip','dns','static','properties','automatically','analysis','software','data','organization','enterprise','government','ai','stock','stocks','invest','market','company','reference'
   ];
   const commandTerms=['ipconfig','release','renew','ping','nslookup','tracert','netsh','arp','route','curl','ssh','telnet'];
 
@@ -28,6 +28,35 @@
       weirdRatio:compact.length?weird/compact.length:0,
       zeroRatio:compact.length?zeros/compact.length:0
     };
+  }
+
+  function tokenLooksGarbled(token){
+    const raw=String(token||'').trim();
+    if(!raw||raw.length<3)return false;
+    const stripped=raw.replace(/[.,:;()\[\]{}"'“”]/g,'');
+    if(!stripped||stripped.length<3)return false;
+    const hasThai=/[ก-ฮ]/.test(stripped);
+    const hasThaiDigit=/[๐-๙]/.test(stripped);
+    const hasArabicDigit=/[0-9]/.test(stripped);
+    const hasLatin=/[A-Za-z]/.test(stripped);
+    const zeroLike=(stripped.match(/[0๐oO]/g)||[]).length;
+    const digits=(stripped.match(/[0-9๐-๙]/g)||[]).length;
+    const letters=(stripped.match(/[A-Za-zก-ฮ]/g)||[]).length;
+    const mixedDigitScripts=hasThaiDigit&&hasArabicDigit;
+    const mixedTextScripts=(hasThai&&hasLatin)||(hasThai&&(hasThaiDigit||hasArabicDigit)&&letters<=2);
+    const denseZeroNoise=zeroLike>=2&&digits>=2;
+    const mostlyDigitsAndZero=digits>=Math.max(2,Math.ceil(stripped.length*.45));
+    if(commandTerms.some(term=>stripped.toLowerCase().includes(term)))return false;
+    if(/^[0-9๐-๙.,]+$/.test(stripped))return false;
+    if(mixedDigitScripts&&denseZeroNoise)return true;
+    if(mixedTextScripts&&mostlyDigitsAndZero)return true;
+    if(/[0-9๐-๙][ก-ฮ][0-9๐-๙]/.test(stripped))return true;
+    if(/^[5S][๒2][ลlI1][๐0O][๐0O][2๒]$/i.test(stripped))return true;
+    return false;
+  }
+
+  function scrubGarbledTokens(text){
+    return normalize(text).split(' ').filter(token=>!tokenLooksGarbled(token)).join(' ').trim();
   }
 
   function scoreLine(line){
@@ -53,7 +82,8 @@
   function looksLikeNoise(line){
     const s=lineStats(line);
     const score=scoreLine(line);
-    if(s.heading||s.command||s.trusted)return false;
+    if(s.heading||s.command)return false;
+    if(s.trusted&&score>=12)return false;
     if(s.len<3)return true;
     if(score<14)return true;
     if(s.weirdRatio>.12)return true;
@@ -61,6 +91,7 @@
     if(s.zeroRatio>.35&&s.len>8)return true;
     if(/^[๐0oO\s]+/.test(s.text)&&s.letterRatio<.60)return true;
     if(/[๐0oO]\s*[๐0oO].{0,8}[()อเเขะโดดเด่น]/.test(s.text)&&s.letterRatio<.70)return true;
+    if(s.text.split(' ').some(tokenLooksGarbled)&&s.letterRatio<.55)return true;
     return false;
   }
 
@@ -70,15 +101,21 @@
     text=text.replace(/[|]{2,}/g,' ');
     text=text.replace(/[�{}<>~`_^]/g,'');
     text=text.replace(/\bwu\s*[:;]?\b/gi,'');
+    text=scrubGarbledTokens(text);
     text=text.replace(/\s{2,}/g,' ').trim();
     return text;
   }
 
   function strictFilterText(text){
-    const lines=splitLines(text).map(cleanLine).filter(Boolean);
-    if(!lines.length)return {text:'',removed:[],kept:[]};
-    const kept=[];
+    const originalLines=splitLines(text);
     const removed=[];
+    const lines=originalLines.map(line=>{
+      const cleaned=cleanLine(line);
+      if(cleaned!==normalize(line))removed.push(line);
+      return cleaned;
+    }).filter(Boolean);
+    if(!lines.length)return {text:'',removed:originalLines,kept:[]};
+    const kept=[];
     lines.forEach(line=>{
       if(looksLikeNoise(line))removed.push(line);
       else kept.push(line);
@@ -86,7 +123,7 @@
 
     if(!kept.length){
       const best=lines.slice().sort((a,b)=>scoreLine(b)-scoreLine(a)).slice(0,Math.min(5,lines.length));
-      return {text:best.join('\n'),removed:lines.filter(line=>!best.includes(line)),kept:best};
+      return {text:best.join('\n'),removed:lines.filter(line=>!best.includes(line)).concat(removed),kept:best};
     }
 
     const dedup=[];
@@ -97,12 +134,12 @@
       seen.add(key);
       dedup.push(line);
     });
-    return {text:dedup.join('\n'),removed,kept:dedup};
+    return {text:dedup.join('\n'),removed:[...new Set(removed)],kept:dedup};
   }
 
   function addStrictIssues(result,filter){
     const oqcResults=result.oqcResults||[];
-    const message=filter.removed.length?'OQC Strict ลบข้อความมั่ว/Noise '+filter.removed.length+' บรรทัด':'OQC Strict ไม่พบ noise รุนแรง';
+    const message=filter.removed.length?'OQC Strict ลบข้อความมั่ว/Noise '+filter.removed.length+' จุด':'OQC Strict ไม่พบ noise รุนแรง';
     oqcResults.forEach(oqc=>{
       oqc.issuesFound=Array.isArray(oqc.issuesFound)?oqc.issuesFound:[];
       if(!oqc.issuesFound.includes(message))oqc.issuesFound.unshift(message);
@@ -115,7 +152,7 @@
 
   function renderStrictNotice(filter,result){
     let notice=$('oqcStrictNotice');
-    const finalBox=$('finalResultBox');
+    const finalBox=$('finalResultBox')||$('output')?.parentNode;
     if(!finalBox)return;
     if(!notice){
       notice=document.createElement('div');
@@ -124,7 +161,7 @@
       finalBox.parentNode.insertBefore(notice,finalBox);
     }
     const removed=filter.removed.length;
-    notice.innerHTML='<b>OQC Strict Review</b><span>'+ (removed?'ลบข้อความมั่ว/Noise ออก '+removed+' บรรทัด · confidence ใหม่ '+result.finalConfidence+'%':'ตรวจเข้มแล้ว ไม่พบ noise รุนแรง · confidence '+result.finalConfidence+'%') +'</span>';
+    notice.innerHTML='<b>OQC Strict Review</b><span>'+ (removed?'ลบข้อความมั่ว/Noise ออก '+removed+' จุด · confidence ใหม่ '+result.finalConfidence+'%':'ตรวจเข้มแล้ว ไม่พบ noise รุนแรง · confidence '+result.finalConfidence+'%') +'</span>';
   }
 
   function applyStrictReview(){
