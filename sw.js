@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v36-multi-oqc';
+const CACHE_NAME='riptwosec-scan-v37-simplified-ui';
 const CORE_ASSETS=[
   './',
   './index.html',
