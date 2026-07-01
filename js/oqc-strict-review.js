@@ -8,23 +8,42 @@
 
   const trustedTerms=[
     'ขั้นตอน','ตรวจสอบ','เชื่อมต่อ','กายภาพ','รีเฟรช','ตั้งค่า','เครือข่าย','ระบบ','ซอฟต์แวร์','เราเตอร์','พอร์ต','สาย','ข้อมูล','วิเคราะห์','องค์กร','หน่วยงาน','รายงาน','เอกสาร','ใบเสร็จ','ใบกำกับ','ราคา','ยอดรวม','วันที่','รายการ','จำนวน','ภาษี','บาท','สินค้า','บริการ','หุ้น','ตลาดหุ้น','ลงทุน','บริษัท','อ้างอิง',
-    'physical','connection','command','line','windows','dhcp','ip','dns','static','properties','automatically','analysis','software','data','organization','enterprise','government','ai','stock','stocks','invest','market','company','reference'
+    'บันทึกข้อความ','ส่วนราชการ','สรรพากร','เทคโนโลยีสารสนเทศ','ผู้อำนวยการ','ผู้อํานวยการ','กองเทคโนโลยีสารสนเทศ','อนุเคราะห์','ราชการ','สำนักงาน','สํานักงาน','ความมั่นคง','ความมันคง','เครือข่าย','นิติกร','รักษาราชการแทน','เรื่อง','เรียน','โทร','Mac Address','Notebook',
+    'physical','connection','command','line','windows','dhcp','ip','dns','static','properties','automatically','analysis','software','data','organization','enterprise','government','ai','stock','stocks','invest','market','company','reference','mac','address','notebook'
   ];
   const commandTerms=['ipconfig','release','renew','ping','nslookup','tracert','netsh','arp','route','curl','ssh','telnet'];
+  const govTerms=['บันทึก','ข้อความ','ส่วนราชการ','สรรพากร','วันที่','เรื่อง','เรียน','ผู้อำนวยการ','ผู้อํานวยการ','กองเทคโนโลยีสารสนเทศ','อนุเคราะห์','ราชการ','Mac Address','Notebook','เอกสารที่แนบ'];
+  const safeEnglishTerms=['mac','address','notebook','ip','dns','dhcp','url','email'];
+
+  function isGovernmentMemoText(text){
+    const source=String(text||'');
+    let hits=0;
+    govTerms.forEach(term=>{if(source.toLowerCase().includes(term.toLowerCase()))hits++;});
+    return hits>=3;
+  }
+
+  function hasTrustedTerm(text){
+    const lower=String(text||'').toLowerCase();
+    return trustedTerms.some(term=>lower.includes(term.toLowerCase()));
+  }
 
   function lineStats(line){
     const text=normalize(line);
     const compact=text.replace(/\s/g,'');
     const letters=(compact.match(/[A-Za-zก-๙]/g)||[]).length;
+    const thaiLetters=(compact.match(/[ก-ฮ]/g)||[]).length;
+    const latinLetters=(compact.match(/[A-Za-z]/g)||[]).length;
     const digits=(compact.match(/[0-9๐-๙]/g)||[]).length;
     const weird=(compact.match(/[�|{}<>~`_^=\\]{1,}|[^\u0E00-\u0E7FA-Za-z0-9\s.,:;()\-\/"'“”%+฿#@]/g)||[]).length;
     const zeros=(compact.match(/[0๐oO]/g)||[]).length;
-    const trusted=trustedTerms.some(term=>text.toLowerCase().includes(term.toLowerCase()));
+    const trusted=hasTrustedTerm(text);
     const command=commandTerms.some(term=>text.toLowerCase().includes(term));
     const heading=/^(ขั้นตอนที่|step\s*\d+|\d+\s*[:.)-])/i.test(text);
     return {
-      text, len:compact.length, letters, digits, weird, zeros, trusted, command, heading,
+      text, len:compact.length, letters, thaiLetters, latinLetters, digits, weird, zeros, trusted, command, heading,
       letterRatio:compact.length?letters/compact.length:0,
+      thaiRatio:compact.length?thaiLetters/compact.length:0,
+      latinRatio:compact.length?latinLetters/compact.length:0,
       weirdRatio:compact.length?weird/compact.length:0,
       zeroRatio:compact.length?zeros/compact.length:0
     };
@@ -46,17 +65,34 @@
     const mixedTextScripts=(hasThai&&hasLatin)||(hasThai&&(hasThaiDigit||hasArabicDigit)&&letters<=2);
     const denseZeroNoise=zeroLike>=2&&digits>=2;
     const mostlyDigitsAndZero=digits>=Math.max(2,Math.ceil(stripped.length*.45));
-    if(commandTerms.some(term=>stripped.toLowerCase().includes(term)))return false;
-    if(/^[0-9๐-๙.,]+$/.test(stripped))return false;
+    const lower=stripped.toLowerCase();
+    if(commandTerms.some(term=>lower.includes(term)))return false;
+    if(safeEnglishTerms.some(term=>lower.includes(term)))return false;
+    if(/^[0-9๐-๙.,/\-]+$/.test(stripped))return false;
     if(mixedDigitScripts&&denseZeroNoise)return true;
     if(mixedTextScripts&&mostlyDigitsAndZero)return true;
     if(/[0-9๐-๙][ก-ฮ][0-9๐-๙]/.test(stripped))return true;
     if(/^[5S][๒2][ลlI1][๐0O][๐0O][2๒]$/i.test(stripped))return true;
+    if(/^[A-Za-z]{1,3}[0-9๐-๙ก-ฮ]{2,}$/.test(stripped)&&!safeEnglishTerms.some(term=>lower.includes(term)))return true;
     return false;
   }
 
   function scrubGarbledTokens(text){
     return normalize(text).split(' ').filter(token=>!tokenLooksGarbled(token)).join(' ').trim();
+  }
+
+  function looksLikeHeaderGarbage(line){
+    const text=normalize(line);
+    const s=lineStats(text);
+    const lower=text.toLowerCase();
+    if(hasTrustedTerm(text))return false;
+    if(safeEnglishTerms.some(term=>lower.includes(term)))return false;
+    if(/^(a|al|ap|eof|n)\b/i.test(text)&&s.thaiLetters<4)return true;
+    if(/^(a|al|ap|eof)\b/i.test(text)&&s.latinRatio>.35)return true;
+    if(s.latinLetters>=5&&s.thaiLetters<5&&s.digits>=2)return true;
+    if(/[=©%|]/.test(text)&&s.letters<8)return true;
+    if(/^[-=©\s.0๐oOซ%]+$/.test(text))return true;
+    return false;
   }
 
   function scoreLine(line){
@@ -79,9 +115,10 @@
     return score;
   }
 
-  function looksLikeNoise(line){
+  function looksLikeNoise(line,govMode){
     const s=lineStats(line);
     const score=scoreLine(line);
+    if(govMode&&looksLikeHeaderGarbage(line))return true;
     if(s.heading||s.command)return false;
     if(s.trusted&&score>=12)return false;
     if(s.len<3)return true;
@@ -95,29 +132,60 @@
     return false;
   }
 
-  function cleanLine(line){
+  function fixGovernmentMemoLine(line){
+    let text=normalize(line);
+    text=text.replace(/สํ/g,'สำ');
+    text=text.replace(/อํ/g,'อำ');
+    text=text.replace(/ข้อัความ/g,'ข้อความ');
+    text=text.replace(/^ร\s*บันทึก/g,'บันทึก');
+    text=text.replace(/^เรอง\b/g,'เรื่อง');
+    text=text.replace(/ขอเพิม/g,'ขอเพิ่ม');
+    text=text.replace(/ตรวาจ/g,'ตรวจ');
+    text=text.replace(/เนการ/g,'ในการ');
+    text=text.replace(/พื้นที\b/g,'พื้นที่');
+    text=text.replace(/เจ้าหน้าที\b/g,'เจ้าหน้าที่');
+    text=text.replace(/เอกสารที\b/g,'เอกสารที่');
+    text=text.replace(/พร้อมนี\b/g,'พร้อมนี้');
+    text=text.replace(/สือสาร/g,'สื่อสาร');
+    text=text.replace(/ความมันคง/g,'ความมั่นคง');
+    text=text.replace(/สรรพาภาค/g,'สรรพากรภาค');
+    text=text.replace(/จึงข้อความอนุเคราะห์/g,'จึงขอความอนุเคราะห์');
+    text=text.replace(/TU\s+เวลา/g,'วัน เวลา');
+    text=text.replace(/เรื่อง\s+ขอเพิ่ม.*?เครื่องคอมพิวเตอร์/i,'เรื่อง ขอเพิ่ม MAC Address เครื่องคอมพิวเตอร์');
+    text=text.replace(/เพื่อใช้ในการตรวจราชการของ\s*[.ศสภิสภ\.๑10]+/,'เพื่อใช้ในการตรวจราชการของ สภ.๑๐');
+    text=text.replace(/เพื่อใช้เนการตรวจราชการของ\s*[.ศสภิสภ\.๑10]+/,'เพื่อใช้ในการตรวจราชการของ สภ.๑๐');
+    if(!/https?:\/\//i.test(text)&&!/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/.test(text))text=text.replace(/\.{2,}/g,' ').replace(/\s*\.\s*/g,' ');
+    if(/เอกสารที่แนบมาพร้อมนี้/.test(text))text=text.replace(/\s*[=|].*$/,'');
+    text=text.replace(/\s{2,}/g,' ').trim();
+    return text;
+  }
+
+  function cleanLine(line,govMode){
     let text=normalize(line);
     text=text.replace(/^[๐0oO\s.,:;|\-_/\\]+(?=[A-Za-zก-๙])/,'');
     text=text.replace(/[|]{2,}/g,' ');
     text=text.replace(/[�{}<>~`_^]/g,'');
     text=text.replace(/\bwu\s*[:;]?\b/gi,'');
+    if(govMode)text=fixGovernmentMemoLine(text);
     text=scrubGarbledTokens(text);
+    if(govMode)text=fixGovernmentMemoLine(text);
     text=text.replace(/\s{2,}/g,' ').trim();
     return text;
   }
 
   function strictFilterText(text){
+    const govMode=isGovernmentMemoText(text);
     const originalLines=splitLines(text);
     const removed=[];
     const lines=originalLines.map(line=>{
-      const cleaned=cleanLine(line);
+      const cleaned=cleanLine(line,govMode);
       if(cleaned!==normalize(line))removed.push(line);
       return cleaned;
     }).filter(Boolean);
     if(!lines.length)return {text:'',removed:originalLines,kept:[]};
     const kept=[];
     lines.forEach(line=>{
-      if(looksLikeNoise(line))removed.push(line);
+      if(looksLikeNoise(line,govMode))removed.push(line);
       else kept.push(line);
     });
 
