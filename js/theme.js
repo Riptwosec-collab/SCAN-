@@ -198,7 +198,7 @@ function ensureLiveOcrAssets(){loadCssOnce('css/multi-ocr-live-ui.css?v=2','mult
 function ensureOcrFormatterAssets(){loadCssOnce('css/ocr-layout-formatter.css?v=1','ocrLayoutFormatterCss');loadScriptOnce('js/ocr-layout-formatter.js?v=1','ocrLayoutFormatterScript');}
 function ensureOqcStrictAssets(){loadScriptOnce('js/oqc-strict-review.js?v=3','oqcStrictReviewScript');}
 function ensureCyberAiTheme(){loadCssOnce('css/cyber-ai-theme.css?v=2','cyberAiThemeCss');}
-function ensureSystemUpgradeAssets(){loadCssOnce('css/system-upgrade.css?v=1','systemUpgradeCss');loadScriptOnce('js/system-upgrade.js?v=1','systemUpgradeScript');}
+function ensureSystemUpgradeAssets(){loadCssOnce('css/system-upgrade.css?v=1','systemUpgradeCss');loadScriptOnce('js/system-upgrade.js?v=2','systemUpgradeScript');}
 
 window.simplifyScanUi=simplifyScanUi;
 document.addEventListener('DOMContentLoaded',()=>{
