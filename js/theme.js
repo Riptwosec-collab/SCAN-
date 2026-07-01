@@ -235,9 +235,14 @@ function ensureOqcStrictAssets(){
   loadScriptOnce('js/oqc-strict-review.js?v=1','oqcStrictReviewScript');
 }
 
+function ensureCyberAiTheme(){
+  loadCssOnce('css/cyber-ai-theme.css?v=1','cyberAiThemeCss');
+}
+
 window.simplifyScanUi=simplifyScanUi;
 document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(simplifyScanUi,0);
+  setTimeout(ensureCyberAiTheme,20);
   setTimeout(ensureLiveOcrAssets,40);
   setTimeout(ensureOcrFormatterAssets,80);
   setTimeout(ensureOqcStrictAssets,120);
