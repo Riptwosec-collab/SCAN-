@@ -226,9 +226,15 @@ function ensureLiveOcrAssets(){
   loadScriptOnce('js/multi-ocr-live-ui.js?v=1','multiOcrLiveScript');
 }
 
+function ensureOcrFormatterAssets(){
+  loadCssOnce('css/ocr-layout-formatter.css?v=1','ocrLayoutFormatterCss');
+  loadScriptOnce('js/ocr-layout-formatter.js?v=1','ocrLayoutFormatterScript');
+}
+
 window.simplifyScanUi=simplifyScanUi;
 document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(simplifyScanUi,0);
   setTimeout(ensureLiveOcrAssets,40);
+  setTimeout(ensureOcrFormatterAssets,80);
 });
 document.addEventListener('riptwosec:themechange',()=>setTimeout(simplifyScanUi,0));
