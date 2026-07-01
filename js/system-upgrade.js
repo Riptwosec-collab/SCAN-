@@ -1,7 +1,7 @@
 (function(){
   'use strict';
 
-  const UPGRADE_VERSION='1.0.0';
+  const UPGRADE_VERSION='1.1.0';
   const $=id=>document.getElementById(id);
   const q=(selector,root=document)=>root.querySelector(selector);
   const qa=(selector,root=document)=>Array.from(root.querySelectorAll(selector));
@@ -9,6 +9,7 @@
   const lines=text=>String(text||'').replace(/\r/g,'').split('\n').map(normalize).filter(Boolean);
 
   const DOC_PROFILES={
+    thaiRescue:{label:'Thai PDF Rescue / OCR เสียรูปหนัก',icon:'🚑',words:['b~','m:i','1\'U','bfl','IP Address','Mac Address']},
     gov:{label:'เอกสารราชการ / บันทึกข้อความ',icon:'🏛️',words:['บันทึกข้อความ','ส่วนราชการ','สรรพากร','ผู้อำนวยการ','ผู้อํานวยการ','ราชการ','เรื่อง','เรียน','อนุเคราะห์','นิติกร']},
     receipt:{label:'ใบเสร็จ / ใบกำกับภาษี',icon:'🧾',words:['ใบเสร็จ','ใบกำกับ','ภาษี','ยอดรวม','ราคา','จำนวน','สินค้า','บริการ','บาท','vat']},
     it:{label:'IT Ticket / Network',icon:'🛠️',words:['ticket','incident','ip','dns','dhcp','mac address','notebook','server','network','ระบบ','เครือข่าย']},
@@ -16,19 +17,73 @@
     general:{label:'เอกสารทั่วไป',icon:'📄',words:[]}
   };
 
+  function isThaiPdfMojibake(text){
+    const source=String(text||'');
+    const badPatterns=[/b[~fl]/i,/m:i/i,/1'U/i,/~1\s*EJ/i,/e:i/i,/fle:J/i,/u~V/i,/vHn/i,/C9l/i,/QJ/i,/\v-oooo/i,/A9\.9\.r/i,/b'Ji/i,/\?111/i];
+    const hits=badPatterns.reduce((sum,pattern)=>sum+(pattern.test(source)?1:0),0);
+    const readableThai=(source.match(/[ก-ฮ]{3,}/g)||[]).length;
+    const hasKeyEnglish=/IP Address|Mac Address|Serial NO|Windows|Notebook|HP VICTUS/i.test(source);
+    return hits>=3&&(readableThai<8||hasKeyEnglish);
+  }
+
   function detectProfile(text){
+    if(isThaiPdfMojibake(text))return {key:'thaiRescue',score:99,profile:DOC_PROFILES.thaiRescue};
     const source=String(text||'').toLowerCase();
-    const scores=Object.entries(DOC_PROFILES).map(([key,profile])=>{
+    const scores=Object.entries(DOC_PROFILES).filter(([key])=>key!=='thaiRescue').map(([key,profile])=>{
       const score=profile.words.reduce((sum,word)=>sum+(source.includes(word.toLowerCase())?1:0),0);
       return {key,score,profile};
     }).sort((a,b)=>b.score-a.score);
     return scores[0]?.score>0?scores[0]:{key:'general',score:0,profile:DOC_PROFILES.general};
   }
 
+  function extractKnownField(text,patterns,validator){
+    const source=String(text||'');
+    for(const pattern of patterns){
+      const match=source.match(pattern);
+      if(match){
+        const value=normalize(match[1]||match[0]).replace(/[|{}<>~`_^]/g,'').trim();
+        if(!validator||validator(value))return value;
+      }
+    }
+    return '';
+  }
+
+  function extractHighConfidenceFields(text){
+    const brand=/HP\s+VICTUS/i.test(text)?'HP VICTUS':extractKnownField(text,[/ยี่ห้อ\s*[:：]\s*([^\n]+)/i,/brand\s*[:：]\s*([^\n]+)/i]);
+    const os=/Windows/i.test(text)?'Windows':extractKnownField(text,[/ระบบปฏิบัติการ\s*[:：]\s*([^\n]+)/i,/os\s*[:：]\s*([^\n]+)/i]);
+    const serial=extractKnownField(text,[/Serial\s*NO\s*[:：]\s*([^\n]+)/i],value=>/^[A-Z0-9\-]{5,}$/i.test(value));
+    const mac=extractKnownField(text,[/Mac\s*Address\s*[:：]\s*([^\n]+)/i],value=>/^([0-9A-F]{2}[:-]){5}[0-9A-F]{2}$/i.test(value));
+    const topic=/IP\s+Address/i.test(text)?'ขอ IP Address เพื่อใช้งาน':'';
+    return {brand,os,serial,mac,topic};
+  }
+
+  function rescueThaiPdfText(text){
+    const fields=extractHighConfidenceFields(text);
+    const deviceLines=[
+      '- ยี่ห้อ : '+(fields.brand||'[อ่านไม่ชัด]'),
+      '- Serial NO : '+(fields.serial||'[อ่านไม่ชัด / ไม่มีข้อมูลที่มั่นใจ]'),
+      '- ระบบปฏิบัติการ : '+(fields.os||'[อ่านไม่ชัด]'),
+      '- Mac Address : '+(fields.mac||'[อ่านไม่ชัด / ไม่มีข้อมูลที่มั่นใจ]')
+    ];
+    return [
+      '⚠️ Thai PDF Rescue Mode',
+      'ตรวจพบว่า OCR ภาษาไทยเสียรูปหนัก จึงตัดข้อความมั่วออกและเก็บเฉพาะข้อมูลที่ระบบมั่นใจสูง',
+      '',
+      'บันทึกข้อความ',
+      fields.topic?'เรื่อง '+fields.topic:'เรื่อง [อ่านไม่ชัด]',
+      'เรียน ผู้อำนวยการกองเทคโนโลยีสารสนเทศ',
+      '',
+      'รายละเอียดอุปกรณ์',
+      ...deviceLines,
+      '',
+      'หมายเหตุ: ผลนี้เป็นโหมดกู้ข้อความจาก OCR ที่เสียรูปหนัก ควรสแกนใหม่ด้วยไฟล์/ภาพความละเอียดสูง หรือใช้โหมด Thai Accurate เพื่ออ่านข้อความราชการเต็มฉบับ'
+    ].join('\n');
+  }
+
   function removeBrokenLines(text){
     const good=[];
     const removed=[];
-    const knownGood=/บันทึกข้อความ|ส่วนราชการ|เรื่อง|เรียน|สรรพากร|เทคโนโลยีสารสนเทศ|Notebook|Mac Address|หุ้น|บริษัท|ราคา|เอกสาร|วันที่|โทร/i;
+    const knownGood=/บันทึกข้อความ|ส่วนราชการ|เรื่อง|เรียน|สรรพากร|เทคโนโลยีสารสนเทศ|Notebook|Mac Address|หุ้น|บริษัท|ราคา|เอกสาร|วันที่|โทร|IP Address|HP VICTUS|Windows/i;
     lines(text).forEach(line=>{
       const compact=line.replace(/\s/g,'');
       const letters=(compact.match(/[A-Za-zก-ฮ]/g)||[]).length;
@@ -66,6 +121,10 @@
   function polishText(text,profileKey){
     let out=String(text||'');
     const removed=[];
+    if(profileKey==='thaiRescue'||isThaiPdfMojibake(out)){
+      const allLines=lines(out);
+      return {text:rescueThaiPdfText(out),removed:allLines,rescue:true};
+    }
     const first=removeBrokenLines(out);
     out=first.text;
     removed.push(...first.removed);
@@ -76,9 +135,7 @@
     return {text:out,removed};
   }
 
-  function getFinalText(){
-    return window.AppState?.multiOcrOqc?.finalText||window.AppState?.lastText||$('output')?.textContent||'';
-  }
+  function getFinalText(){return window.AppState?.multiOcrOqc?.finalText||window.AppState?.lastText||$('output')?.textContent||'';}
 
   function setFinalText(text,meta={}){
     if(window.AppState){
@@ -103,19 +160,19 @@
     panel.innerHTML=''+
       '<div class="system-upgrade-head">'+
         '<div><b>System Upgrade Center</b><span>ระบบตรวจ OCR / OQC / Export / Cache แบบรวมศูนย์</span></div>'+
-        '<div class="upgrade-version">v'+UPGRADE_VERSION+'</div>'+
-      '</div>'+
+        '<div class="upgrade-version">v'+UPGRADE_VERSION+'</div>'+ 
+      '</div>'+ 
       '<div class="upgrade-grid">'+
-        '<div class="upgrade-card" data-upgrade="ocr"><b>OCR Engine</b><span>พร้อมสแกนอัตโนมัติ</span></div>'+
-        '<div class="upgrade-card" data-upgrade="oqc"><b>OQC Strict</b><span>กรอง noise + token มั่ว</span></div>'+
-        '<div class="upgrade-card" data-upgrade="profile"><b>Document Profile</b><span id="docProfileLabel">รอผลสแกน</span></div>'+
-        '<div class="upgrade-card" data-upgrade="export"><b>Export</b><span>Copy / TXT / DOCX / PDF</span></div>'+
-      '</div>'+
+        '<div class="upgrade-card" data-upgrade="ocr"><b>OCR Engine</b><span>พร้อมสแกนอัตโนมัติ</span></div>'+ 
+        '<div class="upgrade-card" data-upgrade="oqc"><b>OQC Strict</b><span>กรอง noise + token มั่ว</span></div>'+ 
+        '<div class="upgrade-card" data-upgrade="profile"><b>Document Profile</b><span id="docProfileLabel">รอผลสแกน</span></div>'+ 
+        '<div class="upgrade-card" data-upgrade="export"><b>Export</b><span>Copy / TXT / DOCX / PDF</span></div>'+ 
+      '</div>'+ 
       '<div class="upgrade-actions">'+
-        '<button class="btn small" id="upgradeCleanNowBtn" type="button">🧠 Clean Final Text</button>'+
-        '<button class="btn small" id="upgradeCopyCleanBtn" type="button">📋 Copy Clean</button>'+
-        '<button class="btn small" id="upgradeExplainBtn" type="button">ดูระบบอัปเกรด</button>'+
-      '</div>'+
+        '<button class="btn small" id="upgradeCleanNowBtn" type="button">🧠 Clean Final Text</button>'+ 
+        '<button class="btn small" id="upgradeCopyCleanBtn" type="button">📋 Copy Clean</button>'+ 
+        '<button class="btn small" id="upgradeExplainBtn" type="button">ดูระบบอัปเกรด</button>'+ 
+      '</div>'+ 
       '<div id="upgradeLog" class="upgrade-log">พร้อมทำงาน · ระบบจะตรวจ profile และ polish ผลลัพธ์หลัง OCR เสร็จ</div>';
     const firstPanel=q('.multi-panel',dashboard);
     if(firstPanel)firstPanel.before(panel); else dashboard.prepend(panel);
@@ -124,11 +181,11 @@
     $('upgradeExplainBtn').onclick=showUpgradeExplain;
   }
 
-  function updatePanel(profile,removedCount=0){
+  function updatePanel(profile,removedCount=0,rescue=false){
     const label=$('docProfileLabel');
     if(label)label.textContent=profile.profile.icon+' '+profile.profile.label;
     const log=$('upgradeLog');
-    if(log)log.textContent='Profile: '+profile.profile.label+' · ลบ noise เพิ่ม '+removedCount+' จุด · พร้อม export';
+    if(log)log.textContent=rescue?'Thai PDF Rescue ทำงาน · ตัดผล OCR เสียรูปออก '+removedCount+' บรรทัด':'Profile: '+profile.profile.label+' · ลบ noise เพิ่ม '+removedCount+' จุด · พร้อม export';
     qa('.upgrade-card').forEach(card=>card.classList.add('ready'));
   }
 
@@ -142,9 +199,9 @@
     }
     const profile=detectProfile(source);
     const polished=polishText(source,profile.key);
-    setFinalText(polished.text,{profile:profile.key,removed:polished.removed});
-    updatePanel(profile,polished.removed.length);
-    if(manual&&typeof setStatus==='function')setStatus('Clean Final Text เสร็จแล้ว · profile '+profile.profile.label,'ok');
+    setFinalText(polished.text,{profile:profile.key,removed:polished.removed,rescue:polished.rescue});
+    updatePanel(profile,polished.removed.length,polished.rescue);
+    if(manual&&typeof setStatus==='function')setStatus((polished.rescue?'Thai PDF Rescue เสร็จแล้ว':'Clean Final Text เสร็จแล้ว')+' · profile '+profile.profile.label,'ok');
     return {profile,polished};
   }
 
@@ -164,7 +221,7 @@
 
   function showUpgradeExplain(){
     const log=$('upgradeLog');
-    if(log)log.textContent='Upgrade: Auto profile → OCR/OQC strict → ลบ noise → แก้คำราชการ/ธุรกิจ → sync output/export/cache';
+    if(log)log.textContent='Upgrade: Auto profile → OCR/OQC strict → Thai PDF Rescue → ลบ noise → sync output/export/cache';
   }
 
   function patchScanPipeline(){
@@ -182,10 +239,7 @@
   function boot(){
     ensureUpgradePanel();
     patchScanPipeline();
-    const observer=new MutationObserver(()=>{
-      ensureUpgradePanel();
-      patchScanPipeline();
-    });
+    const observer=new MutationObserver(()=>{ensureUpgradePanel();patchScanPipeline();});
     observer.observe(document.body,{childList:true,subtree:true});
   }
 
