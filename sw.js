@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v39-layout-formatter';
+const CACHE_NAME='riptwosec-scan-v41-cyber-theme';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -7,6 +7,7 @@ const CORE_ASSETS=[
   './terms.html',
   './manifest.webmanifest',
   './css/style.css',
+  './css/cyber-ai-theme.css?v=1',
   './css/features.css',
   './css/background.css',
   './css/tool-cleanup.css',

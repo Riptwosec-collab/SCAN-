@@ -231,10 +231,15 @@ function ensureOcrFormatterAssets(){
   loadScriptOnce('js/ocr-layout-formatter.js?v=1','ocrLayoutFormatterScript');
 }
 
+function ensureCyberAiTheme(){
+  loadCssOnce('css/cyber-ai-theme.css?v=1','cyberAiThemeCss');
+}
+
 window.simplifyScanUi=simplifyScanUi;
 document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(simplifyScanUi,0);
   setTimeout(ensureLiveOcrAssets,40);
   setTimeout(ensureOcrFormatterAssets,80);
+  setTimeout(ensureCyberAiTheme,20);
 });
 document.addEventListener('riptwosec:themechange',()=>setTimeout(simplifyScanUi,0));
