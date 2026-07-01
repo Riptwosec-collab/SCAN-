@@ -35,6 +35,15 @@ This branch adds a lightweight UI simplification layer on top of the merged Mult
 - PDF compare is hidden from the primary Scan page.
 - Auto-delete dropdown is hidden and replaced by the simpler `ไม่บันทึกประวัติ` toggle.
 
+## Live dashboard changes
+
+- Adds a real action bar above OCR Team Status.
+- Adds `สแกนอัตโนมัติ`, `อัปโหลดไฟล์`, and `ทดสอบด้วยภาพตัวอย่าง` buttons.
+- If no file is selected, the dashboard sends the user back to the Upload Zone instead of doing nothing.
+- OCR result buttons are disabled until a real scan completes.
+- The demo button creates a sample image and runs real Tesseract OCR through the Multi OCR + OQC pipeline.
+- Service worker cache now includes `multi-ocr-live-ui` assets.
+
 ## Implementation
 
-The simplification is implemented in `js/theme.js` as a post-load UI layer so existing OCR, export, and OQC features remain available without rewriting the full page.
+The simplification is implemented in `js/theme.js` as a post-load UI layer so existing OCR, export, and OQC features remain available without rewriting the full page. The actionable dashboard behavior lives in `js/multi-ocr-live-ui.js` with styles in `css/multi-ocr-live-ui.css`.
