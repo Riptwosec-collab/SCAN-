@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v40-oqc-review';
+const CACHE_NAME='riptwosec-scan-v42-oqc-cyber-theme';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -7,6 +7,7 @@ const CORE_ASSETS=[
   './terms.html',
   './manifest.webmanifest',
   './css/style.css',
+  './css/cyber-ai-theme.css?v=1',
   './css/features.css',
   './css/background.css',
   './css/tool-cleanup.css',
@@ -54,9 +55,7 @@ self.addEventListener('install',event=>{
 });
 
 self.addEventListener('activate',event=>{
-  event.waitUntil(
-    caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE_NAME).map(key=>caches.delete(key))))
-  );
+  event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE_NAME).map(key=>caches.delete(key)))));
   self.clients.claim();
 });
 
