@@ -1,4 +1,4 @@
-const CACHE_NAME='riptwosec-scan-v39-layout-formatter';
+const CACHE_NAME='riptwosec-scan-v40-oqc-review';
 const CORE_ASSETS=[
   './',
   './index.html',
@@ -15,7 +15,7 @@ const CORE_ASSETS=[
   './css/themes.css?v=5',
   './css/theme-contrast.css?v=21',
   './css/multi-ocr-oqc.css?v=1',
-  './css/multi-ocr-live-ui.css?v=1',
+  './css/multi-ocr-live-ui.css?v=2',
   './css/ocr-layout-formatter.css?v=1',
   './js/state.js?v=2',
   './js/theme.js?v=17',
@@ -44,6 +44,7 @@ const CORE_ASSETS=[
   './js/multi-ocr-oqc.js?v=1',
   './js/multi-ocr-live-ui.js?v=1',
   './js/ocr-layout-formatter.js?v=1',
+  './js/oqc-strict-review.js?v=1',
   './js/scan-3d.js?v=5'
 ];
 
