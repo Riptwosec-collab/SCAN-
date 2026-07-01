@@ -79,8 +79,15 @@
       add('ipFound',(fields.ipAddress||[]).length>0);add('networkPatternFound',(fields.vlan||[]).length>0||(fields.interface||[]).length>0);add('ticketOrIssueFound',!!fields.ticketNo||!!fields.issue);
     }else if(documentType==='email'){
       add('fromFound',!!fields.from);add('toFound',!!fields.to);add('subjectFound',!!fields.subject);
-    }else if(documentType==='government'){
-      add('subjectFound',!!fields.subject);add('recipientFound',!!fields.to);add('departmentFound',!!fields.department);add('dateFound',!!fields.date);
+    }else if(['government_memo','official_letter','internal_memo','government'].includes(documentType)){
+      const structure=fields.structure;
+      add('headerFound',!!structure?.items?.find(item=>item.name==='บันทึกข้อความ'&&item.found)||documentType==='official_letter');
+      add('departmentFound',!!fields.department||!!structure?.items?.find(item=>item.name==='ส่วนราชการ'&&item.found));
+      add('documentNoOrReview',!!fields.documentNo||(fields.reviewRequired||[]).some(item=>/เลขหนังสือ|รหัส/.test(item.type||item.reason||'')));
+      add('dateFound',!!fields.date||!!structure?.items?.find(item=>item.name==='วันที่'&&item.found));
+      add('subjectFound',!!fields.subject||!!structure?.items?.find(item=>item.name==='เรื่อง'&&item.found));
+      add('recipientFound',!!fields.to||!!structure?.items?.find(item=>item.name==='เรียน'&&item.found));
+      add('signatureOrPositionFound',!!fields.signer||!!fields.position||!!structure?.items?.find(item=>/ชื่อผู้ลงนาม|ตำแหน่ง/.test(item.name)&&item.found));
     }else if(documentType==='table'){
       add('headersFound',(fields.headers||[]).length>0);add('rowsFound',(fields.rows||[]).length>0);
     }else{
@@ -94,13 +101,24 @@
     const fallback=(ocrResults||[]).find(r=>r.isBest)||ocrResults?.[0];
     const baseText=oqc1Result?.text||fallback?.text||'';
     const applied=window.UserLearning?.applyUserCorrections?.(baseText)||{text:baseText,applied:[]};
-    const extracted=window.DocumentExtractor?.extractFields?.(applied.text,analysis.documentTypeHint)||{documentType:'general',fields:{}};
-    const validation=validateDocument(applied.text,extracted.documentType,extracted.fields||{});
+    const govReview=window.GovernmentOQC?.reviewGovernmentText?.(applied.text)||null;
+    const textForExtraction=govReview?.cleanText||applied.text;
+    const extracted=window.DocumentExtractor?.extractFields?.(textForExtraction,analysis.documentTypeHint)||{documentType:'general',fields:{}};
+    const documentType=govReview?.documentType||extracted.documentType;
+    const extractedFields={...(extracted.fields||{}),governmentReview:govReview||undefined};
+    const validation=validateDocument(textForExtraction,documentType,extractedFields);
     const warnings=[];
     if(validation.score<60)warnings.push('Document logic ผ่านไม่ครบ ควรตรวจทานเอง');
     if((oqc1Result?.unresolvedCount||0)>0)warnings.push('ยังมี conflict ที่ OQC #1 ไม่มั่นใจ '+oqc1Result.unresolvedCount+' จุด');
-    const confidence=clamp((oqc1Result?.confidence||0)*.44+validation.score*.36+((fallback?.confidence||0)*.20)-warnings.length*4);
-    return {status:'success',documentType:extracted.documentType,finalText:applied.text,confidence:Number(confidence.toFixed(1)),corrections:applied.applied||[],warnings,extractedFields:extracted.fields,validation:{...validation,totalMatched:validation.score>=70,dateValid:!!(extracted.fields?.date),documentNoFound:!!(extracted.fields?.documentNo||extracted.fields?.receiptNo||extracted.fields?.invoiceNo||extracted.fields?.ticketNo)}};
+    if(govReview?.warnings?.length)warnings.push(...govReview.warnings);
+    if(govReview?.reviewRequired?.length)warnings.push('พบข้อมูลสำคัญที่ต้องตรวจเอง '+govReview.reviewRequired.length+' จุด');
+    const confidence=govReview?clamp(govReview.confidence*.55+validation.score*.25+((fallback?.confidence||0)*.20)-warnings.length*3):clamp((oqc1Result?.confidence||0)*.44+validation.score*.36+((fallback?.confidence||0)*.20)-warnings.length*4);
+    return {
+      status:'success',documentType,finalText:govReview?.finalText||applied.text,confidence:Number(confidence.toFixed(1)),
+      corrections:[...(applied.applied||[]),...(govReview?.corrections||[])],warnings,extractedFields,
+      reviewRequired:govReview?.reviewRequired||[],uncertain:govReview?.uncertain||[],removedNoise:govReview?.removedNoise||[],
+      validation:{...validation,totalMatched:validation.score>=70,dateValid:!!(extractedFields.date),documentNoFound:!!(extractedFields.documentNo||extractedFields.receiptNo||extractedFields.invoiceNo||extractedFields.ticketNo)||(extractedFields.reviewRequired||[]).some(item=>/เลขหนังสือ|รหัส/.test(item.type||item.reason||''))}
+    };
   }
 
   function calculateFinalConfidence(context){
@@ -120,9 +138,9 @@
 
   function explainDecision(context){
     const best=context.bestOCR||context.ocrResults?.find(r=>r.isBest)||{};
-    const finalSource=context.oqc2?.status==='success'?'OQC #2 finalText':context.oqc1?.status==='success'?'OQC #1 text':best.engineName||'fallback';
+    const finalSource=context.oqc2?.documentType&&['government_memo','official_letter','internal_memo'].includes(context.oqc2.documentType)?'Government OQC Brain':context.oqc2?.status==='success'?'OQC #2 finalText':context.oqc1?.status==='success'?'OQC #1 text':best.engineName||'fallback';
     const conf=calculateFinalConfidence(context);
-    return {bestOCR:best.engineName||'',bestOCRId:best.engineId||'',finalSource,conflicts:context.oqc1?.decisions||[],confidenceParts:conf.parts,warnings:context.oqc2?.warnings||[],summary:['OCR ที่ดีที่สุด: '+(best.engineName||'-'),'Final source: '+finalSource,'Final confidence: '+conf.finalConfidence+'%'].join('\n')};
+    return {bestOCR:best.engineName||'',bestOCRId:best.engineId||'',finalSource,conflicts:context.oqc1?.decisions||[],confidenceParts:conf.parts,warnings:context.oqc2?.warnings||[],governmentReview:context.oqc2?.extractedFields?.governmentReview||null,summary:['OCR ที่ดีที่สุด: '+(best.engineName||'-'),'Final source: '+finalSource,'Final confidence: '+conf.finalConfidence+'%'].join('\n')};
   }
 
   function buildFinalResult(context){
